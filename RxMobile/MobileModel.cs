@@ -3,7 +3,7 @@ using ReactiveUI;
 
 namespace RxMobile
 {
-    public class MobileModel : INavigableModel, ILifecycleModel
+    public class MobileModel : ReactiveObject, INavigableModel, ILifecycleModel
     {
         private readonly IReactiveCommand<object> back = ReactiveCommand.Create();
         private readonly IReactiveCommand<object> up = ReactiveCommand.Create();

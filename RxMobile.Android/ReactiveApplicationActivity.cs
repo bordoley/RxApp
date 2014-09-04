@@ -14,7 +14,7 @@ namespace RxMobile
     {
     }
         
-    public abstract class ReactiveApplicationActivity<TViewModel> : ReactiveActivity, IViewFor<TViewModel>
+    public abstract class RxMobileActivity<TViewModel> : ReactiveActivity, IViewFor<TViewModel>
         where TViewModel : class, INavigableViewModel, ILifecycleViewModel
     {
         private TViewModel viewModel;
@@ -36,7 +36,7 @@ namespace RxMobile
             base.OnCreate(bundle);
 
             this.WhenAnyObservable(x => x.ViewModel.Close).FirstAsync().Subscribe(_ => this.Finish());
-            var app = (ReactiveApplication) this.Application;
+            var app = (RxMobileApplication) this.Application;
             app.OnActivityCreated(this);
         }
 
@@ -72,7 +72,7 @@ namespace RxMobile
         }
     }
         
-    public class ReactiveApplicationActivity : Activity, IReactiveObject, IReactiveNotifyPropertyChanged<ReactiveApplicationActivity>, IHandleObservableErrors
+    public class RxMobileActivity : Activity, IReactiveObject, IReactiveNotifyPropertyChanged<RxMobileActivity>, IHandleObservableErrors
     {
         private readonly ReactiveObject deleg = new DelegatingReactiveObject();
 
@@ -88,14 +88,14 @@ namespace RxMobile
             remove { deleg.PropertyChanged -= value; }
         }
 
-        public IObservable<IReactivePropertyChangedEventArgs<ReactiveApplicationActivity>> Changing
+        public IObservable<IReactivePropertyChangedEventArgs<RxMobileActivity>> Changing
         {
-            get { return deleg.Changing.Select(x => new ReactivePropertyChangingEventArgs<ReactiveApplicationActivity>(this, x.PropertyName));}
+            get { return deleg.Changing.Select(x => new ReactivePropertyChangingEventArgs<RxMobileActivity>(this, x.PropertyName));}
         }
 
-        public IObservable<IReactivePropertyChangedEventArgs<ReactiveApplicationActivity>> Changed
+        public IObservable<IReactivePropertyChangedEventArgs<RxMobileActivity>> Changed
         {
-            get { return deleg.Changed.Select(x => new ReactivePropertyChangedEventArgs<ReactiveApplicationActivity>(this, x.PropertyName)); }
+            get { return deleg.Changed.Select(x => new ReactivePropertyChangedEventArgs<RxMobileActivity>(this, x.PropertyName)); }
         }
 
         public IDisposable SuppressChangeNotifications()

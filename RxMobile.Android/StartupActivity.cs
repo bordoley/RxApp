@@ -6,15 +6,11 @@ namespace RxMobile
 {
     public sealed class StartupActivity : Activity
     {
-        public StartupActivity()
-        {
-        }
-
         protected override void OnCreate(Bundle bundle)
         {
             base.OnCreate(bundle);
 
-            var app = (ReactiveApplication) this.Application;
+            var app = (RxMobileApplication) this.Application;
             app.OnResume();
             this.Finish();
         }

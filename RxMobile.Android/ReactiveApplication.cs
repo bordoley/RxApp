@@ -1,4 +1,5 @@
 ﻿using Android.App;
+using Android.Content;
 using Android.Runtime;
 using System;
 using System.Reactive.Linq;
@@ -6,8 +7,16 @@ using ReactiveUI;
 
 namespace RxMobile
 {           
-    public abstract class ReactiveApplication : Application
+    public abstract class RxMobileApplication : Application
     {
+        static public void PresentView(Func<INavigableViewModel, Type> provideViewType, Context context, INavigableViewModel vieWModel)
+        {
+            // FIXME: Precondition or Contract checks
+            var viewType = provideViewType(vieWModel);
+            var intent = new Intent(context, viewType).SetFlags(ActivityFlags.NewTask | ActivityFlags.SingleTop);
+            context.StartActivity(intent);
+        }
+
         private readonly IViewStack viewStack = ViewStack.Create();
 
         private IMobileApplication application = null;
@@ -15,14 +24,14 @@ namespace RxMobile
 
         private IDisposable viewStackSubscription = null;
 
-        public ReactiveApplication(IntPtr javaReference, JniHandleOwnership transfer) : base(javaReference, transfer)
+        public RxMobileApplication(IntPtr javaReference, JniHandleOwnership transfer) : base(javaReference, transfer)
         {
         }
 
         protected abstract void SetActivityViewModel(Activity activity, INavigableViewModel viewModel);
         protected abstract IMobileApplication CreateApplication(IViewStack viewStack);
 
-        public override sealed void OnCreate()
+        public override void OnCreate()
         {
             base.OnCreate();
 

@@ -20,12 +20,12 @@ namespace RxMobile
     {
     }
 
-    public sealed class LifeCycleController : IService
+    public sealed class LifecycleController : IService
     {
         public static IService Create(ILifecycleControllerModel model, Action onPaused, Action onResumed)
         {
             // FIXME: Preconditions or code contracts
-            return new LifeCycleController(model, onPaused, onResumed);
+            return new LifecycleController(model, onPaused, onResumed);
         }
 
         private readonly ILifecycleControllerModel model;
@@ -35,7 +35,7 @@ namespace RxMobile
         private bool paused = true;
         private IDisposable subscription;
 
-        private LifeCycleController(ILifecycleControllerModel model, Action onPaused, Action onResumed)
+        private LifecycleController(ILifecycleControllerModel model, Action onPaused, Action onResumed)
         {
             this.model = model;
             this.onPaused = onPaused;
