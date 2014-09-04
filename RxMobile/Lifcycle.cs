@@ -22,10 +22,10 @@ namespace RxMobile
 
     public sealed class LifecycleController : IService
     {
-        public static IService Create(ILifecycleControllerModel model, Action onPaused, Action onResumed)
+        public static IService Create(ILifecycleControllerModel model, Action onResumed, Action onPaused)
         {
             // FIXME: Preconditions or code contracts
-            return new LifecycleController(model, onPaused, onResumed);
+            return new LifecycleController(model, onResumed, onPaused);
         }
 
         private readonly ILifecycleControllerModel model;
@@ -35,7 +35,7 @@ namespace RxMobile
         private bool paused = true;
         private IDisposable subscription;
 
-        private LifecycleController(ILifecycleControllerModel model, Action onPaused, Action onResumed)
+        private LifecycleController(ILifecycleControllerModel model, Action onResumed, Action onPaused)
         {
             this.model = model;
             this.onPaused = onPaused;
@@ -54,7 +54,7 @@ namespace RxMobile
             newSubscription.Add (
                 model.Resuming.Subscribe(_ => 
                     {
-                        paused = true;
+                        paused = false;
                         onResumed();
                     }));
 
