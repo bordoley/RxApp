@@ -6,65 +6,83 @@ using System.Reactive.Linq;
 using ReactiveUI;
 
 namespace RxMobile
-{           
-    public abstract class RxMobileApplication : Application
+{          
+    public sealed class AndroidViewPresenter : IViewPresenter
     {
-        static public void PresentView(Func<IMobileViewModel, Type> provideViewType, Context context, IMobileViewModel vieWModel)
+        public static IViewPresenter Create(Func<object, Type> provideViewType, Context context)
+        {
+            // FIXME: Contracts/ PReconditions
+            return new AndroidViewPresenter(provideViewType, context);
+        }
+
+        private readonly Func<object, Type> provideViewType;
+        private readonly Context context;
+
+        private AndroidViewPresenter(Func<object, Type> provideViewType, Context context)
+        {
+            this.provideViewType = provideViewType;
+            this.context = context;
+        }
+
+        public void PresentView(object viewModel)
         {
             // FIXME: Precondition or Contract checks
-            var viewType = provideViewType(vieWModel);
+            var viewType = provideViewType(viewModel);
             var intent = new Intent(context, viewType).SetFlags(ActivityFlags.NewTask | ActivityFlags.SingleTop);
             context.StartActivity(intent);
         }
-            
-        private readonly IViewStack<IMobileModel> viewStack = ViewStack<IMobileModel>.Create();
 
+        public void Initialize() {}
+        public void Dispose() {}
+    }
+
+    public abstract class RxMobileApplication : Application
+    {
         private IMobileApplication application = null;
-        private IController viewStackBinder = null;
-
-        private IDisposable viewStackSubscription = null;
+        private IActivityLifecycleEvents events = null;
+        private int activities = 0;
 
         public RxMobileApplication(IntPtr javaReference, JniHandleOwnership transfer) : base(javaReference, transfer)
         {
         }
 
-        protected abstract void SetActivityViewModel(Activity activity, IMobileViewModel viewModel);
-        protected abstract IMobileApplication CreateApplication(IViewStack<IMobileModel> viewStack);
+        protected abstract void SetViewModel(IViewFor view, IMobileViewModel viewModel);
+        protected abstract IMobileApplication CreateApplication();
 
         public override void OnCreate()
         {
             base.OnCreate();
 
+            events = ActivityLifecycleEvents.Register(this);
+            events.Created.Subscribe(a => activities++);
+            events.Destroyed.Subscribe(_ =>
+                {
+                    activities--;
+                    if (activities <= 0)
+                    {
+                        application.Dispose();
+                        application = null;
+                    }
+                });
+
             RxApp.MainThreadScheduler = new WaitForDispatcherScheduler(() => AndroidScheduler.UIScheduler());
-
-            viewStackSubscription =
-                viewStack
-                    .WhenAnyValue(x => x.Current)
-                    .Buffer(2, 1)
-                    .Select(x => Tuple.Create(x[0], x[1]))
-                    .Where(t => (t.Item1 != null) && (t.Item2 == null))
-                    .Subscribe(_ => this.OnPause());
-
-            application = this.CreateApplication(viewStack);
-            viewStackBinder = 
-                ViewStackBinder<IMobileModel>.Create(
-                    viewStack, 
-                    vm => application.PresentView(vm), 
-                    vm => application.ProvideController(vm));
         }
 
-        public override sealed void OnTerminate()
+        public override void OnTerminate()
         {
-            viewStackBinder.Dispose();
-            viewStackSubscription.Dispose();
+            if (application != null)
+            {
+                application.Dispose();
+                application = null;
+            }
             base.OnTerminate();
         }
 
-        public void OnActivityCreated(Activity activity)
+        public void OnViewCreated(IViewFor view)
         {
-            if (viewStack.Current != null)
+            if (application.ViewStack.Current != null)
             {
-                this.SetActivityViewModel(activity, viewStack.Current);
+                this.SetViewModel(view, application.ViewStack.Current);
             }
             else
             {
@@ -72,14 +90,10 @@ namespace RxMobile
             }
         }
 
-        public void OnResume()
+        public void Run()
         {
-            application.Start();
-        }
-
-        public void OnPause()
-        {
-            application.Stop();
+            application = this.CreateApplication();
+            application.Run();
         }
     }
 }

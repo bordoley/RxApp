@@ -131,28 +131,40 @@ namespace RxMobile
             notify.RaisePropertyChanged("Current");
         }
     }
+
+    // FIXME: Not positive IController is the right thing here.
+    public interface IViewPresenter : IController
+    {
+        void PresentView(object model);
+    }
+
+    // FIXME: Not positive IController is the right thing here.
+    public interface IControllerProvider : IController
+    {
+        IController ProvideController(object model);
+    }
         
     // FIXME: Not positive IController is the right thing here.
     public sealed class ViewStackBinder<TModel> : IController
         where TModel: INavigableModel
     {
-        public static IController Create(IViewStack<TModel> viewStack, Action<TModel> presentView, Func<TModel, IController> provideController)
+        public static IController Create(IViewStack<TModel> viewStack, IViewPresenter viewPresenter, IControllerProvider controllerProvider)
         {
             // FIXME: Preconditions or code contracts
-            return new ViewStackBinder<TModel>(viewStack, presentView, provideController);
+            return new ViewStackBinder<TModel>(viewStack, viewPresenter, controllerProvider);
         }
 
         private readonly IViewStack<TModel> viewStack;
-        private readonly Action<TModel> presentView;
-        private readonly Func<TModel, IController> provideController;
+        private readonly IViewPresenter viewPresenter;
+        private readonly IControllerProvider controllerProvider;
 
         private IDisposable subscription = null;
 
-        private ViewStackBinder(IViewStack<TModel> viewStack, Action<TModel> presentView, Func<TModel, IController> provideController)
+        private ViewStackBinder(IViewStack<TModel> viewStack, IViewPresenter viewPresenter, IControllerProvider controllerProvider)
         {
             this.viewStack = viewStack;
-            this.presentView = presentView;
-            this.provideController = provideController;
+            this.viewPresenter = viewPresenter;
+            this.controllerProvider = controllerProvider;
         }
 
         public void Initialize()
@@ -161,6 +173,9 @@ namespace RxMobile
             {
                 throw new NotSupportedException("Initialize can only be called once");
             }
+
+            viewPresenter.Initialize();
+            controllerProvider.Initialize();
 
             IController controller = null;
 
@@ -175,8 +190,8 @@ namespace RxMobile
 
                         if (next != null)
                         {
-                            presentView(next);
-                            controller = provideController(next);
+                            viewPresenter.PresentView(next);
+                            controller = controllerProvider.ProvideController(next);
                             controller.Initialize();
                         }
                     });
@@ -185,6 +200,8 @@ namespace RxMobile
         public void Dispose()
         {
             subscription.Dispose();
+            viewPresenter.Dispose();
+            controllerProvider.Dispose();
         }
     }
 }

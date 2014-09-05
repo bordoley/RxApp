@@ -2,6 +2,7 @@
 
 namespace RxMobile
 {
+    // Maybe ISupportInitialize or rename IComponent?
     public interface IController : IDisposable
     {
         void Initialize();

@@ -37,7 +37,7 @@ namespace RxMobile
 
             this.WhenAnyObservable(x => x.ViewModel.Close).FirstAsync().Subscribe(_ => this.Finish());
             var app = (RxMobileApplication) this.Application;
-            app.OnActivityCreated(this);
+            app.OnViewCreated(this);
         }
 
         protected override void OnResume()

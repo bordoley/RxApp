@@ -11,7 +11,7 @@ namespace RxMobile
             base.OnCreate(bundle);
 
             var app = (RxMobileApplication) this.Application;
-            app.OnResume();
+            app.Run();
             this.Finish();
         }
     }
