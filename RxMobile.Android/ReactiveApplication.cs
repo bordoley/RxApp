@@ -9,18 +9,18 @@ namespace RxMobile
 {           
     public abstract class RxMobileApplication : Application
     {
-        static public void PresentView(Func<INavigableViewModel, Type> provideViewType, Context context, INavigableViewModel vieWModel)
+        static public void PresentView(Func<IMobileViewModel, Type> provideViewType, Context context, IMobileViewModel vieWModel)
         {
             // FIXME: Precondition or Contract checks
             var viewType = provideViewType(vieWModel);
             var intent = new Intent(context, viewType).SetFlags(ActivityFlags.NewTask | ActivityFlags.SingleTop);
             context.StartActivity(intent);
         }
-
-        private readonly IViewStack viewStack = ViewStack.Create();
+            
+        private readonly IViewStack<IMobileModel> viewStack = ViewStack<IMobileModel>.Create();
 
         private IMobileApplication application = null;
-        private IService viewStackBinder = null;
+        private IController viewStackBinder = null;
 
         private IDisposable viewStackSubscription = null;
 
@@ -28,8 +28,8 @@ namespace RxMobile
         {
         }
 
-        protected abstract void SetActivityViewModel(Activity activity, INavigableViewModel viewModel);
-        protected abstract IMobileApplication CreateApplication(IViewStack viewStack);
+        protected abstract void SetActivityViewModel(Activity activity, IMobileViewModel viewModel);
+        protected abstract IMobileApplication CreateApplication(IViewStack<IMobileModel> viewStack);
 
         public override void OnCreate()
         {
@@ -44,12 +44,19 @@ namespace RxMobile
                     .Select(x => Tuple.Create(x[0], x[1]))
                     .Where(t => (t.Item1 != null) && (t.Item2 == null))
                     .Subscribe(_ => this.OnPause());
+
+            application = this.CreateApplication(viewStack);
+            viewStackBinder = 
+                ViewStackBinder<IMobileModel>.Create(
+                    viewStack, 
+                    vm => application.PresentView(vm), 
+                    vm => application.ProvideController(vm));
         }
 
         public override sealed void OnTerminate()
         {
+            viewStackBinder.Dispose();
             viewStackSubscription.Dispose();
-            viewStackSubscription = null;
             base.OnTerminate();
         }
 
@@ -61,27 +68,18 @@ namespace RxMobile
             }
             else
             {
-                throw new Exception("ReactiveApplicationActivity created when no viewmodel available");
+                throw new Exception("RxMobileActivity created when no viewmodel available");
             }
         }
 
         public void OnResume()
         {
-            application = this.CreateApplication(viewStack);
-            viewStackBinder = 
-                ViewStackBinder.Create(viewStack, application.PresentView, application.ProvideController);
-
-            viewStackBinder.Start();
             application.Start();
         }
 
         public void OnPause()
         {
             application.Stop();
-            application = null;
-
-            viewStackBinder.Stop();
-            viewStackBinder = null;
         }
     }
 }

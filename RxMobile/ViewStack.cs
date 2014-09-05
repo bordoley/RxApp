@@ -27,20 +27,21 @@ namespace RxMobile
     {
     }
 
-    public interface IViewStack : INotifyPropertyChanged
+    public interface IViewStack<TModel> : INotifyPropertyChanged
+        where TModel: INavigableModel
     {
-        INavigableModel Current { get; }
+        TModel Current { get; }
 
-        void Push(INavigableModel model);
-        void SetRoot(INavigableModel model);
+        void Push(TModel model);
+        void SetRoot(TModel model);
     }
-
-    // FIXME: Don't inherit ReactiveObject, delegate to it instead
-    public sealed class ViewStack : ReactiveObject, IViewStack
+        
+    public sealed class ViewStack<TModel> : IViewStack<TModel>  
+        where TModel: class, INavigableModel
     {
-        public static IViewStack Create ()
+        public static IViewStack<TModel> Create ()
         {
-            return new ViewStack();
+            return new ViewStack<TModel>();
         }
 
         private static void Close(IEnumerable<INavigableControllerModel> views) 
@@ -53,14 +54,21 @@ namespace RxMobile
             }, null);
         }
 
-        private IStack<INavigableModel> viewStack = Stack<INavigableModel>.Empty;
+        private readonly IReactiveObject notify = ReactiveObjectFactory.Create();
+        private IStack<TModel> viewStack = Stack<TModel>.Empty;
         private IDisposable backSubscription = null;
 
         private ViewStack()
         {
         }
 
-        public INavigableModel Current
+        public event PropertyChangedEventHandler PropertyChanged
+        {
+            add { notify.PropertyChanged += value; }
+            remove { notify.PropertyChanged -= value; }
+        }
+
+        public TModel Current
         { 
             get
             {
@@ -74,11 +82,11 @@ namespace RxMobile
             if (!reversed.IsEmpty())
             {
                 Close(reversed.Tail);
-                Update(Stack<INavigableModel>.Empty.Push(reversed.Head));
+                Update(Stack<TModel>.Empty.Push(reversed.Head));
             }              
         }
 
-        public void Push(INavigableModel model)
+        public void Push(TModel model)
         {
             // FIXME: Preconditions or Code contract check for null
             Update(viewStack.Push(model));
@@ -86,15 +94,15 @@ namespace RxMobile
 
         private void Pop()
         {
-            Close(Stack<INavigableModel>.Empty.Push(viewStack.Head));
+            Close(Stack<TModel>.Empty.Push(viewStack.Head));
             Update(viewStack.Tail);
         }
 
-        public void SetRoot(INavigableModel model)
+        public void SetRoot(TModel model)
         {
             // FIXME: Preconditions or Code contract check for null
             Close(viewStack);
-            Update(Stack<INavigableModel>.Empty.Push(model));
+            Update(Stack<TModel>.Empty.Push(model));
         }
 
         private void SubscribeToBack()
@@ -116,76 +124,67 @@ namespace RxMobile
             backSubscription = newSubscription;
         }
 
-        private void Update(IStack<INavigableModel> newStack)
+        private void Update(IStack<TModel> newStack)
         {
-            this.RaisePropertyChanging("Current");
             viewStack = newStack;
             SubscribeToBack();
-            this.RaisePropertyChanged("Current");
+            notify.RaisePropertyChanged("Current");
         }
     }
-
-    public sealed class ViewStackBinder : IService
+        
+    // FIXME: Not positive IController is the right thing here.
+    public sealed class ViewStackBinder<TModel> : IController
+        where TModel: INavigableModel
     {
-        private readonly IViewStack viewStack;
-        private readonly Action<INavigableViewModel> presentView;
-        private readonly Func<INavigableControllerModel, IService> provideController;
-
-        private IService controller = null;
-        private IDisposable viewModelSubscription = null;
-
-        public static IService Create(IViewStack viewStack, Action<INavigableViewModel> presentView, Func<INavigableControllerModel, IService> provideController)
+        public static IController Create(IViewStack<TModel> viewStack, Action<TModel> presentView, Func<TModel, IController> provideController)
         {
             // FIXME: Preconditions or code contracts
-            return new ViewStackBinder(viewStack, presentView, provideController);
+            return new ViewStackBinder<TModel>(viewStack, presentView, provideController);
         }
 
-        private ViewStackBinder(IViewStack viewStack, Action<INavigableViewModel> presentView, Func<INavigableControllerModel, IService> provideController)
+        private readonly IViewStack<TModel> viewStack;
+        private readonly Action<TModel> presentView;
+        private readonly Func<TModel, IController> provideController;
+
+        private IDisposable subscription = null;
+
+        private ViewStackBinder(IViewStack<TModel> viewStack, Action<TModel> presentView, Func<TModel, IController> provideController)
         {
             this.viewStack = viewStack;
             this.presentView = presentView;
             this.provideController = provideController;
         }
 
-        public void Start()
+        public void Initialize()
         {
-            if (viewModelSubscription != null)
+            if (subscription != null)
             {
-                throw new NotSupportedException("Trying to call start more than once without first calling stop");
+                throw new NotSupportedException("Initialize can only be called once");
             }
 
-            viewModelSubscription =
-                viewStack.WhenAnyValue(x => x.Current).Where(x => x != null).Subscribe(next =>
+            IController controller = null;
+
+            subscription =
+                viewStack.WhenAnyValue(x => x.Current).Subscribe(next =>
                     {
                         if (controller != null)
                         {
-                            controller.Stop();
+                            controller.Dispose();
                             controller = null;
                         }
 
-                        presentView(next);
-                        controller = provideController(next);
-
-                        if (controller != null)
+                        if (next != null)
                         {
-                            controller.Start();
+                            presentView(next);
+                            controller = provideController(next);
+                            controller.Initialize();
                         }
                     });
         }
 
-        public void Stop()
+        public void Dispose()
         {
-            if (viewModelSubscription != null)
-            {
-                viewModelSubscription.Dispose();
-                viewModelSubscription = null;
-            }
-
-            if (controller != null)
-            {
-                controller.Stop();
-                controller = null;
-            }
+            subscription.Dispose();
         }
     }
 }

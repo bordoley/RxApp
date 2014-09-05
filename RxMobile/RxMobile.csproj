@@ -31,12 +31,13 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="IService.cs" />
     <Compile Include="ViewStack.cs" />
     <Compile Include="Stack.cs" />
-    <Compile Include="Lifcycle.cs" />
     <Compile Include="IMobileApplication.cs" />
     <Compile Include="MobileModel.cs" />
+    <Compile Include="Lifecycle.cs" />
+    <Compile Include="ReactiveObject.cs" />
+    <Compile Include="IController.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
   <ItemGroup>

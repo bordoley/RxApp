@@ -2,9 +2,12 @@
 
 namespace RxMobile
 {
-    public interface IMobileApplication : IService
+    public interface IMobileApplication 
     {
-        void PresentView(INavigableViewModel model);
-        IService ProvideController(INavigableControllerModel model);
+        void Start();
+        void Stop();
+
+        void PresentView(IMobileViewModel model);
+        IController ProvideController(IMobileControllerModel model);
     }
 }
