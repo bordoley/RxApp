@@ -68,6 +68,7 @@
     <Compile Include="RxMobileApplication.cs" />
     <Compile Include="RxMobileActivity.cs" />
     <Compile Include="ActivityLifecycle.cs" />
+    <Compile Include="ViewPresenter.cs" />
   </ItemGroup>
   <ItemGroup>
   </ItemGroup>
