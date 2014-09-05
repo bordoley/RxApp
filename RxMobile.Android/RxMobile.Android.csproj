@@ -64,9 +64,9 @@
     <Compile Include="AndroidScheduler.cs" />
     <None Include="packages.config">
     </None>
-    <Compile Include="ReactiveApplication.cs" />
-    <Compile Include="ReactiveApplicationActivity.cs" />
     <Compile Include="StartupActivity.cs" />
+    <Compile Include="RxMobileApplication.cs" />
+    <Compile Include="RxMobileActivity.cs" />
   </ItemGroup>
   <ItemGroup>
   </ItemGroup>
