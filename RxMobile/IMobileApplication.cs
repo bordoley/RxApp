@@ -4,9 +4,6 @@ namespace RxMobile
 {
     public interface IMobileApplication : IDisposable
     {
-        // FIXME: LeakyAbstraction
-        IViewStack<IMobileModel> ViewStack { get; }
-
         void Run();
     }
 
@@ -18,26 +15,16 @@ namespace RxMobile
             IControllerProvider controllerProvider)
         {
             var viewStackBinder = ViewStackBinder<IMobileModel>.Create(viewStack, viewPresenter, controllerProvider);
-            return new MobileApplicationImpl(viewStack, viewStackBinder);
+            return new MobileApplicationImpl(viewStackBinder);
         }
        
         internal sealed class MobileApplicationImpl : IMobileApplication
         {
-            private readonly IViewStack<IMobileModel> viewStack;
             private readonly IController viewStackBinder;
 
-            internal MobileApplicationImpl(IViewStack<IMobileModel> viewStack, IController viewStackBinder)
+            internal MobileApplicationImpl(IController viewStackBinder)
             {
-                this.viewStack = viewStack;
                 this.viewStackBinder = viewStackBinder;
-            }
-
-            public IViewStack<IMobileModel> ViewStack
-            {
-                get
-                {
-                    return viewStack;
-                }
             }
 
             public void Run()

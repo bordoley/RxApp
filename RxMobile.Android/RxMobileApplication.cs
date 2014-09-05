@@ -7,10 +7,9 @@ using ReactiveUI;
 
 namespace RxMobile
 {          
-
-
     public abstract class RxMobileApplication : Application
     {
+        private readonly IViewStack<IMobileModel> viewStack = ViewStack<IMobileModel>.Create();
         private IMobileApplication application = null;
         private IActivityLifecycleEvents events = null;
         private int activities = 0;
@@ -20,7 +19,7 @@ namespace RxMobile
         }
 
         protected abstract void SetViewModel(IViewFor view, IMobileViewModel viewModel);
-        protected abstract IMobileApplication CreateApplication();
+        protected abstract IMobileApplication CreateApplication(IViewStack<IMobileModel> viewStack);
 
         public override void OnCreate()
         {
@@ -53,9 +52,9 @@ namespace RxMobile
 
         public void OnViewCreated(IViewFor view)
         {
-            if (application.ViewStack.Current != null)
+            if (viewStack.Current != null)
             {
-                this.SetViewModel(view, application.ViewStack.Current);
+                this.SetViewModel(view, viewStack.Current);
             }
             else
             {
@@ -65,7 +64,7 @@ namespace RxMobile
 
         public void Run()
         {
-            application = this.CreateApplication();
+            application = this.CreateApplication(viewStack);
             application.Run();
         }
     }
