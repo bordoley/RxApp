@@ -11,6 +11,8 @@ namespace RxApp
     {
         void OnCreate(Bundle bundle);
 
+        void OnDestroy();
+
         void OnResume();
 
         void OnPause();
@@ -19,8 +21,8 @@ namespace RxApp
 
         bool OnOptionsItemSelected(IMenuItem item);
     }
-
-    public interface IRxActivity<TViewModel> : IViewFor<TViewModel>
+        
+    public interface IRxActivity<TViewModel> : IViewFor<TViewModel>, IRxActivity
         where TViewModel : class, IMobileViewModel
     {
     }
@@ -59,9 +61,14 @@ namespace RxApp
 
             public void OnCreate(Bundle bundle)
             {
+                // FIXME: Dispose the subscription in on destroy
                 this.WhenAnyObservable(x => x.ViewModel.Close).FirstAsync().Subscribe(_ => activity.Finish());
                 var app = (IRxAndroidApplication) activity.Application;
                 app.OnViewCreated(this);
+            }
+
+            public void OnDestroy()
+            {
             }
 
             public void OnResume()
