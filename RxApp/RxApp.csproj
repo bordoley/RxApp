@@ -35,7 +35,7 @@
     <Compile Include="Stack.cs" />
     <Compile Include="ReactiveObject.cs" />
     <Compile Include="Controller.cs" />
-    <Compile Include="ModelStack.cs" />
+    <Compile Include="NavigationStack.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
   <ItemGroup>

@@ -37,7 +37,7 @@ namespace RxApp
     {
     }
 
-    public interface IModelStack<TModel> : INotifyPropertyChanged
+    public interface INavigationStack<TModel> : INotifyPropertyChanged
         where TModel: INavigableModel
     {
         TModel Current { get; }
@@ -49,7 +49,7 @@ namespace RxApp
     public interface IModelBinder<TModel> : IInitializable
         where TModel : INavigableModel
     {
-        IDisposable Bind(IModelStack<TModel> model);
+        IDisposable Bind(INavigationStack<TModel> model);
     }
         
     public interface IViewPresenter : IInitializable

@@ -14,13 +14,13 @@ namespace RxApp
     public static class AndroidApplication
     {
         public static IRxAndroidApplication Create(
-            IModelStack<IMobileModel> modelStack, 
+            INavigationStack<IMobileModel> navStack, 
             Application androidApplication, 
             IInitializableService mobileApplication,
             Action<IViewFor,IMobileViewModel> setViewModel)
         {
             return new RxAndroidApplicationImpl(
-                modelStack,
+                navStack,
                 androidApplication, 
                 mobileApplication,
                 setViewModel);
@@ -28,7 +28,7 @@ namespace RxApp
 
         private sealed class RxAndroidApplicationImpl : IRxAndroidApplication 
         {
-            private readonly IModelStack<IMobileModel> modelStack;
+            private readonly INavigationStack<IMobileModel> navStack;
             private readonly Application androidApplication;
             private readonly IInitializableService mobileApplication;
             private readonly Action<IViewFor,IMobileViewModel> setViewModel;
@@ -39,12 +39,12 @@ namespace RxApp
             private int activities = 0;
 
             internal RxAndroidApplicationImpl(
-                IModelStack<IMobileModel> modelStack, 
+                INavigationStack<IMobileModel> navStack, 
                 Application androidApplication, 
                 IInitializableService mobileApplication,
                 Action<IViewFor,IMobileViewModel> setViewModel)
             {
-                this.modelStack = modelStack;
+                this.navStack = navStack;
                 this.androidApplication = androidApplication;
                 this.mobileApplication = mobileApplication;
                 this.setViewModel = setViewModel;
@@ -87,9 +87,9 @@ namespace RxApp
 
             public void OnViewCreated(IViewFor view)
             {
-                if (modelStack.Current != null)
+                if (navStack.Current != null)
                 {
-                    setViewModel(view, modelStack.Current);
+                    setViewModel(view, navStack.Current);
                 }
                 else
                 {

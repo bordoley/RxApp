@@ -4,22 +4,22 @@ namespace RxApp
 {
     public static class MobileApplication
     {
-        public static IInitializableService Create(IModelStack<IMobileModel> modelStack, IModelBinder<IMobileModel> binder)
+        public static IInitializableService Create(INavigationStack<IMobileModel> navStack, IModelBinder<IMobileModel> binder)
         {
             // FIXMe: PReconditions/Code contracts
-            return new MobileApplicationImpl(modelStack, binder);
+            return new MobileApplicationImpl(navStack, binder);
         }
 
         private sealed class MobileApplicationImpl : IInitializableService
         {
-            private readonly IModelStack<IMobileModel> modelStack;
+            private readonly INavigationStack<IMobileModel> navStack;
             private readonly IModelBinder<IMobileModel> binder;
 
             private IDisposable modelBinding = null;
 
-            internal MobileApplicationImpl(IModelStack<IMobileModel> modelStack, IModelBinder<IMobileModel> binder)
+            internal MobileApplicationImpl(INavigationStack<IMobileModel> navStack, IModelBinder<IMobileModel> binder)
             {
-                this.modelStack = modelStack;
+                this.navStack = navStack;
                 this.binder = binder;
             }
 
@@ -30,7 +30,7 @@ namespace RxApp
                     throw new NotSupportedException("Calling start more than once in a row without first calling stop");
                 }
 
-                modelBinding = binder.Bind(modelStack);
+                modelBinding = binder.Bind(navStack);
             }
 
             public void Stop()
