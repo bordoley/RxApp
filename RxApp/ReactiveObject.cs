@@ -1,11 +1,11 @@
 ﻿using System;
 using ReactiveUI;
 
-namespace RxMobile
+namespace RxApp
 {
-    public static class ReactiveObjectFactory
+    public static class ReactiveObject
     {
-        internal class InstantiableReactiveObject : ReactiveObject 
+        internal class InstantiableReactiveObject : ReactiveUI.ReactiveObject 
         {
         }
 

@@ -5,7 +5,7 @@ using System.Reactive.Subjects;
 using Android.App;
 using Android.OS;
 
-namespace RxMobile
+namespace RxApp
 {        
     public interface IActivityLifecycleEvents
     {

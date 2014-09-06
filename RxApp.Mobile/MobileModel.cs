@@ -1,7 +1,7 @@
 ﻿using System;
 using ReactiveUI;
 
-namespace RxMobile
+namespace RxApp
 {
     public interface IMobileViewModel : INavigableViewModel, ILifecycleViewModel {}
     public interface IMobileControllerModel : INavigableControllerModel, ILifecycleControllerModel {}

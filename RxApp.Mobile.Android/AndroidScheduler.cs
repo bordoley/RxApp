@@ -3,9 +3,10 @@ using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using Android.OS;
 
-namespace RxMobile
+// Deprecated after the next release of ReactiveUI 6.0.8 I think
+namespace RxApp
 {
-    public sealed class AndroidScheduler : IScheduler
+    internal sealed class AndroidScheduler : IScheduler
     {
         private readonly Handler handler;
 

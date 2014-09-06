@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 
 // A trivial cons list implementation
-namespace RxMobile
+namespace RxApp
 {
     internal interface IStack<T> : IEnumerable<T> 
     {

@@ -2,7 +2,7 @@
 using Android.OS;
 using System;
 
-namespace RxMobile
+namespace RxApp
 {
     public sealed class StartupActivity : Activity
     {
@@ -10,8 +10,8 @@ namespace RxMobile
         {
             base.OnCreate(bundle);
 
-            var app = (RxMobileApplication) this.Application;
-            app.Run();
+            var app = (IRxAndroidApplication) this.Application;
+            app.Start();
             this.Finish();
         }
     }
