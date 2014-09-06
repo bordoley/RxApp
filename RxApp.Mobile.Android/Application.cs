@@ -6,7 +6,6 @@ namespace RxApp
 {
     public abstract class RxAndroidApplicationBase : Application, IRxAndroidApplication 
     {
-
         public RxAndroidApplicationBase(IntPtr javaReference, Android.Runtime.JniHandleOwnership transfer) : base(javaReference, transfer)
         {
 
@@ -76,7 +75,7 @@ namespace RxApp
 
             private int activities = 0;
 
-            private IDisposable navStackBinding = null;
+            private IInitializableService navStackBinding = null;
 
             internal RxAndroidApplicationImpl(
                 INavigationStackViewModel<IMobileModel> navStack, 
@@ -106,23 +105,23 @@ namespace RxApp
 
                 // FIXME: Should not be need after ReactiveUI 6.0.8
                 ReactiveUI.RxApp.MainThreadScheduler = new WaitForDispatcherScheduler(() => AndroidScheduler.UIScheduler());
+                navStackBinding = navStack.Bind(controllerProvider);
+                navStackBinding.Initialize();
             }
 
             public void Start()
             {
-                var binding = navStack.Bind(controllerProvider());
-                binding.Initialize();
-                navStackBinding = binding;
+                navStackBinding.Start();
             }
 
             public void Stop()
             {
-                navStackBinding.Dispose();
+                navStackBinding.Stop();
             }
 
             public void OnTerminate()
             {
-                // FIXME: check if navstackBinding is not null
+                navStackBinding.Dispose();
             }
 
             public void OnViewCreated(IViewFor view)
