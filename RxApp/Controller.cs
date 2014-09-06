@@ -21,7 +21,7 @@ namespace RxApp
             }
         }
 
-        public static IInitializable Bind(this IServiceControllerModel model, IInitializableService deleg)
+        public static IInitializable Bind(this IServiceControllerModel model, IDisposableService deleg)
         {
             // FIXME: Preconditions or code contracts
             return new ServiceController(model, deleg);
@@ -30,10 +30,10 @@ namespace RxApp
         private sealed class ServiceController : IInitializable
         {
             private readonly IServiceControllerModel model;
-            private readonly IInitializableService deleg;
+            private readonly IDisposableService deleg;
             private readonly CompositeDisposable subscription = new CompositeDisposable();
 
-            internal ServiceController(IServiceControllerModel model, IInitializableService deleg)
+            internal ServiceController(IServiceControllerModel model, IDisposableService deleg)
             {
                 this.model = model;
                 this.deleg = deleg;
@@ -41,7 +41,6 @@ namespace RxApp
 
             public void Initialize()
             {
-                deleg.Initialize();
                 subscription.Add (model.Starting.Subscribe(_ => deleg.Start()));
                 subscription.Add (model.Stopping.Subscribe(_ =>  deleg.Stop()));
             }

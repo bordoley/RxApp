@@ -15,7 +15,7 @@ namespace RxApp
         void Stop();
     }
 
-    public interface IInitializableService : IInitializable, IService
+    public interface IDisposableService : IDisposable, IService
     {
     }
 

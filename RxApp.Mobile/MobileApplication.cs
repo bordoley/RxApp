@@ -4,13 +4,13 @@ namespace RxApp
 {
     public static class MobileApplication
     {
-        public static IInitializableService Bind(this INavigationStackViewModel<IMobileModel> navStack, Func<INavigationViewController> controllerProvider)
+        public static IDisposableService Bind(this INavigationStackViewModel<IMobileModel> navStack, Func<INavigationViewController> controllerProvider)
         {
             // FIXMe: PReconditions/Code contracts
             return new MobileApplicationImpl(navStack, controllerProvider);
         }
 
-        private sealed class MobileApplicationImpl : IInitializableService
+        private sealed class MobileApplicationImpl : IDisposableService
         {
             private readonly INavigationStackViewModel<IMobileModel> navStack;
             private readonly Func<INavigationViewController> controllerProvider;
@@ -38,10 +38,6 @@ namespace RxApp
             {
                 navStackBinding.Dispose();
                 navStackBinding = null;
-            }
-
-            public void Initialize()
-            {
             }
 
             public void Dispose()
