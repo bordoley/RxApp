@@ -1,12 +1,91 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Reactive.Linq;
 using Android.App;
 using Android.OS;
 using Android.Views;
 using ReactiveUI;
 
+
 namespace RxApp
 {        
+    public class MobileActivity<TViewModel> : Activity, IViewFor<TViewModel>, INotifyPropertyChanged
+        where TViewModel : class, IMobileViewModel
+    {
+        private readonly IRxActivity<TViewModel> deleg;
+
+        protected MobileActivity()
+        {
+            deleg = RxActivity<TViewModel>.Create(this);
+        }
+
+        public event PropertyChangedEventHandler PropertyChanged
+        {
+            add { deleg.PropertyChanged += value; }
+            remove { deleg.PropertyChanged -= value; }
+        }
+            
+        public TViewModel ViewModel
+        {
+            get
+            {
+                return deleg.ViewModel;
+            }
+
+            set
+            {
+                deleg.ViewModel = value;
+            }
+        }
+
+        object IViewFor.ViewModel
+        {
+            get
+            {
+                return ((IViewFor)deleg).ViewModel;
+            }
+
+            set
+            {
+                ((IViewFor)deleg).ViewModel = value;
+            }
+        }
+
+        protected override void OnCreate(Bundle bundle)
+        {
+            base.OnCreate(bundle);
+            deleg.OnCreate(bundle);
+        }
+
+        protected override void OnDestroy()
+        {
+            base.OnDestroy();
+            deleg.OnDestroy();
+        }
+
+        protected override void OnResume()
+        {
+            base.OnResume();
+            deleg.OnResume();
+        }
+
+        protected override void OnPause()
+        {
+            base.OnPause();
+            deleg.OnPause();
+        }
+
+        public override void OnBackPressed()
+        {
+            deleg.OnBackPressed();
+        }
+
+        public override bool OnOptionsItemSelected(IMenuItem item)
+        {
+            return deleg.OnOptionsItemSelected(item);
+        }
+    }
+
     public interface IRxActivity
     {
         void OnCreate(Bundle bundle);
@@ -22,7 +101,7 @@ namespace RxApp
         bool OnOptionsItemSelected(IMenuItem item);
     }
         
-    public interface IRxActivity<TViewModel> : IViewFor<TViewModel>, IRxActivity
+    public interface IRxActivity<TViewModel> : IRxActivity, IViewFor<TViewModel>, INotifyPropertyChanged
         where TViewModel : class, IMobileViewModel
     {
     }
