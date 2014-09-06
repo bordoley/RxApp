@@ -3,9 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2012
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RxApp", "RxApp\RxApp.csproj", "{CC5733DE-CD02-451A-8371-2F6067A5CE07}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RxApp.Mobile", "RxApp.Mobile\RxApp.Mobile.csproj", "{89E96EE2-9C28-49B3-AD8D-1FFF4AAD9417}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RxApp.Mobile.Android", "RxApp.Mobile.Android\RxApp.Mobile.Android.csproj", "{C25BB5A4-5A21-4837-8F8F-B46673937F6D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RxApp.Android", "RxApp.Android\RxApp.Android.csproj", "{C25BB5A4-5A21-4837-8F8F-B46673937F6D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
