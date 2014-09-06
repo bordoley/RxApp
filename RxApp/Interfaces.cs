@@ -4,9 +4,9 @@ using ReactiveUI;
 
 namespace RxApp
 {
-    public interface IInitable : IDisposable
+    public interface IInitializable : IDisposable
     {
-        void Init();
+        void Initialize();
     }
 
     public interface IService
@@ -15,7 +15,7 @@ namespace RxApp
         void Stop();
     }
 
-    public interface IInitableService : IInitable, IService
+    public interface IInitializableService : IInitializable, IService
     {
     }
 
@@ -46,20 +46,20 @@ namespace RxApp
         void SetRoot(TModel model);
     }
 
-    public interface IModelBinder<TModel> : IInitable
+    public interface IModelBinder<TModel> : IInitializable
         where TModel : INavigableModel
     {
         IDisposable Bind(IModelStack<TModel> model);
     }
         
-    public interface IViewPresenter : IInitable
+    public interface IViewPresenter : IInitializable
     {
         void PresentView(object model);
     }
         
-    public interface IControllerProvider : IInitable
+    public interface IControllerProvider : IInitializable
     {
-        IInitable ProvideController(object model);
+        IInitializable ProvideController(object model);
     }
 
     public interface ILifecycleViewModel 

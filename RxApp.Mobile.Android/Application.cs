@@ -16,7 +16,7 @@ namespace RxApp
         public static IRxAndroidApplication Create(
             IModelStack<IMobileModel> modelStack, 
             Application androidApplication, 
-            IInitableService mobileApplication,
+            IInitializableService mobileApplication,
             Action<IViewFor,IMobileViewModel> setViewModel)
         {
             return new RxAndroidApplicationImpl(
@@ -30,7 +30,7 @@ namespace RxApp
         {
             private readonly IModelStack<IMobileModel> modelStack;
             private readonly Application androidApplication;
-            private readonly IInitableService mobileApplication;
+            private readonly IInitializableService mobileApplication;
             private readonly Action<IViewFor,IMobileViewModel> setViewModel;
 
             // FIXME: Test if this can be immutable
@@ -41,7 +41,7 @@ namespace RxApp
             internal RxAndroidApplicationImpl(
                 IModelStack<IMobileModel> modelStack, 
                 Application androidApplication, 
-                IInitableService mobileApplication,
+                IInitializableService mobileApplication,
                 Action<IViewFor,IMobileViewModel> setViewModel)
             {
                 this.modelStack = modelStack;
@@ -64,7 +64,7 @@ namespace RxApp
                         }
                     });
 
-                mobileApplication.Init();
+                mobileApplication.Initialize();
 
                 // FIXME: Should not be need after ReactiveUI 6.0.8
                 ReactiveUI.RxApp.MainThreadScheduler = new WaitForDispatcherScheduler(() => AndroidScheduler.UIScheduler());

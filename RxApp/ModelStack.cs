@@ -11,7 +11,7 @@ namespace RxApp
 {
     public static class ModelStack
     {
-        public static IInitable Bind<TModel>(this IModelStack<TModel> viewStack, IViewPresenter viewPresenter, IControllerProvider controllerProvider)
+        public static IInitializable Bind<TModel>(this IModelStack<TModel> viewStack, IViewPresenter viewPresenter, IControllerProvider controllerProvider)
             where TModel : INavigableModel
         {
             // FIXME: Preconditions or code contracts
@@ -24,7 +24,7 @@ namespace RxApp
             return new ViewStackImpl<TModel>();
         }
 
-        private sealed class ViewStackBinder<TModel> : IInitable
+        private sealed class ViewStackBinder<TModel> : IInitializable
             where TModel: INavigableModel
         {
             private readonly IModelStack<TModel> viewStack;
@@ -40,17 +40,17 @@ namespace RxApp
                 this.controllerProvider = controllerProvider;
             }
 
-            public void Init()
+            public void Initialize()
             {
                 if (subscription != null)
                 {
                     throw new NotSupportedException("Initialize can only be called once");
                 }
 
-                viewPresenter.Init();
-                controllerProvider.Init();
+                viewPresenter.Initialize();
+                controllerProvider.Initialize();
 
-                IInitable controller = null;
+                IInitializable controller = null;
 
                 subscription =
                     viewStack.WhenAnyValue(x => x.Current).Subscribe(next =>
@@ -65,7 +65,7 @@ namespace RxApp
                             {
                                 viewPresenter.PresentView(next);
                                 controller = controllerProvider.ProvideController(next);
-                                controller.Init();
+                                controller.Initialize();
                             }
                         });
             }

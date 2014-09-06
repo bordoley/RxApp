@@ -5,20 +5,20 @@ namespace RxApp
 {
     public static class Controller
     {
-        public static IInitable DoesNothing()
+        public static IInitializable DoesNothing()
         {
-            return new NullInitable();
+            return new NullInitializable();
         }
 
-        public static IInitable Lifecycled(ILifecycleControllerModel model, IInitableService deleg)
+        public static IInitializable Lifecycled(ILifecycleControllerModel model, IInitializableService deleg)
         {
             // FIXME: Preconditions or code contracts
             return new LifecycleController(model, deleg);
         }
 
-        private sealed class NullInitable : IInitable
+        private sealed class NullInitializable : IInitializable
         {
-            public void Init()
+            public void Initialize()
             {
             }
 
@@ -27,21 +27,21 @@ namespace RxApp
             }
         }
 
-        private sealed class LifecycleController : IInitable
+        private sealed class LifecycleController : IInitializable
         {
             private readonly ILifecycleControllerModel model;
-            private readonly IInitableService deleg;
+            private readonly IInitializableService deleg;
             private readonly CompositeDisposable subscription = new CompositeDisposable();
 
-            internal LifecycleController(ILifecycleControllerModel model, IInitableService deleg)
+            internal LifecycleController(ILifecycleControllerModel model, IInitializableService deleg)
             {
                 this.model = model;
                 this.deleg = deleg;
             }
 
-            public void Init()
+            public void Initialize()
             {
-                deleg.Init();
+                deleg.Initialize();
                 subscription.Add (model.Resuming.Subscribe(_ => deleg.Start()));
                 subscription.Add (model.Pausing.Subscribe(_ =>  deleg.Stop()));
             }

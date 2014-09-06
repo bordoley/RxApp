@@ -30,7 +30,7 @@ namespace RxApp
                 context.StartActivity(intent);
             }
 
-            public void Init() {}
+            public void Initialize() {}
             public void Dispose() {}
         }
     } 

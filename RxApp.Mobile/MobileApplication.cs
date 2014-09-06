@@ -4,13 +4,13 @@ namespace RxApp
 {
     public static class MobileApplication
     {
-        public static IInitableService Create(IModelStack<IMobileModel> modelStack, IModelBinder<IMobileModel> binder)
+        public static IInitializableService Create(IModelStack<IMobileModel> modelStack, IModelBinder<IMobileModel> binder)
         {
             // FIXMe: PReconditions/Code contracts
             return new MobileApplicationImpl(modelStack, binder);
         }
 
-        private sealed class MobileApplicationImpl : IInitableService
+        private sealed class MobileApplicationImpl : IInitializableService
         {
             private readonly IModelStack<IMobileModel> modelStack;
             private readonly IModelBinder<IMobileModel> binder;
@@ -39,9 +39,9 @@ namespace RxApp
                 modelBinding = null;
             }
 
-            public void Init()
+            public void Initialize()
             {
-                binder.Init();
+                binder.Initialize();
             }
 
             public void Dispose()
