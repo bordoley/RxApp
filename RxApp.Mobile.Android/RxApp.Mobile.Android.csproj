@@ -73,10 +73,6 @@
       <Project>{CC5733DE-CD02-451A-8371-2F6067A5CE07}</Project>
       <Name>RxApp</Name>
     </ProjectReference>
-    <ProjectReference Include="..\RxApp.Mobile\RxApp.Mobile.csproj">
-      <Project>{89E96EE2-9C28-49B3-AD8D-1FFF4AAD9417}</Project>
-      <Name>RxApp.Mobile</Name>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
