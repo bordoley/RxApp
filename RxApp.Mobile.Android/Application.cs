@@ -54,13 +54,13 @@ namespace RxApp
         public static IRxAndroidApplication Create(
             INavigationStackViewModel<IMobileModel> navStack, 
             Application androidApplication, 
-            INavigationViewController controller,
+            Func<INavigationViewController> controllerProvider,
             Action<IViewFor,IMobileViewModel> setViewModel)
         {
             return new RxAndroidApplicationImpl(
                 navStack,
                 androidApplication, 
-                controller,
+                controllerProvider,
                 setViewModel);
         }
 
@@ -68,7 +68,7 @@ namespace RxApp
         {
             private readonly INavigationStackViewModel<IMobileModel> navStack;
             private readonly Application androidApplication;
-            private readonly INavigationViewController controller;
+            private readonly Func<INavigationViewController> controllerProvider;
             private readonly Action<IViewFor,IMobileViewModel> setViewModel;
 
             // FIXME: Test if this can be immutable
@@ -81,12 +81,12 @@ namespace RxApp
             internal RxAndroidApplicationImpl(
                 INavigationStackViewModel<IMobileModel> navStack, 
                 Application androidApplication, 
-                INavigationViewController controller,
+                Func<INavigationViewController> controllerProvider,
                 Action<IViewFor,IMobileViewModel> setViewModel)
             {
                 this.navStack = navStack;
                 this.androidApplication = androidApplication;
-                this.controller = controller;
+                this.controllerProvider = controllerProvider;
                 this.setViewModel = setViewModel;
             }
 
@@ -104,15 +104,13 @@ namespace RxApp
                         }
                     });
 
-                controller.Initialize();
-
                 // FIXME: Should not be need after ReactiveUI 6.0.8
                 ReactiveUI.RxApp.MainThreadScheduler = new WaitForDispatcherScheduler(() => AndroidScheduler.UIScheduler());
             }
 
             public void Start()
             {
-                var binding = navStack.Bind(controller);
+                var binding = navStack.Bind(controllerProvider());
                 binding.Initialize();
                 navStackBinding = binding;
             }
@@ -124,7 +122,7 @@ namespace RxApp
 
             public void OnTerminate()
             {
-                controller.Dispose();
+                // FIXME: check if navstackBinding is not null
             }
 
             public void OnViewCreated(IViewFor view)
