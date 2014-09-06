@@ -57,7 +57,7 @@ namespace RxApp
     public interface INavigationViewController : IInitializable
     {
         void PresentView(object model);
-        IInitializable ProvideController(object model);
+        IDisposable ProvideController(object model);
     }
 
     public interface IServiceViewModel 

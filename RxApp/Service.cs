@@ -3,37 +3,23 @@ using System.Reactive.Disposables;
 
 namespace RxApp
 {
-    public static class Controller
+    public static class Service
     {
-        public static IInitializable DoesNothing()
-        {
-            return new DoesNothingInitializable();
-        }
-
-        private sealed class DoesNothingInitializable : IInitializable
-        {
-            public void Initialize()
-            {
-            }
-
-            public void Dispose()
-            {
-            }
-        }
-
-        public static IInitializable Bind(this IServiceControllerModel model, IDisposableService deleg)
+        public static IDisposable Bind(this IServiceControllerModel model, IDisposableService deleg)
         {
             // FIXME: Preconditions or code contracts
-            return new ServiceController(model, deleg);
+            var retval = new ServiceControllerBinding(model, deleg);
+            retval.Initialize();
+            return retval;
         }
 
-        private sealed class ServiceController : IInitializable
+        private sealed class ServiceControllerBinding : IInitializable
         {
             private readonly IServiceControllerModel model;
             private readonly IDisposableService deleg;
             private readonly CompositeDisposable subscription = new CompositeDisposable();
 
-            internal ServiceController(IServiceControllerModel model, IDisposableService deleg)
+            internal ServiceControllerBinding(IServiceControllerModel model, IDisposableService deleg)
             {
                 this.model = model;
                 this.deleg = deleg;

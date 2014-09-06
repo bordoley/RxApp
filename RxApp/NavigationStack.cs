@@ -11,14 +11,16 @@ namespace RxApp
 {
     public static class NavigationStack
     {
-        public static IInitializable Bind<TModel>(this INavigationStackViewModel<TModel> navStack, INavigationViewController navViewController)
+        public static IDisposable Bind<TModel>(this INavigationStackViewModel<TModel> navStack, INavigationViewController navViewController)
             where TModel : INavigableModel
         {
             // FIXME: Preconditions or code contracts
-            return new ViewStackBinder<TModel>(navStack, navViewController);
+            var retval = new NavigationStackBinding<TModel>(navStack, navViewController);
+            retval.Initialize();
+            return retval;
         }
 
-        private sealed class ViewStackBinder<TModel> : IInitializable
+        private sealed class NavigationStackBinding<TModel> : IInitializable
             where TModel: INavigableModel
         {
             private readonly INavigationStackViewModel<TModel> navStack;
@@ -26,7 +28,7 @@ namespace RxApp
 
             private IDisposable subscription = null;
 
-            internal ViewStackBinder(INavigationStackViewModel<TModel> navStack, INavigationViewController navViewController)
+            internal NavigationStackBinding(INavigationStackViewModel<TModel> navStack, INavigationViewController navViewController)
             {
                 this.navStack = navStack;
                 this.navViewController = navViewController;
@@ -41,7 +43,7 @@ namespace RxApp
 
                 navViewController.Initialize();
 
-                IInitializable controller = null;
+                IDisposable controller = null;
 
                 subscription =
                     navStack.WhenAnyValue(x => x.Current).Subscribe(next =>
@@ -56,7 +58,6 @@ namespace RxApp
                             {
                                 navViewController.PresentView(next);
                                 controller = navViewController.ProvideController(next);
-                                controller.Initialize();
                             }
                         });
             }

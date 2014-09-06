@@ -15,7 +15,7 @@ namespace RxApp
             private readonly INavigationStackViewModel<IMobileModel> navStack;
             private readonly Func<INavigationViewController> controllerProvider;
 
-            private IInitializable navStackBinding = null;
+            private IDisposable navStackBinding = null;
 
             internal MobileApplicationImpl(INavigationStackViewModel<IMobileModel> navStack, Func<INavigationViewController> controllerProvider)
             {
@@ -31,7 +31,6 @@ namespace RxApp
                 }
 
                 navStackBinding = navStack.Bind(controllerProvider());
-                navStackBinding.Initialize();
             }
 
             public void Stop()
