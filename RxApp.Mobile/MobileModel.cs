@@ -3,17 +3,17 @@ using ReactiveUI;
 
 namespace RxApp
 {
-    public interface IMobileViewModel : INavigableViewModel, ILifecycleViewModel {}
-    public interface IMobileControllerModel : INavigableControllerModel, ILifecycleControllerModel {}
-    public interface IMobileModel : IMobileViewModel, IMobileControllerModel, INavigableModel, ILifecycleModel {}
+    public interface IMobileViewModel : INavigableViewModel, IServiceViewModel {}
+    public interface IMobileControllerModel : INavigableControllerModel, IServiceControllerModel {}
+    public interface IMobileModel : IMobileViewModel, IMobileControllerModel, INavigableModel, IServiceModel {}
 
     public sealed class MobileModel : IMobileModel
     {
         private readonly IReactiveCommand<object> back = ReactiveCommand.Create();
         private readonly IReactiveCommand<object> up = ReactiveCommand.Create();
         private readonly IReactiveCommand<object> close = ReactiveCommand.Create();
-        private readonly IReactiveCommand<object> pausing = ReactiveCommand.Create();
-        private readonly IReactiveCommand<object> resuming = ReactiveCommand.Create();
+        private readonly IReactiveCommand<object> stopping = ReactiveCommand.Create();
+        private readonly IReactiveCommand<object> starting = ReactiveCommand.Create();
 
         IObservable<object> INavigableControllerModel.Back
         {
@@ -63,35 +63,35 @@ namespace RxApp
             }
         }
 
-        IObservable<object> ILifecycleControllerModel.Pausing
+        IObservable<object> IServiceControllerModel.Stopping
         {
             get
             {
-                return pausing;
+                return stopping;
             }
         }
 
-        public IReactiveCommand<object> Pausing
+        public IReactiveCommand<object> Stopping
         {
             get
             {
-                return pausing;
+                return stopping;
             }
         }
 
-        IObservable<object> ILifecycleControllerModel.Resuming
+        IObservable<object> IServiceControllerModel.Starting
         {
             get
             {
-                return resuming;
+                return starting;
             }
         }
 
-        public IReactiveCommand<object> Resuming
+        public IReactiveCommand<object> Starting
         {
             get
             {
-                return resuming;
+                return starting;
             }
         }  
     }

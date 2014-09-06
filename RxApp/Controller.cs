@@ -7,16 +7,16 @@ namespace RxApp
     {
         public static IInitializable DoesNothing()
         {
-            return new NullInitializable();
+            return new DoesNothingInitializable();
         }
 
-        public static IInitializable Lifecycled(ILifecycleControllerModel model, IInitializableService deleg)
+        public static IInitializable Bind(this IServiceControllerModel model, IInitializableService deleg)
         {
             // FIXME: Preconditions or code contracts
-            return new LifecycleController(model, deleg);
+            return new ServiceController(model, deleg);
         }
 
-        private sealed class NullInitializable : IInitializable
+        private sealed class DoesNothingInitializable : IInitializable
         {
             public void Initialize()
             {
@@ -27,13 +27,13 @@ namespace RxApp
             }
         }
 
-        private sealed class LifecycleController : IInitializable
+        private sealed class ServiceController : IInitializable
         {
-            private readonly ILifecycleControllerModel model;
+            private readonly IServiceControllerModel model;
             private readonly IInitializableService deleg;
             private readonly CompositeDisposable subscription = new CompositeDisposable();
 
-            internal LifecycleController(ILifecycleControllerModel model, IInitializableService deleg)
+            internal ServiceController(IServiceControllerModel model, IInitializableService deleg)
             {
                 this.model = model;
                 this.deleg = deleg;
@@ -42,8 +42,8 @@ namespace RxApp
             public void Initialize()
             {
                 deleg.Initialize();
-                subscription.Add (model.Resuming.Subscribe(_ => deleg.Start()));
-                subscription.Add (model.Pausing.Subscribe(_ =>  deleg.Stop()));
+                subscription.Add (model.Starting.Subscribe(_ => deleg.Start()));
+                subscription.Add (model.Stopping.Subscribe(_ =>  deleg.Stop()));
             }
 
             public void Dispose()

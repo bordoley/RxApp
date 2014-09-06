@@ -62,19 +62,19 @@ namespace RxApp
         IInitializable ProvideController(object model);
     }
 
-    public interface ILifecycleViewModel 
+    public interface IServiceViewModel 
     {
-        IReactiveCommand<object> Pausing { get; }
-        IReactiveCommand<object> Resuming { get; }
+        IReactiveCommand<object> Starting { get; }
+        IReactiveCommand<object> Stopping { get; }
     }
 
-    public interface ILifecycleControllerModel
+    public interface IServiceControllerModel
     {
-        IObservable<object> Pausing { get; }
-        IObservable<object> Resuming { get; }
+        IObservable<object> Starting { get; }
+        IObservable<object> Stopping { get; }
     }
 
-    public interface ILifecycleModel : ILifecycleViewModel, ILifecycleControllerModel
+    public interface IServiceModel : IServiceViewModel, IServiceControllerModel
     {
     }
 }

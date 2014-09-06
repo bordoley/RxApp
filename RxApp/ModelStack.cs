@@ -168,7 +168,5 @@ namespace RxApp
                 notify.RaisePropertyChanged("Current");
             }
         }
-            
-
     }
 }
