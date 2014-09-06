@@ -11,33 +11,25 @@ namespace RxApp
 {
     public static class NavigationStack
     {
-        public static IInitializable Bind<TModel>(this INavigationStack<TModel> navStack, IViewPresenter viewPresenter, IControllerProvider controllerProvider)
+        public static IInitializable Bind<TModel>(this INavigationStackViewModel<TModel> navStack, INavigationViewController navViewController)
             where TModel : INavigableModel
         {
             // FIXME: Preconditions or code contracts
-            return new ViewStackBinder<TModel>(navStack, viewPresenter, controllerProvider);
-        }
-
-        public static INavigationStack<TModel> Create<TModel> ()
-            where TModel: class, INavigableModel
-        {
-            return new ViewStackImpl<TModel>();
+            return new ViewStackBinder<TModel>(navStack, navViewController);
         }
 
         private sealed class ViewStackBinder<TModel> : IInitializable
             where TModel: INavigableModel
         {
-            private readonly INavigationStack<TModel> navStack;
-            private readonly IViewPresenter viewPresenter;
-            private readonly IControllerProvider controllerProvider;
+            private readonly INavigationStackViewModel<TModel> navStack;
+            private readonly INavigationViewController navViewController;
 
             private IDisposable subscription = null;
 
-            internal ViewStackBinder(INavigationStack<TModel> navStack, IViewPresenter viewPresenter, IControllerProvider controllerProvider)
+            internal ViewStackBinder(INavigationStackViewModel<TModel> navStack, INavigationViewController navViewController)
             {
                 this.navStack = navStack;
-                this.viewPresenter = viewPresenter;
-                this.controllerProvider = controllerProvider;
+                this.navViewController = navViewController;
             }
 
             public void Initialize()
@@ -47,8 +39,7 @@ namespace RxApp
                     throw new NotSupportedException("Initialize can only be called once");
                 }
 
-                viewPresenter.Initialize();
-                controllerProvider.Initialize();
+                navViewController.Initialize();
 
                 IInitializable controller = null;
 
@@ -63,8 +54,8 @@ namespace RxApp
 
                             if (next != null)
                             {
-                                viewPresenter.PresentView(next);
-                                controller = controllerProvider.ProvideController(next);
+                                navViewController.PresentView(next);
+                                controller = navViewController.ProvideController(next);
                                 controller.Initialize();
                             }
                         });
@@ -73,12 +64,17 @@ namespace RxApp
             public void Dispose()
             {
                 subscription.Dispose();
-                viewPresenter.Dispose();
-                controllerProvider.Dispose();
+                navViewController.Dispose();
             }
         }
 
-        private sealed class ViewStackImpl<TModel> : INavigationStack<TModel> 
+        public static INavigationStackModel<TModel> Create<TModel> ()
+            where TModel: class, INavigableModel
+        {
+            return new ViewStackImpl<TModel>();
+        }
+
+        private sealed class ViewStackImpl<TModel> : INavigationStackModel<TModel> 
             where TModel: class, INavigableModel
         {
             private static void Close(IEnumerable<INavigableControllerModel> views) 

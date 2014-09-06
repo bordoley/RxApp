@@ -4,55 +4,53 @@ namespace RxApp
 {
     public static class MobileApplication
     {
-        public static IInitializableService Create(INavigationStack<IMobileModel> navStack, IModelBinder<IMobileModel> binder)
+        public static IInitializableService Bind(this INavigationStackViewModel<IMobileModel> navStack, Func<INavigationViewController> controllerProvider)
         {
             // FIXMe: PReconditions/Code contracts
-            return new MobileApplicationImpl(navStack, binder);
+            return new MobileApplicationImpl(navStack, controllerProvider);
         }
 
         private sealed class MobileApplicationImpl : IInitializableService
         {
-            private readonly INavigationStack<IMobileModel> navStack;
-            private readonly IModelBinder<IMobileModel> binder;
+            private readonly INavigationStackViewModel<IMobileModel> navStack;
+            private readonly Func<INavigationViewController> controllerProvider;
 
-            private IDisposable modelBinding = null;
+            private IInitializable navStackBinding = null;
 
-            internal MobileApplicationImpl(INavigationStack<IMobileModel> navStack, IModelBinder<IMobileModel> binder)
+            internal MobileApplicationImpl(INavigationStackViewModel<IMobileModel> navStack, Func<INavigationViewController> controllerProvider)
             {
                 this.navStack = navStack;
-                this.binder = binder;
+                this.controllerProvider = controllerProvider;
             }
 
             public void Start()
             {
-                if (modelBinding != null)
+                if (navStackBinding != null)
                 {
                     throw new NotSupportedException("Calling start more than once in a row without first calling stop");
                 }
 
-                modelBinding = binder.Bind(navStack);
+                navStackBinding = navStack.Bind(controllerProvider());
+                navStackBinding.Initialize();
             }
 
             public void Stop()
             {
-                modelBinding.Dispose();
-                modelBinding = null;
+                navStackBinding.Dispose();
+                navStackBinding = null;
             }
 
             public void Initialize()
             {
-                binder.Initialize();
             }
 
             public void Dispose()
             {
-                if (modelBinding != null)
+                if (navStackBinding != null)
                 {
-                    modelBinding.Dispose();
-                    modelBinding = null;
+                    navStackBinding.Dispose();
+                    navStackBinding = null;
                 }
-
-                binder.Dispose();
             }
         }
     }

@@ -10,12 +10,6 @@ namespace RxApp
             return new DoesNothingInitializable();
         }
 
-        public static IInitializable Bind(this IServiceControllerModel model, IInitializableService deleg)
-        {
-            // FIXME: Preconditions or code contracts
-            return new ServiceController(model, deleg);
-        }
-
         private sealed class DoesNothingInitializable : IInitializable
         {
             public void Initialize()
@@ -25,6 +19,12 @@ namespace RxApp
             public void Dispose()
             {
             }
+        }
+
+        public static IInitializable Bind(this IServiceControllerModel model, IInitializableService deleg)
+        {
+            // FIXME: Preconditions or code contracts
+            return new ServiceController(model, deleg);
         }
 
         private sealed class ServiceController : IInitializable

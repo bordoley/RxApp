@@ -4,6 +4,44 @@ using System;
 
 namespace RxApp
 {
+    public abstract class RxAndroidApplicationBase : Application, IRxAndroidApplication 
+    {
+
+        public RxAndroidApplicationBase(IntPtr javaReference, Android.Runtime.JniHandleOwnership transfer) : base(javaReference, transfer)
+        {
+
+        }
+
+        protected abstract IRxAndroidApplication Delegate { get; }
+
+        public override void OnCreate()
+        {
+            base.OnCreate();
+            Delegate.OnCreate();
+        }
+
+        public override void OnTerminate()
+        {
+            base.OnTerminate();
+            Delegate.OnTerminate();
+        }
+
+        public void OnViewCreated(IViewFor view)
+        {
+            Delegate.OnViewCreated(view);
+        }
+
+        public void Start()
+        {
+            Delegate.Start();
+        }
+
+        public void Stop()
+        {
+            Delegate.Stop();
+        }
+    }
+
     public interface IRxAndroidApplication : IService
     {
         void OnCreate();
@@ -11,26 +49,26 @@ namespace RxApp
         void OnViewCreated(IViewFor view);
     }
 
-    public static class AndroidApplication
+    public static class RxAndroidApplication
     {
         public static IRxAndroidApplication Create(
-            INavigationStack<IMobileModel> navStack, 
+            INavigationStackViewModel<IMobileModel> navStack, 
             Application androidApplication, 
-            IInitializableService mobileApplication,
+            INavigationViewController controller,
             Action<IViewFor,IMobileViewModel> setViewModel)
         {
             return new RxAndroidApplicationImpl(
                 navStack,
                 androidApplication, 
-                mobileApplication,
+                controller,
                 setViewModel);
         }
 
         private sealed class RxAndroidApplicationImpl : IRxAndroidApplication 
         {
-            private readonly INavigationStack<IMobileModel> navStack;
+            private readonly INavigationStackViewModel<IMobileModel> navStack;
             private readonly Application androidApplication;
-            private readonly IInitializableService mobileApplication;
+            private readonly INavigationViewController controller;
             private readonly Action<IViewFor,IMobileViewModel> setViewModel;
 
             // FIXME: Test if this can be immutable
@@ -38,15 +76,17 @@ namespace RxApp
 
             private int activities = 0;
 
+            private IDisposable navStackBinding = null;
+
             internal RxAndroidApplicationImpl(
-                INavigationStack<IMobileModel> navStack, 
+                INavigationStackViewModel<IMobileModel> navStack, 
                 Application androidApplication, 
-                IInitializableService mobileApplication,
+                INavigationViewController controller,
                 Action<IViewFor,IMobileViewModel> setViewModel)
             {
                 this.navStack = navStack;
                 this.androidApplication = androidApplication;
-                this.mobileApplication = mobileApplication;
+                this.controller = controller;
                 this.setViewModel = setViewModel;
             }
 
@@ -64,7 +104,7 @@ namespace RxApp
                         }
                     });
 
-                mobileApplication.Initialize();
+                controller.Initialize();
 
                 // FIXME: Should not be need after ReactiveUI 6.0.8
                 ReactiveUI.RxApp.MainThreadScheduler = new WaitForDispatcherScheduler(() => AndroidScheduler.UIScheduler());
@@ -72,17 +112,19 @@ namespace RxApp
 
             public void Start()
             {
-                mobileApplication.Start();
+                var binding = navStack.Bind(controller);
+                binding.Initialize();
+                navStackBinding = binding;
             }
 
             public void Stop()
             {
-                mobileApplication.Stop();
+                navStackBinding.Dispose();
             }
 
             public void OnTerminate()
             {
-                mobileApplication.Dispose();
+                controller.Dispose();
             }
 
             public void OnViewCreated(IViewFor view)

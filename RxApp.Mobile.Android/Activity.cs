@@ -9,12 +9,12 @@ using ReactiveUI;
 
 namespace RxApp
 {        
-    public class MobileActivity<TViewModel> : Activity, IViewFor<TViewModel>, INotifyPropertyChanged
+    public class RxActivityBase<TViewModel> : Activity, IViewFor<TViewModel>, INotifyPropertyChanged
         where TViewModel : class, IMobileViewModel
     {
         private readonly IRxActivity<TViewModel> deleg;
 
-        protected MobileActivity()
+        protected RxActivityBase()
         {
             deleg = RxActivity<TViewModel>.Create(this);
         }
