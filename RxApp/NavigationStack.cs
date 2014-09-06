@@ -69,6 +69,53 @@ namespace RxApp
             }
         }
 
+        public static IDisposableService Bind<TModel>(this INavigationStackViewModel<TModel> navStack, Func<INavigationViewController> controllerProvider)
+            where TModel : INavigableModel
+        {
+            // FIXMe: PReconditions/Code contracts
+            return new NavigationStackService<TModel>(navStack, controllerProvider);
+        }
+
+        private sealed class NavigationStackService<TModel> : IDisposableService
+            where TModel : INavigableModel
+        {
+            private readonly INavigationStackViewModel<TModel> navStack;
+            private readonly Func<INavigationViewController> controllerProvider;
+
+            private IDisposable navStackBinding = null;
+
+            internal NavigationStackService(INavigationStackViewModel<TModel> navStack, Func<INavigationViewController> controllerProvider)
+            {
+                this.navStack = navStack;
+                this.controllerProvider = controllerProvider;
+            }
+
+            public void Start()
+            {
+                if (navStackBinding != null)
+                {
+                    throw new NotSupportedException("Calling start more than once in a row without first calling stop");
+                }
+
+                navStackBinding = navStack.Bind(controllerProvider());
+            }
+
+            public void Stop()
+            {
+                navStackBinding.Dispose();
+                navStackBinding = null;
+            }
+
+            public void Dispose()
+            {
+                if (navStackBinding != null)
+                {
+                    navStackBinding.Dispose();
+                    navStackBinding = null;
+                }
+            }
+        }
+
         public static INavigationStackModel<TModel> Create<TModel> ()
             where TModel: class, INavigableModel
         {
