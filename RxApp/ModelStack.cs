@@ -11,11 +11,11 @@ namespace RxApp
 {
     public static class ModelStack
     {
-        public static IInitializable Bind<TModel>(this IModelStack<TModel> viewStack, IViewPresenter viewPresenter, IControllerProvider controllerProvider)
+        public static IInitializable Bind<TModel>(this IModelStack<TModel> modelStack, IViewPresenter viewPresenter, IControllerProvider controllerProvider)
             where TModel : INavigableModel
         {
             // FIXME: Preconditions or code contracts
-            return new ViewStackBinder<TModel>(viewStack, viewPresenter, controllerProvider);
+            return new ViewStackBinder<TModel>(modelStack, viewPresenter, controllerProvider);
         }
 
         public static IModelStack<TModel> Create<TModel> ()
@@ -27,15 +27,15 @@ namespace RxApp
         private sealed class ViewStackBinder<TModel> : IInitializable
             where TModel: INavigableModel
         {
-            private readonly IModelStack<TModel> viewStack;
+            private readonly IModelStack<TModel> modelStack;
             private readonly IViewPresenter viewPresenter;
             private readonly IControllerProvider controllerProvider;
 
             private IDisposable subscription = null;
 
-            internal ViewStackBinder(IModelStack<TModel> viewStack, IViewPresenter viewPresenter, IControllerProvider controllerProvider)
+            internal ViewStackBinder(IModelStack<TModel> modelStack, IViewPresenter viewPresenter, IControllerProvider controllerProvider)
             {
-                this.viewStack = viewStack;
+                this.modelStack = modelStack;
                 this.viewPresenter = viewPresenter;
                 this.controllerProvider = controllerProvider;
             }
@@ -53,7 +53,7 @@ namespace RxApp
                 IInitializable controller = null;
 
                 subscription =
-                    viewStack.WhenAnyValue(x => x.Current).Subscribe(next =>
+                    modelStack.WhenAnyValue(x => x.Current).Subscribe(next =>
                         {
                             if (controller != null)
                             {
@@ -92,7 +92,7 @@ namespace RxApp
             }
 
             private readonly IReactiveObject notify = ReactiveObject.Create();
-            private IStack<TModel> viewStack = Stack<TModel>.Empty;
+            private IStack<TModel> modelStack = Stack<TModel>.Empty;
             private IDisposable backSubscription = null;
 
             internal ViewStackImpl()
@@ -109,13 +109,13 @@ namespace RxApp
             { 
                 get
                 {
-                    return viewStack.FirstOrDefault();
+                    return modelStack.FirstOrDefault();
                 }
             }
 
             private void GotoRoot()
             {
-                var reversed = viewStack.Reverse();
+                var reversed = modelStack.Reverse();
                 if (!reversed.IsEmpty())
                 {
                     Close(reversed.Tail);
@@ -126,19 +126,19 @@ namespace RxApp
             public void Push(TModel model)
             {
                 // FIXME: Preconditions or Code contract check for null
-                Update(viewStack.Push(model));
+                Update(modelStack.Push(model));
             }
 
             private void Pop()
             {
-                Close(Stack<TModel>.Empty.Push(viewStack.Head));
-                Update(viewStack.Tail);
+                Close(Stack<TModel>.Empty.Push(modelStack.Head));
+                Update(modelStack.Tail);
             }
 
             public void SetRoot(TModel model)
             {
                 // FIXME: Preconditions or Code contract check for null
-                Close(viewStack);
+                Close(modelStack);
                 Update(Stack<TModel>.Empty.Push(model));
             }
 
@@ -151,9 +151,9 @@ namespace RxApp
                 }
 
                 var newSubscription = new CompositeDisposable();
-                if (!viewStack.IsEmpty())
+                if (!modelStack.IsEmpty())
                 {   
-                    INavigableControllerModel view = viewStack.First();
+                    INavigableControllerModel view = modelStack.First();
                     newSubscription.Add(view.Back.FirstAsync().Subscribe(_ => this.Pop()));
                     newSubscription.Add(view.Up.FirstAsync().Subscribe(_ => this.GotoRoot()));
                 }
@@ -163,7 +163,7 @@ namespace RxApp
 
             private void Update(IStack<TModel> newStack)
             {
-                viewStack = newStack;
+                modelStack = newStack;
                 SubscribeToBack();
                 notify.RaisePropertyChanged("Current");
             }
