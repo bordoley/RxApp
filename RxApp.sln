@@ -1,0 +1,32 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RxApp", "RxApp\RxApp.csproj", "{CC5733DE-CD02-451A-8371-2F6067A5CE07}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RxApp.Mobile", "RxApp.Mobile\RxApp.Mobile.csproj", "{89E96EE2-9C28-49B3-AD8D-1FFF4AAD9417}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RxApp.Mobile.Android", "RxApp.Mobile.Android\RxApp.Mobile.Android.csproj", "{C25BB5A4-5A21-4837-8F8F-B46673937F6D}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{89E96EE2-9C28-49B3-AD8D-1FFF4AAD9417}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{89E96EE2-9C28-49B3-AD8D-1FFF4AAD9417}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{89E96EE2-9C28-49B3-AD8D-1FFF4AAD9417}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{89E96EE2-9C28-49B3-AD8D-1FFF4AAD9417}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C25BB5A4-5A21-4837-8F8F-B46673937F6D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C25BB5A4-5A21-4837-8F8F-B46673937F6D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C25BB5A4-5A21-4837-8F8F-B46673937F6D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C25BB5A4-5A21-4837-8F8F-B46673937F6D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CC5733DE-CD02-451A-8371-2F6067A5CE07}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CC5733DE-CD02-451A-8371-2F6067A5CE07}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CC5733DE-CD02-451A-8371-2F6067A5CE07}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CC5733DE-CD02-451A-8371-2F6067A5CE07}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(MonoDevelopProperties) = preSolution
+		StartupItem = RxApp\RxApp.csproj
+	EndGlobalSection
+EndGlobal
