@@ -57,7 +57,7 @@ namespace RxApp
                             if (next != null)
                             {
                                 navViewController.PresentView(next);
-                                controller = navViewController.ProvideController(next);
+                                controller = navViewController.AttachController(next);
                             }
                         });
             }
