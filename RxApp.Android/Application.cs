@@ -53,14 +53,12 @@ namespace RxApp
         public static IRxAndroidApplication Create(
             INavigationStackViewModel<IMobileModel> navStack, 
             Application androidApplication, 
-            Func<INavigationViewController> controllerProvider,
-            Action<IViewFor,IMobileViewModel> setViewModel)
+            Func<INavigationViewController> controllerProvider)
         {
             return new RxAndroidApplicationImpl(
                 navStack,
                 androidApplication, 
-                controllerProvider,
-                setViewModel);
+                controllerProvider);
         }
 
         private sealed class RxAndroidApplicationImpl : IRxAndroidApplication 
@@ -68,7 +66,6 @@ namespace RxApp
             private readonly INavigationStackViewModel<IMobileModel> navStack;
             private readonly Application androidApplication;
             private readonly Func<INavigationViewController> controllerProvider;
-            private readonly Action<IViewFor,IMobileViewModel> setViewModel;
 
             // FIXME: Test if this can be immutable
             private IActivityLifecycleEvents events = null;
@@ -80,13 +77,11 @@ namespace RxApp
             internal RxAndroidApplicationImpl(
                 INavigationStackViewModel<IMobileModel> navStack, 
                 Application androidApplication, 
-                Func<INavigationViewController> controllerProvider,
-                Action<IViewFor,IMobileViewModel> setViewModel)
+                Func<INavigationViewController> controllerProvider)
             {
                 this.navStack = navStack;
                 this.androidApplication = androidApplication;
                 this.controllerProvider = controllerProvider;
-                this.setViewModel = setViewModel;
             }
 
             public void OnCreate()
@@ -127,7 +122,7 @@ namespace RxApp
             {
                 if (navStack.Current != null)
                 {
-                    setViewModel(view, navStack.Current);
+                    view.ViewModel = navStack.Current;
                 }
                 else
                 {

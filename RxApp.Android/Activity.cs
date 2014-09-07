@@ -16,7 +16,7 @@ namespace RxApp
 
         protected RxActivityBase()
         {
-            deleg = RxActivity<TViewModel>.Create(this);
+            deleg = RxActivity.Create<TViewModel>(this);
         }
 
         public event PropertyChangedEventHandler PropertyChanged
@@ -106,17 +106,18 @@ namespace RxApp
     {
     }
 
-    public static class RxActivity<TViewModel>
-        where TViewModel : class, IMobileViewModel
+    public static class RxActivity
     {
-        public static IRxActivity<TViewModel> Create(Activity activity)
+        public static IRxActivity<TViewModel> Create<TViewModel>(Activity activity)
+            where TViewModel: class, IMobileViewModel
         {
             // FIXME: Preconditions/Contracts
-            return new RxActivityImpl(activity);
+            return new RxActivityImpl<TViewModel>(activity);
         }
 
         // Inheritance kind of evil, but this is a super hidden class
-        private sealed class RxActivityImpl : ReactiveUI.ReactiveObject, IRxActivity<TViewModel>
+        private sealed class RxActivityImpl<TViewModel> : ReactiveUI.ReactiveObject, IRxActivity<TViewModel>
+             where TViewModel: class, IMobileViewModel
         {
             private readonly Activity activity;
             private TViewModel viewModel;
