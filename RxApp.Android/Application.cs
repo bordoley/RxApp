@@ -53,7 +53,7 @@ namespace RxApp
     {
         public static IRxAndroidApplication Create(
             INavigationStackViewModel<IMobileModel> navStack, 
-            Func<INavigableModelBinder> binderProvider)
+            Func<IModelBinder<IMobileModel>> binderProvider)
         {
             return new RxAndroidApplicationImpl(navStack, binderProvider);
         }
@@ -61,13 +61,13 @@ namespace RxApp
         private sealed class RxAndroidApplicationImpl : IRxAndroidApplication 
         {
             private readonly INavigationStackViewModel<IMobileModel> navStack;
-            private readonly Func<INavigableModelBinder> binderProvider;
+            private readonly Func<IModelBinder<IMobileModel>> binderProvider;
 
             private IDisposableService navStackService = null;
 
             internal RxAndroidApplicationImpl(
                 INavigationStackViewModel<IMobileModel> navStack, 
-                Func<INavigableModelBinder> binderProvider)
+                Func<IModelBinder<IMobileModel>> binderProvider)
             {
                 this.navStack = navStack;
                 this.binderProvider = binderProvider;

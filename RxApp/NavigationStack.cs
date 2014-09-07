@@ -11,7 +11,7 @@ namespace RxApp
 {
     public static class NavigationStack
     {
-        public static IDisposable Bind<TModel>(this INavigationStackViewModel<TModel> navStack, INavigableModelBinder binder)
+        public static IDisposable Bind<TModel>(this INavigationStackViewModel<TModel> navStack, IModelBinder<TModel> binder)
             where TModel : INavigableModel
         {
             // FIXME: Preconditions or code contracts
@@ -24,11 +24,11 @@ namespace RxApp
             where TModel: INavigableModel
         {
             private readonly INavigationStackViewModel<TModel> navStack;
-            private readonly INavigableModelBinder binder;
+            private readonly IModelBinder<TModel> binder;
 
             private IDisposable subscription = null;
 
-            internal NavigationStackBinding(INavigationStackViewModel<TModel> navStack, INavigableModelBinder binder)
+            internal NavigationStackBinding(INavigationStackViewModel<TModel> navStack, IModelBinder<TModel> binder)
             {
                 this.navStack = navStack;
                 this.binder = binder;
@@ -43,21 +43,22 @@ namespace RxApp
 
                 binder.Initialize();
 
-                IDisposable controller = null;
+                IDisposable binding = null;
 
+                // FIXME: Add an onComplete listener so that when the subscription is Disposed
+                // the binding is also is disposed in not null
                 subscription =
                     navStack.WhenAnyValue(x => x.Current).Subscribe(next =>
                         {
-                            if (controller != null)
+                            if (binding  != null)
                             {
-                                controller.Dispose();
-                                controller = null;
+                                binding.Dispose();
+                                binding = null;
                             }
 
                             if (next != null)
                             {
-                                binder.PresentView(next);
-                                controller = binder.AttachController(next);
+                                binding = binder.Bind(next);
                             }
                         });
             }
@@ -69,7 +70,7 @@ namespace RxApp
             }
         }
 
-        public static IDisposableService Bind<TModel>(this INavigationStackViewModel<TModel> navStack, Func<INavigableModelBinder> binderProvider)
+        public static IDisposableService Bind<TModel>(this INavigationStackViewModel<TModel> navStack, Func<IModelBinder<TModel>> binderProvider)
             where TModel : INavigableModel
         {
             // FIXMe: PReconditions/Code contracts
@@ -80,11 +81,11 @@ namespace RxApp
             where TModel : INavigableModel
         {
             private readonly INavigationStackViewModel<TModel> navStack;
-            private readonly Func<INavigableModelBinder> binderProvider;
+            private readonly Func<IModelBinder<TModel>> binderProvider;
 
             private IDisposable navStackBinding = null;
 
-            internal NavigationStackService(INavigationStackViewModel<TModel> navStack, Func<INavigableModelBinder> binderProvider)
+            internal NavigationStackService(INavigationStackViewModel<TModel> navStack, Func<IModelBinder<TModel>> binderProvider)
             {
                 this.navStack = navStack;
                 this.binderProvider = binderProvider;

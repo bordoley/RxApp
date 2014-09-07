@@ -38,6 +38,7 @@ namespace RxApp
     }
 
     public interface INavigationStackViewModel<TModel> : INotifyPropertyChanged
+        where TModel: INavigableModel
     {
         TModel Current { get; }
     }
@@ -54,10 +55,9 @@ namespace RxApp
     {
     }
 
-    public interface INavigableModelBinder : IInitializable
+    public interface IModelBinder<TModel> : IInitializable
     {
-        void PresentView(INavigableViewModel model);
-        IDisposable AttachController(INavigableControllerModel model);
+        IDisposable Bind(TModel model);
     }
 
     public interface IServiceViewModel 
