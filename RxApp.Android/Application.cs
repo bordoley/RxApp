@@ -53,24 +53,24 @@ namespace RxApp
     {
         public static IRxAndroidApplication Create(
             INavigationStackViewModel<IMobileModel> navStack, 
-            Func<INavigationViewController> controllerProvider)
+            Func<INavigableModelBinder> binderProvider)
         {
-            return new RxAndroidApplicationImpl(navStack, controllerProvider);
+            return new RxAndroidApplicationImpl(navStack, binderProvider);
         }
 
         private sealed class RxAndroidApplicationImpl : IRxAndroidApplication 
         {
             private readonly INavigationStackViewModel<IMobileModel> navStack;
-            private readonly Func<INavigationViewController> controllerProvider;
+            private readonly Func<INavigableModelBinder> binderProvider;
 
             private IDisposableService navStackService = null;
 
             internal RxAndroidApplicationImpl(
                 INavigationStackViewModel<IMobileModel> navStack, 
-                Func<INavigationViewController> controllerProvider)
+                Func<INavigableModelBinder> binderProvider)
             {
                 this.navStack = navStack;
-                this.controllerProvider = controllerProvider;
+                this.binderProvider = binderProvider;
             }
 
             public void OnCreate()
@@ -89,7 +89,7 @@ namespace RxApp
 
                 // FIXME: Should not be need after ReactiveUI 6.0.8
                 ReactiveUI.RxApp.MainThreadScheduler = new WaitForDispatcherScheduler(() => AndroidScheduler.UIScheduler());
-                navStackService = navStack.Bind(controllerProvider);
+                navStackService = navStack.Bind(binderProvider);
             }
 
             public void Start()

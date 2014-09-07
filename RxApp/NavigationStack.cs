@@ -11,11 +11,11 @@ namespace RxApp
 {
     public static class NavigationStack
     {
-        public static IDisposable Bind<TModel>(this INavigationStackViewModel<TModel> navStack, INavigationViewController navViewController)
+        public static IDisposable Bind<TModel>(this INavigationStackViewModel<TModel> navStack, INavigableModelBinder binder)
             where TModel : INavigableModel
         {
             // FIXME: Preconditions or code contracts
-            var retval = new NavigationStackBinding<TModel>(navStack, navViewController);
+            var retval = new NavigationStackBinding<TModel>(navStack, binder);
             retval.Initialize();
             return retval;
         }
@@ -24,14 +24,14 @@ namespace RxApp
             where TModel: INavigableModel
         {
             private readonly INavigationStackViewModel<TModel> navStack;
-            private readonly INavigationViewController navViewController;
+            private readonly INavigableModelBinder binder;
 
             private IDisposable subscription = null;
 
-            internal NavigationStackBinding(INavigationStackViewModel<TModel> navStack, INavigationViewController navViewController)
+            internal NavigationStackBinding(INavigationStackViewModel<TModel> navStack, INavigableModelBinder binder)
             {
                 this.navStack = navStack;
-                this.navViewController = navViewController;
+                this.binder = binder;
             }
 
             public void Initialize()
@@ -41,7 +41,7 @@ namespace RxApp
                     throw new NotSupportedException("Initialize can only be called once");
                 }
 
-                navViewController.Initialize();
+                binder.Initialize();
 
                 IDisposable controller = null;
 
@@ -56,8 +56,8 @@ namespace RxApp
 
                             if (next != null)
                             {
-                                navViewController.PresentView(next);
-                                controller = navViewController.AttachController(next);
+                                binder.PresentView(next);
+                                controller = binder.AttachController(next);
                             }
                         });
             }
@@ -65,29 +65,29 @@ namespace RxApp
             public void Dispose()
             {
                 subscription.Dispose();
-                navViewController.Dispose();
+                binder.Dispose();
             }
         }
 
-        public static IDisposableService Bind<TModel>(this INavigationStackViewModel<TModel> navStack, Func<INavigationViewController> controllerProvider)
+        public static IDisposableService Bind<TModel>(this INavigationStackViewModel<TModel> navStack, Func<INavigableModelBinder> binderProvider)
             where TModel : INavigableModel
         {
             // FIXMe: PReconditions/Code contracts
-            return new NavigationStackService<TModel>(navStack, controllerProvider);
+            return new NavigationStackService<TModel>(navStack, binderProvider);
         }
 
         private sealed class NavigationStackService<TModel> : IDisposableService
             where TModel : INavigableModel
         {
             private readonly INavigationStackViewModel<TModel> navStack;
-            private readonly Func<INavigationViewController> controllerProvider;
+            private readonly Func<INavigableModelBinder> binderProvider;
 
             private IDisposable navStackBinding = null;
 
-            internal NavigationStackService(INavigationStackViewModel<TModel> navStack, Func<INavigationViewController> controllerProvider)
+            internal NavigationStackService(INavigationStackViewModel<TModel> navStack, Func<INavigableModelBinder> binderProvider)
             {
                 this.navStack = navStack;
-                this.controllerProvider = controllerProvider;
+                this.binderProvider = binderProvider;
             }
 
             public void Start()
@@ -97,7 +97,7 @@ namespace RxApp
                     throw new NotSupportedException("Calling start more than once in a row without first calling stop");
                 }
 
-                navStackBinding = navStack.Bind(controllerProvider());
+                navStackBinding = navStack.Bind(binderProvider());
             }
 
             public void Stop()

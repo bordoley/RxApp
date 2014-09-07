@@ -54,7 +54,7 @@ namespace RxApp
     {
     }
 
-    public interface INavigationViewController : IInitializable
+    public interface INavigableModelBinder : IInitializable
     {
         void PresentView(INavigableViewModel model);
         IDisposable AttachController(INavigableControllerModel model);
