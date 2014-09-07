@@ -12,8 +12,8 @@ namespace RxApp
         private readonly IReactiveCommand<object> back = ReactiveCommand.Create();
         private readonly IReactiveCommand<object> up = ReactiveCommand.Create();
         private readonly IReactiveCommand<object> close = ReactiveCommand.Create();
-        private readonly IReactiveCommand<object> stopping = ReactiveCommand.Create();
-        private readonly IReactiveCommand<object> starting = ReactiveCommand.Create();
+        private readonly IReactiveCommand<object> stop = ReactiveCommand.Create();
+        private readonly IReactiveCommand<object> start = ReactiveCommand.Create();
 
         IObservable<object> INavigableControllerModel.Back
         {
@@ -63,35 +63,35 @@ namespace RxApp
             }
         }
 
-        IObservable<object> IServiceControllerModel.Stopping
+        IObservable<object> IServiceControllerModel.Stop
         {
             get
             {
-                return stopping;
+                return stop;
             }
         }
 
-        public IReactiveCommand<object> Stopping
+        public IReactiveCommand<object> Stop
         {
             get
             {
-                return stopping;
+                return stop;
             }
         }
 
-        IObservable<object> IServiceControllerModel.Starting
+        IObservable<object> IServiceControllerModel.Start
         {
             get
             {
-                return starting;
+                return start;
             }
         }
 
-        public IReactiveCommand<object> Starting
+        public IReactiveCommand<object> Start
         {
             get
             {
-                return starting;
+                return start;
             }
         }  
     }

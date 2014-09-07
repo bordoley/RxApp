@@ -27,8 +27,8 @@ namespace RxApp
 
             public void Initialize()
             {
-                subscription.Add (model.Starting.Subscribe(_ => deleg.Start()));
-                subscription.Add (model.Stopping.Subscribe(_ =>  deleg.Stop()));
+                subscription.Add (model.Start.Subscribe(_ => deleg.Start()));
+                subscription.Add (model.Stop.Subscribe(_ =>  deleg.Stop()));
             }
 
             public void Dispose()

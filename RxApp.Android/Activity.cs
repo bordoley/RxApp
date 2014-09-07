@@ -153,12 +153,12 @@ namespace RxApp
 
             public void OnResume()
             {
-                ((IServiceViewModel) this.ViewModel).Starting.Execute(null);
+                ((IServiceViewModel) this.ViewModel).Start.Execute(null);
             }
 
             public void OnPause()
             {
-                ((IServiceViewModel) this.ViewModel).Stopping.Execute(null);
+                ((IServiceViewModel) this.ViewModel).Stop.Execute(null);
             }
 
             public void OnBackPressed()

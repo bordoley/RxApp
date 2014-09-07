@@ -62,14 +62,14 @@ namespace RxApp
 
     public interface IServiceViewModel 
     {
-        IReactiveCommand<object> Starting { get; }
-        IReactiveCommand<object> Stopping { get; }
+        IReactiveCommand<object> Start { get; }
+        IReactiveCommand<object> Stop { get; }
     }
 
     public interface IServiceControllerModel
     {
-        IObservable<object> Starting { get; }
-        IObservable<object> Stopping { get; }
+        IObservable<object> Start { get; }
+        IObservable<object> Stop { get; }
     }
 
     public interface IServiceModel : IServiceViewModel, IServiceControllerModel
