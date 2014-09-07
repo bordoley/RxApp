@@ -1,6 +1,7 @@
 ﻿using ReactiveUI;
 using Android.App;
 using System;
+using System.Reactive.Linq;
 
 namespace RxApp
 {
@@ -52,51 +53,39 @@ namespace RxApp
     {
         public static IRxAndroidApplication Create(
             INavigationStackViewModel<IMobileModel> navStack, 
-            Application androidApplication, 
             Func<INavigationViewController> controllerProvider)
         {
-            return new RxAndroidApplicationImpl(
-                navStack,
-                androidApplication, 
-                controllerProvider);
+            return new RxAndroidApplicationImpl(navStack, controllerProvider);
         }
 
         private sealed class RxAndroidApplicationImpl : IRxAndroidApplication 
         {
             private readonly INavigationStackViewModel<IMobileModel> navStack;
-            private readonly Application androidApplication;
             private readonly Func<INavigationViewController> controllerProvider;
-
-            // FIXME: Test if this can be immutable
-            private IActivityLifecycleEvents events = null;
-
-            private int activities = 0;
 
             private IDisposableService navStackService = null;
 
             internal RxAndroidApplicationImpl(
                 INavigationStackViewModel<IMobileModel> navStack, 
-                Application androidApplication, 
                 Func<INavigationViewController> controllerProvider)
             {
                 this.navStack = navStack;
-                this.androidApplication = androidApplication;
                 this.controllerProvider = controllerProvider;
             }
 
             public void OnCreate()
             {
-                // FIXME: Its debatable if the events should be in this class at all
-                events = ActivityLifecycleEvents.Register(this.androidApplication);
-                events.Created.Subscribe(a => activities++);
-                events.Destroyed.Subscribe(_ =>
-                    {
-                        activities--;
-                        if (activities <= 0)
+                // FIXME: release the subscription onTerminate.
+                navStack
+                    .WhenAnyValue(x => x.Current)
+                    .Buffer(2, 1)
+                    .Subscribe(models =>
                         {
-                            this.Stop();
-                        }
-                    });
+                            if (models[0] != null && models[1] == null)
+                            {
+                                this.Stop();
+                            }
+                        });
 
                 // FIXME: Should not be need after ReactiveUI 6.0.8
                 ReactiveUI.RxApp.MainThreadScheduler = new WaitForDispatcherScheduler(() => AndroidScheduler.UIScheduler());
