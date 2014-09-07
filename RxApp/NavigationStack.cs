@@ -11,7 +11,7 @@ namespace RxApp
 {
     public static class NavigationStack
     {
-        public static IDisposable Bind<TModel>(this INavigationStackViewModel<TModel> navStack, IModelBinder<TModel> binder)
+        internal static IDisposable Bind<TModel>(this INavigationStackViewModel<TModel> navStack, IModelBinder<TModel> binder)
             where TModel : INavigableModel
         {
             // FIXME: Preconditions or code contracts
