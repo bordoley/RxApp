@@ -7,38 +7,53 @@ namespace RxApp
 {
     public abstract class RxAndroidApplicationBase : Application, IRxAndroidApplication 
     {
+        private readonly INavigationStackModel<IMobileModel> navigationStack;
+        private readonly IRxAndroidApplication deleg;
+
         public RxAndroidApplicationBase(IntPtr javaReference, Android.Runtime.JniHandleOwnership transfer) : base(javaReference, transfer)
         {
-
+            navigationStack = RxApp.NavigationStack.Create<IMobileModel>();
+            deleg = RxAndroidApplication.Create(navigationStack, () => 
+                AndroidModelBinder.Create(this.ApplicationContext, ProvideControllerBinder(), model => GetViewType(model)));
         }
 
-        protected abstract IRxAndroidApplication Delegate { get; }
+        protected abstract Type GetViewType(IMobileViewModel model);
 
+        protected abstract IModelBinder<IMobileControllerModel> ProvideControllerBinder();
+
+        public INavigationStackModel<IMobileModel> NavigationStack
+        {
+            get
+            {
+                return navigationStack;
+            }
+        }
+                    
         public override void OnCreate()
         {
             base.OnCreate();
-            Delegate.OnCreate();
+            deleg.OnCreate();
         }
 
         public override void OnTerminate()
         {
             base.OnTerminate();
-            Delegate.OnTerminate();
+            deleg.OnTerminate();
         }
 
         public void OnViewCreated(IViewFor view)
         {
-            Delegate.OnViewCreated(view);
+            deleg.OnViewCreated(view);
         }
 
         public void Start()
         {
-            Delegate.Start();
+            deleg.Start();
         }
 
         public void Stop()
         {
-            Delegate.Stop();
+            deleg.Stop();
         }
     }
 
