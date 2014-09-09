@@ -1,5 +1,6 @@
-﻿using System;
-using Android.Content;
+﻿using Android.Content;
+using System;
+using System.Diagnostics.Contracts;
 
 namespace RxApp
 {
@@ -10,7 +11,10 @@ namespace RxApp
             IModelBinder<IMobileControllerModel> controllerBinder, 
             Func<IMobileViewModel, Type> viewTypeMap)
         {
-            // FIXME: Preconditions/Code contracts
+            Contract.Requires(context != null);
+            Contract.Requires(controllerBinder != null);
+            Contract.Requires(viewTypeMap != null);
+
             return new AndroidModelBinderImpl(controllerBinder, context, viewTypeMap);
         }
 
@@ -41,7 +45,6 @@ namespace RxApp
                 controllerBinder.Initialize();
             }
                 
-
             public void Dispose()
             {
                 controllerBinder.Dispose();
@@ -49,6 +52,8 @@ namespace RxApp
 
             public IDisposable Bind(IMobileModel model)
             {
+                Contract.Requires(model != null);
+
                 context.PresentView(viewTypeMap(model));
                 return controllerBinder.Bind(model);
             }

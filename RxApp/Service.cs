@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Diagnostics.Contracts;
+
 using System.Reactive.Disposables;
 
 namespace RxApp
@@ -7,7 +9,9 @@ namespace RxApp
     {
         public static IDisposable Bind(this IServiceControllerModel model, IDisposableService deleg)
         {
-            // FIXME: Preconditions or code contracts
+            Contract.Requires(model != null);
+            Contract.Requires(deleg != null);
+
             var retval = new ServiceControllerBinding(model, deleg);
             retval.Initialize();
             return retval;

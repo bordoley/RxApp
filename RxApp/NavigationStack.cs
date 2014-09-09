@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
@@ -14,7 +15,6 @@ namespace RxApp
         internal static IDisposable Bind<TModel>(this INavigationStackViewModel<TModel> navStack, IModelBinder<TModel> binder)
             where TModel : INavigableModel
         {
-            // FIXME: Preconditions or code contracts
             var retval = new NavigationStackBinding<TModel>(navStack, binder);
             retval.Initialize();
             return retval;
@@ -44,9 +44,6 @@ namespace RxApp
                 binder.Initialize();
 
                 IDisposable binding = null;
-
-                // FIXME: Add an onComplete listener so that when the subscription is Disposed
-                // the binding is also is disposed in not null
                 subscription =
                     navStack.WhenAnyValue(x => x.Current).Subscribe(next =>
                         {
@@ -59,6 +56,13 @@ namespace RxApp
                             if (next != null)
                             {
                                 binding = binder.Bind(next);
+                            }
+                        }, () => 
+                        {
+                            if (binding != null)
+                            {
+                                binding.Dispose();
+                                binding = null;
                             }
                         });
             }
@@ -73,7 +77,9 @@ namespace RxApp
         public static IDisposableService Bind<TModel>(this INavigationStackViewModel<TModel> navStack, Func<IModelBinder<TModel>> binderProvider)
             where TModel : INavigableModel
         {
-            // FIXMe: PReconditions/Code contracts
+            Contract.Requires(navStack != null);
+            Contract.Requires(binderProvider != null);
+
             return new NavigationStackService<TModel>(navStack, binderProvider);
         }
 
@@ -112,7 +118,6 @@ namespace RxApp
                 if (navStackBinding != null)
                 {
                     navStackBinding.Dispose();
-                    navStackBinding = null;
                 }
             }
         }
@@ -170,7 +175,8 @@ namespace RxApp
 
             public void Push(TModel model)
             {
-                // FIXME: Preconditions or Code contract check for null
+                Contract.Requires(model != null);
+
                 Update(navStack.Push(model));
             }
 
@@ -182,7 +188,8 @@ namespace RxApp
 
             public void SetRoot(TModel model)
             {
-                // FIXME: Preconditions or Code contract check for null
+                Contract.Requires(model != null);
+
                 Close(navStack);
                 Update(Stack<TModel>.Empty.Push(model));
             }

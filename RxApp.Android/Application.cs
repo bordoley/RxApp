@@ -1,6 +1,7 @@
-﻿using ReactiveUI;
-using Android.App;
+﻿using Android.App;
+using ReactiveUI;
 using System;
+using System.Diagnostics.Contracts;
 using System.Reactive.Linq;
 
 namespace RxApp
@@ -70,6 +71,9 @@ namespace RxApp
             INavigationStackViewModel<IMobileModel> navStack, 
             Func<IModelBinder<IMobileModel>> binderProvider)
         {
+            Contract.Requires(navStack != null);
+            Contract.Requires(binderProvider != null);
+
             return new RxAndroidApplicationImpl(navStack, binderProvider);
         }
 
@@ -79,6 +83,7 @@ namespace RxApp
             private readonly Func<IModelBinder<IMobileModel>> binderProvider;
 
             private IDisposableService navStackService = null;
+            private IDisposable navStackSubscription = null;
 
             internal RxAndroidApplicationImpl(
                 INavigationStackViewModel<IMobileModel> navStack, 
@@ -90,21 +95,27 @@ namespace RxApp
 
             public void OnCreate()
             {
-                // FIXME: release the subscription onTerminate.
-                navStack
-                    .WhenAnyValue(x => x.Current)
-                    .Buffer(2, 1)
-                    .Subscribe(models =>
-                        {
-                            if (models[0] != null && models[1] == null)
+                navStackSubscription = 
+                    navStack
+                        .WhenAnyValue(x => x.Current)
+                        .Buffer(2, 1)
+                        .Subscribe(models =>
                             {
-                                this.Stop();
-                            }
-                        });
+                                if (models[0] != null && models[1] == null)
+                                {
+                                    this.Stop();
+                                }
+                            });
 
                 // FIXME: Should not be need after ReactiveUI 6.0.8
                 ReactiveUI.RxApp.MainThreadScheduler = new WaitForDispatcherScheduler(() => AndroidScheduler.UIScheduler());
                 navStackService = navStack.Bind(binderProvider);
+            }
+                
+            public void OnTerminate()
+            {
+                navStackService.Dispose();
+                navStackSubscription.Dispose();
             }
 
             public void Start()
@@ -117,13 +128,10 @@ namespace RxApp
                 navStackService.Stop();
             }
 
-            public void OnTerminate()
-            {
-                navStackService.Dispose();
-            }
-
             public void OnViewCreated(IViewFor view)
             {
+                Contract.Requires(view != null);
+
                 if (navStack.Current != null)
                 {
                     view.ViewModel = navStack.Current;

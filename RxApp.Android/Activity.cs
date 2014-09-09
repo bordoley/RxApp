@@ -1,9 +1,12 @@
-﻿using System;
-using System.ComponentModel;
-using System.Reactive.Linq;
-using Android.App;
+﻿using Android.App;
 using Android.OS;
 using Android.Views;
+
+using System;
+using System.ComponentModel;
+using System.Diagnostics.Contracts;
+using System.Reactive.Linq;
+
 using ReactiveUI;
 
 
@@ -111,7 +114,7 @@ namespace RxApp
         public static IRxActivity<TViewModel> Create<TViewModel>(Activity activity)
             where TViewModel: class, IMobileViewModel
         {
-            // FIXME: Preconditions/Contracts
+            Contract.Requires(activity != null);
             return new RxActivityImpl<TViewModel>(activity);
         }
 
@@ -120,6 +123,7 @@ namespace RxApp
              where TViewModel: class, IMobileViewModel
         {
             private readonly Activity activity;
+            private IDisposable closeSubscription;
             private TViewModel viewModel;
 
             internal RxActivityImpl(Activity activity)
@@ -141,14 +145,14 @@ namespace RxApp
 
             public void OnCreate(Bundle bundle)
             {
-                // FIXME: Dispose the subscription in on destroy
-                this.WhenAnyObservable(x => x.ViewModel.Close).FirstAsync().Subscribe(_ => activity.Finish());
+                closeSubscription = this.WhenAnyObservable(x => x.ViewModel.Close).FirstAsync().Subscribe(_ => activity.Finish());
                 var app = (IRxAndroidApplication) activity.Application;
                 app.OnViewCreated(this);
             }
 
             public void OnDestroy()
             {
+                closeSubscription.Dispose();
             }
 
             public void OnResume()
@@ -171,6 +175,8 @@ namespace RxApp
 
             public bool OnOptionsItemSelected(IMenuItem item)
             {
+                Contract.Requires(item != null);
+
                 if (item.ItemId == Android.Resource.Id.Home)
                 {
                     ((INavigableViewModel) this.ViewModel).Up.Execute(null);
