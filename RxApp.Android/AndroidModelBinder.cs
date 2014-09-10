@@ -20,7 +20,7 @@ namespace RxApp
 
         private static void PresentView(this Context context, Type viewType)
         {
-            var intent = new Intent(context, viewType).SetFlags(ActivityFlags.NewTask | ActivityFlags.SingleTop);
+            var intent = new Intent(context, viewType).SetFlags(ActivityFlags.NewTask);
             context.StartActivity(intent);
         }
 

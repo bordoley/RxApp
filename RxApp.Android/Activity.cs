@@ -62,8 +62,8 @@ namespace RxApp
 
         protected override void OnDestroy()
         {
-            base.OnDestroy();
             deleg.OnDestroy();
+            base.OnDestroy();
         }
 
         protected override void OnResume()
@@ -74,8 +74,8 @@ namespace RxApp
 
         protected override void OnPause()
         {
-            base.OnPause();
             deleg.OnPause();
+            base.OnPause();
         }
 
         public override void OnBackPressed()
@@ -140,7 +140,7 @@ namespace RxApp
             object IViewFor.ViewModel
             {
                 get { return viewModel; }
-                set { viewModel = (TViewModel)value; }
+                set { this.ViewModel = (TViewModel)value; }
             }
 
             public void OnCreate(Bundle bundle)
