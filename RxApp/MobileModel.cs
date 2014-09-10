@@ -7,7 +7,7 @@ namespace RxApp
     public interface IMobileControllerModel : INavigableControllerModel, IServiceControllerModel {}
     public interface IMobileModel : IMobileViewModel, IMobileControllerModel, INavigableModel, IServiceModel {}
 
-    public sealed class MobileModel : IMobileModel
+    public class MobileModel : IMobileModel
     {
         private readonly IReactiveCommand<object> back = ReactiveCommand.Create();
         private readonly IReactiveCommand<object> up = ReactiveCommand.Create();
