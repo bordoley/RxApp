@@ -1,0 +1,5 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="main_open">Add Another Window to the Stack</string>
+    <string name="app_name">RxApp.Example.Android</string>
+</resources>
