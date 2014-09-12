@@ -6,7 +6,6 @@ using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using System.Threading;
 
 namespace RxApp
 {
@@ -52,22 +51,19 @@ namespace RxApp
                         {
                             var binding = binder.Bind(head);
                             bindings[head] = binding;
-                        }
-                            
-                        SynchronizationContext.Current.Post((d) => 
-                            {
-                                foreach (var model in removed)
-                                {
-                                    IDisposable binding = null;
-                                    if (bindings.TryGetValue(model, out binding))
-                                    {
-                                        binding.Dispose();
-                                    }
+                        }    
 
-                                    // FIXME: This exists solely for android. Maybe it should be encapsulated in the Android binding.
-                                    ((INavigableControllerModel) model).Close.Execute(null);
-                                }
-                            }, null);
+                        foreach (var model in removed)
+                        {
+                            IDisposable binding = null;
+                            if (bindings.TryGetValue(model, out binding))
+                            {
+                                binding.Dispose();
+                            }
+
+                            // FIXME: This exists solely for android. Maybe it should be encapsulated in the Android binding.
+                            ((INavigableControllerModel) model).Close.Execute(null);
+                        }
                     });
 
                 binder.Initialize();
