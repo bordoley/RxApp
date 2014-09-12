@@ -3,8 +3,16 @@ using ReactiveUI;
 
 namespace RxApp
 {
-    public interface IMobileViewModel : INavigableViewModel, IServiceViewModel {}
-    public interface IMobileControllerModel : INavigableControllerModel, IServiceControllerModel {}
+    public interface IMobileViewModel : INavigableViewModel, IServiceViewModel 
+    {
+        IObservable<object> Close { get; }
+    }
+
+    public interface IMobileControllerModel : INavigableControllerModel, IServiceControllerModel 
+    {
+        IReactiveCommand<object> Close { get; }
+    }
+
     public interface IMobileModel : IMobileViewModel, IMobileControllerModel, INavigableModel, IServiceModel {}
 
     public class MobileModel : IMobileModel
@@ -47,7 +55,7 @@ namespace RxApp
             }
         }
 
-        IObservable<object> INavigableViewModel.Close
+        IObservable<object> IMobileViewModel.Close
         {
             get
             {

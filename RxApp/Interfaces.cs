@@ -25,14 +25,12 @@ namespace RxApp
     {
         IReactiveCommand<object> Back { get; }
         IReactiveCommand<object> Up { get; }
-        IObservable<object> Close { get; }
     }
 
     public interface INavigableControllerModel
     {
         IObservable<object> Back { get; }
         IObservable<object> Up { get; }
-        IReactiveCommand<object> Close { get; }
     }
 
     public interface INavigableModel : INavigableViewModel, INavigableControllerModel

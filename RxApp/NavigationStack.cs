@@ -60,9 +60,6 @@ namespace RxApp
                             {
                                 binding.Dispose();
                             }
-
-                            // FIXME: This exists solely for android. Maybe it should be encapsulated in the Android binding.
-                            ((INavigableControllerModel) model).Close.Execute(null);
                         }
                     });
 
@@ -77,8 +74,6 @@ namespace RxApp
                 foreach(var kv in bindings)
                 {
                     kv.Value.Dispose();
-                    // FIXME: This exists solely for android. Maybe it should be encapsulated in the Android binding.
-                    ((INavigableControllerModel) kv.Key).Close.Execute(null);
                 }
                 bindings.Clear();
             }

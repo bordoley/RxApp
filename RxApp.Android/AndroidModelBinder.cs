@@ -1,6 +1,7 @@
 ﻿using Android.Content;
 using System;
 using System.Diagnostics.Contracts;
+using System.Reactive.Disposables;
 
 namespace RxApp
 {
@@ -55,7 +56,26 @@ namespace RxApp
                 Contract.Requires(model != null);
 
                 context.PresentView(viewTypeMap(model));
-                return controllerBinder.Bind(model);
+
+                var retval = new CompositeDisposable();
+                retval.Add(controllerBinder.Bind(model));
+                retval.Add(new AndroidViewBinding(model));
+                return retval;
+            }
+        }
+
+        private sealed class AndroidViewBinding : IDisposable
+        {
+            private readonly IMobileControllerModel model;
+
+            internal AndroidViewBinding(IMobileControllerModel model)
+            {
+                this.model = model;
+            }
+
+            public void Dispose()
+            {
+                model.Close.Execute(null);
             }
         }
     } 
