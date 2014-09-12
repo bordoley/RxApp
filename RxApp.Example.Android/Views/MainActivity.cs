@@ -37,9 +37,8 @@ namespace RxApp.Example.Android
 
         protected override void OnPause()
         {
-            base.OnPause();
-
             subscription.Dispose();
+            base.OnPause();
         }
     }
 }

@@ -39,8 +39,8 @@ namespace RxApp
 
         public override void OnTerminate()
         {
-            base.OnTerminate();
             deleg.OnTerminate();
+            base.OnTerminate();
         }
 
         public void OnViewCreated(IViewFor view)
