@@ -46,9 +46,7 @@ namespace RxApp.Example.Android
             // This is a lot prettier if you use F# pattern matching
             if (model is IMainControllerModel)
             {
-                var retval = new MainController((IMainControllerModel) model, navStack);
-                retval.Initialize();
-                return retval;
+                return model.Bind(new MainControllerService((IMainControllerModel) model, navStack));
             }
             else
             {

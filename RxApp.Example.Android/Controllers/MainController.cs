@@ -4,29 +4,38 @@ using System;
 
 namespace RxApp.Example.Android
 {      
-    public class MainController : IInitializable
+    public class MainControllerService : IDisposableService
     {
         private readonly IMainControllerModel model;
         private readonly INavigationStackControllerModel<IMobileModel> navStack;
 
         private IDisposable subscription = null;
 
-        public MainController(IMainControllerModel model, INavigationStackControllerModel<IMobileModel> navStack)
+        public MainControllerService(IMainControllerModel model, INavigationStackControllerModel<IMobileModel> navStack)
         {
             this.model = model;
             this.navStack = navStack;
         }
 
-        public void Initialize()
+        public void Start()
         {
             subscription = 
                 model.OpenPage.Subscribe(_ => 
                     navStack.Push(new MainModel()));
         }
 
-        public void Dispose()
+        public void Stop()
         {
             subscription.Dispose();
+            subscription = null;
+        }
+
+        public void Dispose()
+        {
+            if (subscription != null)
+            {
+                subscription.Dispose();
+            }
         }
     }
 }
