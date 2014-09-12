@@ -26,6 +26,7 @@ namespace RxApp
             private readonly INavigationStackViewModel<TModel> navStack;
             private readonly IModelBinder<TModel> binder;
 
+            private readonly IDictionary<TModel, IDisposable> bindings = new Dictionary<TModel, IDisposable>();
             private IDisposable subscription = null;
 
             internal NavigationStackBinding(INavigationStackViewModel<TModel> navStack, IModelBinder<TModel> binder)
@@ -41,36 +42,49 @@ namespace RxApp
                     throw new NotSupportedException("Initialize can only be called once");
                 }
 
+                // Need to setup the subscription before calling Initialize() to ensure we don't miss any change notifications.
+                subscription = Observable.FromEventPattern<NotifyNavigationStackChangedEventArgs<TModel>>(navStack, "NavigationStackChanged").Subscribe(e =>
+                    {
+                        var head = e.EventArgs.NewHead;
+                        var removed = e.EventArgs.Removed;
+
+                        if (head != null && !bindings.ContainsKey(head))
+                        {
+                            var binding = binder.Bind(head);
+                            bindings[head] = binding;
+                        }
+                            
+                        SynchronizationContext.Current.Post((d) => 
+                            {
+                                foreach (var model in removed)
+                                {
+                                    IDisposable binding = null;
+                                    if (bindings.TryGetValue(model, out binding))
+                                    {
+                                        binding.Dispose();
+                                    }
+
+                                    // FIXME: This exists solely for android. Maybe it should be encapsulated in the Android binding.
+                                    ((INavigableControllerModel) model).Close.Execute(null);
+                                }
+                            }, null);
+                    });
+
                 binder.Initialize();
-
-                IDisposable binding = null;
-                subscription =
-                    navStack.WhenAnyValue(x => x.Current).Subscribe(next =>
-                        {
-                            if (binding  != null)
-                            {
-                                binding.Dispose();
-                                binding = null;
-                            }
-
-                            if (next != null)
-                            {
-                                binding = binder.Bind(next);
-                            }
-                        }, () => 
-                        {
-                            if (binding != null)
-                            {
-                                binding.Dispose();
-                                binding = null;
-                            }
-                        });
             }
 
             public void Dispose()
             {
-                subscription.Dispose();
                 binder.Dispose();
+                subscription.Dispose();
+
+                foreach(var kv in bindings)
+                {
+                    kv.Value.Dispose();
+                    // FIXME: This exists solely for android. Maybe it should be encapsulated in the Android binding.
+                    ((INavigableControllerModel) kv.Key).Close.Execute(null);
+                }
+                bindings.Clear();
             }
         }
 
@@ -125,37 +139,22 @@ namespace RxApp
         public static INavigationStackModel<TModel> Create<TModel> ()
             where TModel: class, INavigableModel
         {
-            return new ViewStackImpl<TModel>();
+            return new NavigationStackImpl<TModel>();
         }
 
-        private sealed class ViewStackImpl<TModel> : INavigationStackModel<TModel> 
+        private sealed class NavigationStackImpl<TModel> : INavigationStackModel<TModel> 
             where TModel: class, INavigableModel
         {
-            private static void Close(IEnumerable<INavigableControllerModel> views) 
-            {
-                SynchronizationContext.Current.Post((d) => {
-                    foreach (var view in views)
-                    {
-                        view.Close.Execute(null);
-                    }
-                }, null);
-            }
-
-            private readonly IReactiveObject notify = ReactiveObject.Create();
             private IStack<TModel> navStack = Stack<TModel>.Empty;
             private IDisposable backSubscription = null;
 
-            internal ViewStackImpl()
+            internal NavigationStackImpl()
             {
             }
 
-            public event PropertyChangedEventHandler PropertyChanged
-            {
-                add { notify.PropertyChanged += value; }
-                remove { notify.PropertyChanged -= value; }
-            }
+            public event EventHandler<NotifyNavigationStackChangedEventArgs<TModel>> NavigationStackChanged = (o,e) => {};
 
-            public TModel Current
+            public TModel Head
             { 
                 get
                 {
@@ -165,11 +164,17 @@ namespace RxApp
 
             private void GotoRoot()
             {
-                var reversed = navStack.Reverse();
-                if (!reversed.IsEmpty())
+                if (!navStack.IsEmpty())
                 {
-                    Close(reversed.Tail);
+                    var reversed = navStack.Reverse();
+                    var oldHead = navStack.Head;
+                    var newHead = reversed.Head;
+                    var removed = reversed.Tail;
+
                     Update(Stack<TModel>.Empty.Push(reversed.Head));
+                    NavigationStackChanged(
+                        this, 
+                        NotifyNavigationStackChangedEventArgs<TModel>.Create(newHead, oldHead, removed));
                 }              
             }
 
@@ -177,25 +182,40 @@ namespace RxApp
             {
                 Contract.Requires(model != null);
 
+                var oldHead = navStack.Head;
                 Update(navStack.Push(model));
+                NavigationStackChanged(
+                    this, 
+                    NotifyNavigationStackChangedEventArgs<TModel>.Create(model, oldHead, Stack<TModel>.Empty));
             }
 
             private void Pop()
             {
-                Close(Stack<TModel>.Empty.Push(navStack.Head));
+                var oldHead = navStack.Head;
                 Update(navStack.Tail);
+                var newHead = navStack.Head;
+                NavigationStackChanged(
+                    this, 
+                    NotifyNavigationStackChangedEventArgs<TModel>.Create(newHead, oldHead, Stack<TModel>.Empty.Push(oldHead)));
             }
 
             public void SetRoot(TModel model)
             {
                 Contract.Requires(model != null);
 
-                Close(navStack);
+                var oldHead = navStack.Head;
+                var removed = navStack;
+
                 Update(Stack<TModel>.Empty.Push(model));
+                NavigationStackChanged(
+                    this, 
+                    NotifyNavigationStackChangedEventArgs<TModel>.Create(model, oldHead, removed));
             }
 
-            private void SubscribeToBack()
+            private void Update(IStack<TModel> newStack)
             {
+                navStack = newStack;
+
                 if (backSubscription != null)
                 {
                     backSubscription.Dispose();
@@ -211,13 +231,6 @@ namespace RxApp
                 }
 
                 backSubscription = newSubscription;
-            }
-
-            private void Update(IStack<TModel> newStack)
-            {
-                navStack = newStack;
-                SubscribeToBack();
-                notify.RaisePropertyChanged("Current");
             }
         }
     }

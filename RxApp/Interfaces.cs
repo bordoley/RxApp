@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics.Contracts;
 using ReactiveUI;
 
 namespace RxApp
@@ -35,12 +37,58 @@ namespace RxApp
 
     public interface INavigableModel : INavigableViewModel, INavigableControllerModel
     {
+
     }
 
-    public interface INavigationStackViewModel<TModel> : INotifyPropertyChanged
+    public sealed class NotifyNavigationStackChangedEventArgs<TModel> : EventArgs
+    {
+        public static NotifyNavigationStackChangedEventArgs<TModel> Create(TModel newHead, TModel oldHead, IEnumerable<TModel> removed)
+        {
+            Contract.Requires(removed != null);
+            return new NotifyNavigationStackChangedEventArgs<TModel>(newHead, oldHead, removed);
+        }
+
+        private readonly TModel newHead;
+        private readonly TModel oldHead;
+        private readonly IEnumerable<TModel> removed;
+
+        private  NotifyNavigationStackChangedEventArgs(TModel newHead, TModel oldHead, IEnumerable<TModel> removed)
+        {
+            this.newHead = newHead;
+            this.oldHead = oldHead;
+            this.removed = removed;
+        }
+
+        public TModel NewHead
+        {
+            get
+            {
+                return newHead;
+            }
+        }
+
+        public TModel OldHead
+        {
+            get
+            {
+                return oldHead;
+            }
+        }
+
+        public IEnumerable<TModel> Removed
+        {
+            get
+            {
+                return removed;
+            }
+        }
+    }
+
+    public interface INavigationStackViewModel<TModel> 
         where TModel: INavigableModel
     {
-        TModel Current { get; }
+        event EventHandler<NotifyNavigationStackChangedEventArgs<TModel>> NavigationStackChanged;
+        TModel Head { get; }
     }
 
     public interface INavigationStackControllerModel<TModel> 

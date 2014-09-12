@@ -2,6 +2,7 @@
 using ReactiveUI;
 using System;
 using System.Diagnostics.Contracts;
+using System.Reactive;
 using System.Reactive.Linq;
 
 namespace RxApp
@@ -96,12 +97,14 @@ namespace RxApp
             public void OnCreate()
             {
                 navStackSubscription = 
-                    navStack
-                        .WhenAnyValue(x => x.Current)
-                        .Buffer(2, 1)
-                        .Subscribe(models =>
+                    Observable
+                        .FromEventPattern<NotifyNavigationStackChangedEventArgs<IMobileModel>>(navStack, "NavigationStackChanged")
+                        .Subscribe((EventPattern<NotifyNavigationStackChangedEventArgs<IMobileModel>> e) => 
                             {
-                                if (models[0] != null && models[1] == null)
+                                var newHead = e.EventArgs.NewHead;
+                                var oldHead = e.EventArgs.OldHead;
+
+                                if (oldHead != null && newHead == null)
                                 {
                                     this.Stop();
                                 }
@@ -132,9 +135,9 @@ namespace RxApp
             {
                 Contract.Requires(view != null);
 
-                if (navStack.Current != null)
+                if (navStack.Head != null)
                 {
-                    view.ViewModel = navStack.Current;
+                    view.ViewModel = navStack.Head;
                 }
                 else
                 {
