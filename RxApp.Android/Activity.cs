@@ -30,7 +30,7 @@ namespace RxApp
     {
     }
         
-    public class RxActivity<TViewModel> : Activity, IRxActivity<TViewModel>
+    public abstract class RxActivity<TViewModel> : Activity, IRxActivity<TViewModel>
         where TViewModel : class, IMobileViewModel
     {
         private readonly RxActivityDelegate<TViewModel> deleg;

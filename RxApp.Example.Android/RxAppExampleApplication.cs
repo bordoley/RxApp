@@ -8,7 +8,7 @@ using Android.Runtime;
 namespace RxApp.Example.Android
 {
     [Application]
-    public sealed class RxAppExampleApplication : RxAndroidApplicationBase
+    public sealed class RxAppExampleApplication : RxAndroidApplication
     {
         public RxAppExampleApplication(IntPtr javaReference, JniHandleOwnership transfer) : base(javaReference, transfer)
         {

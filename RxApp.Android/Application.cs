@@ -18,11 +18,11 @@ namespace RxApp
         void OnActivityCreated(IRxActivity activity);
     }
 
-    public abstract class RxAndroidApplicationBase : Application, IRxAndroidApplication 
+    public abstract class RxAndroidApplication : Application, IRxAndroidApplication 
     {
         private readonly IRxAndroidApplication deleg;
 
-        public RxAndroidApplicationBase(IntPtr javaReference, Android.Runtime.JniHandleOwnership transfer) : base(javaReference, transfer)
+        public RxAndroidApplication(IntPtr javaReference, Android.Runtime.JniHandleOwnership transfer) : base(javaReference, transfer)
         {
             deleg = RxAndroidApplicationDelegate.Create(
                 this,
