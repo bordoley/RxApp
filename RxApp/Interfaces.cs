@@ -101,9 +101,24 @@ namespace RxApp
     {
     }
 
-    public interface IModelBinder<TModel> : IInitializable
+    public interface IControllerModelBinder<TControllerModel> : IInitializable
     {
-        IDisposable Bind(TModel model);
+        IDisposable Bind(TControllerModel model);
+    }
+
+    public interface IViewModelBinder<TViewModel> : IInitializable
+    {
+        IView Bind(TViewModel model);
+    }
+
+    public interface IViewHost
+    {
+        void PresentView(IViewFor view);
+    }
+
+    public interface IView : IViewFor, IDisposable
+    {
+
     }
 
     public interface IServiceViewModel 

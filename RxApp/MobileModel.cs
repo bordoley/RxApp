@@ -5,12 +5,10 @@ namespace RxApp
 {
     public interface IMobileViewModel : INavigableViewModel, IServiceViewModel 
     {
-        IObservable<object> Close { get; }
     }
 
     public interface IMobileControllerModel : INavigableControllerModel, IServiceControllerModel 
     {
-        IReactiveCommand<object> Close { get; }
     }
 
     public interface IMobileModel : IMobileViewModel, IMobileControllerModel, INavigableModel, IServiceModel {}
@@ -19,7 +17,6 @@ namespace RxApp
     {
         private readonly IReactiveCommand<object> back = ReactiveCommand.Create();
         private readonly IReactiveCommand<object> up = ReactiveCommand.Create();
-        private readonly IReactiveCommand<object> close = ReactiveCommand.Create();
         private readonly IReactiveCommand<object> stop = ReactiveCommand.Create();
         private readonly IReactiveCommand<object> start = ReactiveCommand.Create();
 
@@ -52,22 +49,6 @@ namespace RxApp
             get
             {
                 return up;
-            }
-        }
-
-        IObservable<object> IMobileViewModel.Close
-        {
-            get
-            {
-                return close;
-            }
-        }
-
-        public IReactiveCommand<object> Close
-        {
-            get
-            {
-                return close;
             }
         }
 

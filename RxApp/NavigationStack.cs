@@ -11,65 +11,88 @@ namespace RxApp
 {
     public static class NavigationStack
     {
-        internal static IDisposable Bind<TModel>(this INavigationStackViewModel<TModel> navStack, IModelBinder<TModel> binder)
-            where TModel : INavigableModel
+        internal static IDisposable Bind<TModel, TViewModel, TControllerModel>(
+                this INavigationStackViewModel<TModel> navStack, 
+                IViewHost viewHost,
+                IViewModelBinder<TViewModel> viewModelBinder, 
+                IControllerModelBinder<TControllerModel> controllerModelBinder) 
+            where TModel : class, TViewModel, TControllerModel, INavigableModel
+            where TViewModel : class, INavigableViewModel
+            where TControllerModel : class, INavigableControllerModel
         {
-            var retval = new NavigationStackBinding<TModel>(navStack, binder);
+            var retval = new NavigationStackBinding<TModel, TViewModel, TControllerModel>(navStack, viewHost, viewModelBinder, controllerModelBinder);
             retval.Initialize();
             return retval;
         }
 
-        private sealed class NavigationStackBinding<TModel> : IInitializable
-            where TModel: INavigableModel
+        private sealed class NavigationStackBinding<TModel, TViewModel, TControllerModel> : IInitializable
+            where TModel : class, TViewModel, TControllerModel, INavigableModel
+            where TViewModel : class, INavigableViewModel
+            where TControllerModel : class, INavigableControllerModel
         {
             private readonly INavigationStackViewModel<TModel> navStack;
-            private readonly IModelBinder<TModel> binder;
-
+            private readonly IViewHost viewHost;
+            private readonly IViewModelBinder<TViewModel> viewModelBinder;
+            private readonly IControllerModelBinder<TControllerModel> controllerModelBinder; 
             private readonly IDictionary<TModel, IDisposable> bindings = new Dictionary<TModel, IDisposable>();
-            private IDisposable subscription = null;
+            private IDisposable navStateChangedSubscription = null;
 
-            internal NavigationStackBinding(INavigationStackViewModel<TModel> navStack, IModelBinder<TModel> binder)
+            internal NavigationStackBinding(
+                INavigationStackViewModel<TModel> navStack, 
+                IViewHost viewHost,
+                IViewModelBinder<TViewModel> viewModelBinder, 
+                IControllerModelBinder<TControllerModel> controllerModelBinder)
             {
                 this.navStack = navStack;
-                this.binder = binder;
+                this.viewHost = viewHost;
+                this.viewModelBinder = viewModelBinder;
+                this.controllerModelBinder = controllerModelBinder;
             }
 
             public void Initialize()
             {
-                if (subscription != null)
+                if (navStateChangedSubscription != null)
                 {
                     throw new NotSupportedException("Initialize can only be called once");
                 }
 
                 // Need to setup the subscription before calling Initialize() to ensure we don't miss any change notifications.
-                subscription = Observable.FromEventPattern<NotifyNavigationStackChangedEventArgs<TModel>>(navStack, "NavigationStackChanged").Subscribe(e =>
+                navStateChangedSubscription = Observable.FromEventPattern<NotifyNavigationStackChangedEventArgs<TModel>>(navStack, "NavigationStackChanged").Subscribe(e =>
                     {
                         var head = e.EventArgs.NewHead;
-                        var removed = e.EventArgs.Removed;
+                        var oldHead = e.EventArgs.OldHead;
 
                         if (head != null && !bindings.ContainsKey(head))
                         {
-                            var binding = binder.Bind(head);
+                            var controller = controllerModelBinder.Bind(head);
+                            var view = viewModelBinder.Bind(head);
+                            viewHost.PresentView(view);
+
+                            var binding = new CompositeDisposable();
+                            binding.Add(controller);
+                            binding.Add(view);
+
                             bindings[head] = binding;
                         }    
 
-                        foreach (var model in removed)
+                        if(oldHead != null && bindings.ContainsKey(oldHead))
                         {
-                            IDisposable binding = null;
-                            if (bindings.TryGetValue(model, out binding))
-                            {
-                                binding.Dispose();
-                            }
+                            var binding = bindings[oldHead];
+                            bindings.Remove(oldHead);
+
+                            binding.Dispose();
                         }
                     });
 
-                binder.Initialize();
+                viewModelBinder.Initialize();
+                controllerModelBinder.Initialize();
             }
 
             public void Dispose()
             {
-                binder.Dispose();
-                subscription.Dispose();
+                controllerModelBinder.Dispose();
+                viewModelBinder.Dispose();
+                navStateChangedSubscription.Dispose();
 
                 foreach(var kv in bindings)
                 {
@@ -79,27 +102,45 @@ namespace RxApp
             }
         }
 
-        public static IDisposableService Bind<TModel>(this INavigationStackViewModel<TModel> navStack, Func<IModelBinder<TModel>> binderProvider)
-            where TModel : INavigableModel
+        public static IDisposableService Bind<TModel, TViewModel, TControllerModel>(
+                this INavigationStackViewModel<TModel> navStack, 
+                IViewHost viewHost,
+                Func<IViewModelBinder<TViewModel>> viewModelBinderProvider, 
+                Func<IControllerModelBinder<TControllerModel>> controllerModelBinderProvider)
+            where TModel : class, TViewModel, TControllerModel, INavigableModel
+            where TViewModel : class, INavigableViewModel
+            where TControllerModel : class, INavigableControllerModel
         {
             Contract.Requires(navStack != null);
-            Contract.Requires(binderProvider != null);
+            Contract.Requires(viewHost != null);
+            Contract.Requires(viewModelBinderProvider != null);
+            Contract.Requires(controllerModelBinderProvider != null);
 
-            return new NavigationStackService<TModel>(navStack, binderProvider);
+            return new NavigationStackService<TModel, TViewModel, TControllerModel>(navStack, viewHost, viewModelBinderProvider, controllerModelBinderProvider);
         }
 
-        private sealed class NavigationStackService<TModel> : IDisposableService
-            where TModel : INavigableModel
+        private sealed class NavigationStackService<TModel, TViewModel, TControllerModel> : IDisposableService
+            where TModel : class, TViewModel, TControllerModel, INavigableModel
+            where TViewModel : class, INavigableViewModel
+            where TControllerModel : class, INavigableControllerModel
         {
             private readonly INavigationStackViewModel<TModel> navStack;
-            private readonly Func<IModelBinder<TModel>> binderProvider;
+            private readonly IViewHost viewHost;
+            private readonly Func<IViewModelBinder<TViewModel>> viewModelBinderProvider;
+            private readonly Func<IControllerModelBinder<TControllerModel>> controllerModelBinderProvider;
 
             private IDisposable navStackBinding = null;
 
-            internal NavigationStackService(INavigationStackViewModel<TModel> navStack, Func<IModelBinder<TModel>> binderProvider)
+            internal NavigationStackService(
+                INavigationStackViewModel<TModel> navStack, 
+                IViewHost viewHost,
+                Func<IViewModelBinder<TViewModel>> viewModelBinderProvider, 
+                Func<IControllerModelBinder<TControllerModel>> controllerModelBinderProvider)
             {
                 this.navStack = navStack;
-                this.binderProvider = binderProvider;
+                this.viewHost = viewHost;
+                this.viewModelBinderProvider = viewModelBinderProvider;
+                this.controllerModelBinderProvider = controllerModelBinderProvider;
             }
 
             public void Start()
@@ -109,7 +150,7 @@ namespace RxApp
                     throw new NotSupportedException("Calling start more than once in a row without first calling stop");
                 }
 
-                navStackBinding = navStack.Bind(binderProvider());
+                navStackBinding = navStack.Bind<TModel, TViewModel, TControllerModel>(viewHost, viewModelBinderProvider(), controllerModelBinderProvider());
             }
 
             public void Stop()
@@ -162,10 +203,13 @@ namespace RxApp
                     var newHead = reversed.Head;
                     var removed = reversed.Tail;
 
-                    Update(Stack<TModel>.Empty.Push(reversed.Head));
-                    NavigationStackChanged(
-                        this, 
-                        NotifyNavigationStackChangedEventArgs<TModel>.Create(newHead, oldHead, removed));
+                    if (newHead != oldHead)
+                    { 
+                        Update(Stack<TModel>.Empty.Push(reversed.Head));
+                        NavigationStackChanged(
+                            this, 
+                            NotifyNavigationStackChangedEventArgs<TModel>.Create(newHead, oldHead, removed));
+                    }
                 }              
             }
 

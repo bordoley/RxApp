@@ -65,7 +65,6 @@
     <Compile Include="StartupActivity.cs" />
     <Compile Include="Activity.cs" />
     <Compile Include="Application.cs" />
-    <Compile Include="AndroidModelBinder.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\RxApp\RxApp.csproj">

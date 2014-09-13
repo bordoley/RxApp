@@ -11,15 +11,33 @@ using ReactiveUI;
 
 
 namespace RxApp
-{        
-    public class RxActivityBase<TViewModel> : Activity, IViewFor<TViewModel>, INotifyPropertyChanged
+{   
+    public interface IActivity 
+    {
+        Application Application { get; }
+        FragmentManager FragmentManager { get; }
+        void Finish();
+        bool OnOptionsItemSelected(IMenuItem item);
+    }
+
+    public interface IRxActivity : IActivity, IViewFor, INotifyPropertyChanged
+    {
+
+    }
+
+    public interface IRxActivity<TViewModel> : IRxActivity, IViewFor<TViewModel>
         where TViewModel : class, IMobileViewModel
     {
-        private readonly IRxActivity<TViewModel> deleg;
+    }
+        
+    public class RxActivity<TViewModel> : Activity, IRxActivity<TViewModel>
+        where TViewModel : class, IMobileViewModel
+    {
+        private readonly RxActivityDelegate<TViewModel> deleg;
 
-        protected RxActivityBase()
+        protected RxActivity()
         {
-            deleg = RxActivity.Create<TViewModel>(this);
+            deleg = RxActivityDelegate<TViewModel>.Create(this);
         }
 
         public event PropertyChangedEventHandler PropertyChanged
@@ -60,12 +78,6 @@ namespace RxApp
             deleg.OnCreate(bundle);
         }
 
-        protected override void OnDestroy()
-        {
-            deleg.OnDestroy();
-            base.OnDestroy();
-        }
-
         protected override void OnResume()
         {
             base.OnResume();
@@ -88,103 +100,99 @@ namespace RxApp
             return deleg.OnOptionsItemSelected(item);
         }
     }
-
-    public interface IRxActivity
-    {
-        void OnCreate(Bundle bundle);
-
-        void OnDestroy();
-
-        void OnResume();
-
-        void OnPause();
-
-        void OnBackPressed();
-
-        bool OnOptionsItemSelected(IMenuItem item);
-    }
         
-    public interface IRxActivity<TViewModel> : IRxActivity, IViewFor<TViewModel>, INotifyPropertyChanged
-        where TViewModel : class, IMobileViewModel
+    public sealed class RxActivityDelegate<TViewModel> : INotifyPropertyChanged, IViewFor<TViewModel>
+        where TViewModel: class, IMobileViewModel
     {
-    }
-
-    public static class RxActivity
-    {
-        public static IRxActivity<TViewModel> Create<TViewModel>(Activity activity)
-            where TViewModel: class, IMobileViewModel
+        public static RxActivityDelegate<TViewModel> Create(IRxActivity activity)
         {
             Contract.Requires(activity != null);
-            return new RxActivityImpl<TViewModel>(activity);
+            return new RxActivityDelegate<TViewModel>(activity);
         }
 
-        // Inheritance kind of evil, but this is a super hidden class
-        private sealed class RxActivityImpl<TViewModel> : ReactiveUI.ReactiveObject, IRxActivity<TViewModel>
-             where TViewModel: class, IMobileViewModel
+        private readonly IReactiveObject notify = ReactiveObject.Create();
+        private readonly IRxActivity activity;
+        private TViewModel viewModel;
+
+        private RxActivityDelegate(IRxActivity activity)
         {
-            private readonly Activity activity;
-            private IDisposable closeSubscription;
-            private TViewModel viewModel;
+            this.activity = activity;
+        }
 
-            internal RxActivityImpl(Activity activity)
+        public event PropertyChangedEventHandler PropertyChanged
+        {
+            add 
             {
-                this.activity = activity;
-            }
-                    
-            public TViewModel ViewModel
-            {
-                get { return viewModel; }
-                set { this.RaiseAndSetIfChanged(ref viewModel, value); }
+                notify.PropertyChanged += value;
             }
 
-            object IViewFor.ViewModel
+            remove
             {
-                get { return viewModel; }
-                set { this.ViewModel = (TViewModel)value; }
+                notify.PropertyChanged -= value;
+            }
+        }
+                
+        public TViewModel ViewModel
+        {
+            get 
+            { 
+                return viewModel; 
             }
 
-            public void OnCreate(Bundle bundle)
-            {
-                closeSubscription = this.WhenAnyObservable(x => x.ViewModel.Close).FirstAsync().Subscribe(_ => activity.Finish());
-                var app = (IRxAndroidApplication) activity.Application;
-                app.OnViewCreated(this);
+            set 
+            { 
+                notify.RaiseAndSetIfChanged(ref viewModel, value); 
+            }
+        }
+
+        object IViewFor.ViewModel
+        {
+            get 
+            { 
+                return viewModel; 
             }
 
-            public void OnDestroy()
+            set 
+            { 
+                this.ViewModel = (TViewModel)value; 
+            }
+        }
+
+        public void OnCreate(Bundle bundle)
+        {
+            var app = (IRxAndroidApplication) activity.Application;
+            app.OnActivityCreated(activity);
+        }
+
+        public void OnResume()
+        {
+            ((IServiceViewModel) this.ViewModel).Start.Execute(null);
+        }
+
+        public void OnPause()
+        {
+            ((IServiceViewModel) this.ViewModel).Stop.Execute(null);
+        }
+
+        public void OnBackPressed()
+        {
+            if (!activity.FragmentManager.PopBackStackImmediate())
             {
-                closeSubscription.Dispose();
+                ((INavigableViewModel) this.ViewModel).Back.Execute(null);
+            }
+        }
+
+        public bool OnOptionsItemSelected(IMenuItem item)
+        {
+            Contract.Requires(item != null);
+
+            if (item.ItemId == Android.Resource.Id.Home)
+            {
+                ((INavigableViewModel) this.ViewModel).Up.Execute(null);
+                return true;
             }
 
-            public void OnResume()
-            {
-                ((IServiceViewModel) this.ViewModel).Start.Execute(null);
-            }
-
-            public void OnPause()
-            {
-                ((IServiceViewModel) this.ViewModel).Stop.Execute(null);
-            }
-
-            public void OnBackPressed()
-            {
-                if (!activity.FragmentManager.PopBackStackImmediate())
-                {
-                    ((INavigableViewModel) this.ViewModel).Back.Execute(null);
-                }
-            }
-
-            public bool OnOptionsItemSelected(IMenuItem item)
-            {
-                Contract.Requires(item != null);
-
-                if (item.ItemId == Android.Resource.Id.Home)
-                {
-                    ((INavigableViewModel) this.ViewModel).Up.Execute(null);
-                    return true;
-                }
-
-                return activity.OnOptionsItemSelected(item);
-            }
+            return activity.OnOptionsItemSelected(item);
         }
     }
 }

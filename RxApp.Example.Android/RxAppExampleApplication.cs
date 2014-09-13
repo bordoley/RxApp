@@ -14,7 +14,7 @@ namespace RxApp.Example.Android
         {
         }
 
-        protected override Type GetViewType(IMobileViewModel model)
+        protected override Type GetViewType(object model)
         {
             // This is a lot prettier in F# using pattern matching
             if (model is IMainViewModel)
@@ -25,13 +25,13 @@ namespace RxApp.Example.Android
             throw new Exception("No view for view model");
         }
 
-        protected override IModelBinder<IMobileControllerModel> ProvideControllerBinder()
+        protected override IControllerModelBinder<IMobileControllerModel> ProvideControllerBinder()
         {
             return new ExampleModelBinder(this.NavigationStack);
         }
     }
 
-    internal class ExampleModelBinder : IModelBinder<IMobileControllerModel>
+    internal class ExampleModelBinder : IControllerModelBinder<IMobileControllerModel>
     {
         private readonly INavigationStackControllerModel<IMobileModel> navStack;
 
