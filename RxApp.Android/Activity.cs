@@ -97,7 +97,7 @@ namespace RxApp
 
         public override bool OnOptionsItemSelected(IMenuItem item)
         {
-            return deleg.OnOptionsItemSelected(item);
+            return deleg.OnOptionsItemSelected(item) ? true : base.OnOptionsItemSelected(item);
         }
     }
         
@@ -192,7 +192,7 @@ namespace RxApp
                 return true;
             }
 
-            return activity.OnOptionsItemSelected(item);
+            return false;
         }
     }
 }
