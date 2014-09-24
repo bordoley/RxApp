@@ -10,41 +10,47 @@ using System.Threading;
 
 namespace RxApp
 {
-    public interface IRxAndroidApplication : IService
+    public interface IAndroidApplication 
     {
-        INavigationStackModel<IMobileModel> NavigationStack { get; }
         void OnCreate();
         void OnTerminate();
+    }
+
+    public interface IRxAndroidApplication : IService, IAndroidApplication
+    {
         void OnActivityCreated(IRxActivity activity);
     }
 
     public abstract class RxAndroidApplication : Application, IRxAndroidApplication 
     {
-        private readonly IRxAndroidApplication deleg;
+        private readonly INavigationStackModel<IMobileModel> navStack = RxApp.NavigationStack.Create<IMobileModel>();
+        private IRxAndroidApplication deleg;
 
         public RxAndroidApplication(IntPtr javaReference, Android.Runtime.JniHandleOwnership transfer) : base(javaReference, transfer)
         {
-            deleg = RxAndroidApplicationDelegate.Create(
-                this,
-                this.GetViewType,
-                this.ProvideControllerBinder);
         }
 
         public INavigationStackModel<IMobileModel> NavigationStack
         {
             get
             {
-                return deleg.NavigationStack;
+                return navStack;
             }
         }
 
         protected abstract Type GetViewType(object model);
 
-        protected abstract IControllerModelBinder<IMobileControllerModel> ProvideControllerBinder();
+        protected abstract IMobileApplicationController ProvideApplicationController();
                     
         public override void OnCreate()
         {
             base.OnCreate();
+            deleg = RxAndroidApplicationDelegate.Create(
+                this.NavigationStack,
+                this,
+                this.GetViewType,
+                this.ProvideApplicationController());
+
             deleg.OnCreate();
         }
 
@@ -73,46 +79,42 @@ namespace RxApp
     public sealed class RxAndroidApplicationDelegate : IRxAndroidApplication
     {
         public static RxAndroidApplicationDelegate Create(
+            INavigationStackModel<IMobileModel> navStack,
             Application application, 
             Func<object, Type> viewTypeMap,
-            Func<IControllerModelBinder<IMobileControllerModel>> controllerModelBinderProvider)
+            IMobileApplicationController applicationController) 
         {
+            Contract.Requires(navStack != null);
             Contract.Requires(application != null);
             Contract.Requires(viewTypeMap != null);
-            Contract.Requires(controllerModelBinderProvider != null);
+            Contract.Requires(applicationController != null);
 
-            return new RxAndroidApplicationDelegate(application, viewTypeMap, controllerModelBinderProvider);
+            return new RxAndroidApplicationDelegate(navStack, application, viewTypeMap, applicationController);
         }
-
-        private readonly INavigationStackModel<IMobileModel> navStack = RxApp.NavigationStack.Create<IMobileModel>();
+            
         private readonly IDictionary<IMobileViewModel, IRxActivity> activities = new Dictionary<IMobileViewModel, IRxActivity> ();
 
+        private readonly INavigationStackModel<IMobileModel> navStack;
         private readonly Application application;
         private readonly Func<object, Type> viewTypeMap;
-        private readonly Func<IControllerModelBinder<IMobileControllerModel>> controllerModelBinderProvider;
+        private readonly IMobileApplicationController applicationController;
 
-        private readonly IViewHost viewHost;
+        private readonly IViewHost<RxActivityView> viewHost;
 
-        private IDisposableService navStackService = null;
+        private IDisposable navStackBinding = null;
         private IDisposable navStackSubscription = null;
 
         private RxAndroidApplicationDelegate(
+            INavigationStackModel<IMobileModel> navStack,
             Application application, 
             Func<object, Type> viewTypeMap,
-            Func<IControllerModelBinder<IMobileControllerModel>> controllerModelBinderProvider)
+            IMobileApplicationController applicationController)
         {
+            this.navStack = navStack;
             this.application = application;
             this.viewTypeMap = viewTypeMap;
-            this.controllerModelBinderProvider = controllerModelBinderProvider;
+            this.applicationController = applicationController;
             this.viewHost = new ApplicationViewHost(this);
-        }
-
-        public INavigationStackModel<IMobileModel> NavigationStack 
-        { 
-            get
-            { 
-                return navStack;
-            }
         }
 
         public void OnCreate()
@@ -131,29 +133,27 @@ namespace RxApp
                             }
                         });
 
-            // FIXME: Should not be need after ReactiveUI 6.0.8
-            ReactiveUI.RxApp.MainThreadScheduler = new WaitForDispatcherScheduler(() => AndroidScheduler.UIScheduler());
-            navStackService = 
-                navStack.Bind<IMobileModel,IMobileViewModel,IMobileControllerModel> (
+            navStackBinding = 
+                navStack.Bind<RxActivityView, IMobileModel,IMobileViewModel,IMobileControllerModel> (
                     viewHost,
-                    () => new ApplicationViewModelBinder(this),
-                    controllerModelBinderProvider);
+                    (model) => new RxActivityView(this, model),
+                    applicationController.Bind);
         }
 
         public void OnTerminate()
         {
-            navStackService.Dispose();
+            navStackBinding.Dispose();
             navStackSubscription.Dispose();
         }
 
         public void Start()
         {
-            navStackService.Start();
+            applicationController.Start();
         }
 
         public void Stop()
         {
-            navStackService.Stop();
+            applicationController.Stop();
         }
 
         public void OnActivityCreated(IRxActivity activity)
@@ -171,7 +171,7 @@ namespace RxApp
             }
         }
 
-        private class ApplicationViewHost : IViewHost
+        private sealed class ApplicationViewHost : IViewHost<RxActivityView>
         {
             private readonly RxAndroidApplicationDelegate parent;
 
@@ -180,7 +180,7 @@ namespace RxApp
                 this.parent = parent;
             }
 
-            public void PresentView(IViewFor view)
+            public void PresentView(RxActivityView view)
             {
                 var viewType = parent.viewTypeMap(view.ViewModel);
                 var intent = new Intent(parent.application.ApplicationContext, viewType).SetFlags(ActivityFlags.NewTask);
@@ -188,30 +188,7 @@ namespace RxApp
             }
         }
 
-        private sealed class ApplicationViewModelBinder : IViewModelBinder<IMobileViewModel>
-        {
-            private readonly RxAndroidApplicationDelegate parent;
-
-            internal ApplicationViewModelBinder(RxAndroidApplicationDelegate parent)
-            {
-                this.parent = parent;
-            }
-
-            public IView Bind(IMobileViewModel model)
-            {
-                return new RxActivityView(parent, model);
-            }
-
-            public void Initialize()
-            {
-            }
-
-            public void Dispose()
-            {
-            }
-        }
-
-        private sealed class RxActivityView : IView
+        private sealed class RxActivityView : IDisposable
         {
             private readonly RxAndroidApplicationDelegate parent;
             private readonly IMobileViewModel viewModel;

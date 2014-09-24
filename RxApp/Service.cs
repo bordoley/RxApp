@@ -1,10 +1,36 @@
 ﻿using System;
 using System.Diagnostics.Contracts;
-
 using System.Reactive.Disposables;
+using ReactiveUI;
 
 namespace RxApp
 {
+    public interface IService
+    {
+        void Start();
+        void Stop();
+    }
+
+    public interface IDisposableService : IDisposable, IService
+    {
+    }
+
+    public interface IServiceViewModel 
+    {
+        IReactiveCommand<object> Start { get; }
+        IReactiveCommand<object> Stop { get; }
+    }
+
+    public interface IServiceControllerModel
+    {
+        IObservable<object> Start { get; }
+        IObservable<object> Stop { get; }
+    }
+
+    public interface IServiceModel : IServiceViewModel, IServiceControllerModel
+    {
+    }
+
     public static class Service
     {
         public static IDisposable Bind(this IServiceControllerModel model, IDisposableService deleg)
