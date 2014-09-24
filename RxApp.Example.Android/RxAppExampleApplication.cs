@@ -11,16 +11,22 @@ namespace RxApp.Example.Android
     [Application]
     public sealed class RxAppExampleApplication : RxAndroidApplication
     {
+        private readonly IMobileApplicationController applicationController;
+
         public RxAppExampleApplication(IntPtr javaReference, JniHandleOwnership transfer) : base(javaReference, transfer)
         {
+            applicationController = new RxAppExampleApplicationController(this.NavigationStack);
         }
 
-        protected override IMobileApplicationController ProvideApplicationController()
+        public override IMobileApplicationController ApplicationController
         {
-            return new RxAppExampleApplicationController(this.NavigationStack);
+            get
+            {
+                return applicationController;
+            }
         }
 
-        protected override Type GetViewType(object model)
+        public override Type GetViewType(object model)
         {
             // This is a lot prettier in F# using pattern matching
             if (model is IMainViewModel)
