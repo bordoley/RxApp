@@ -43,7 +43,7 @@ namespace RxApp
             return retval;
         }
 
-        private sealed class ServiceControllerBinding : IInitializable
+        private sealed class ServiceControllerBinding : IDisposable
         {
             private readonly IServiceControllerModel model;
             private readonly IDisposableService deleg;

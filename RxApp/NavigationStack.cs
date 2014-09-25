@@ -9,6 +9,11 @@ using System.Reactive.Linq;
 
 namespace RxApp
 {
+    public interface IViewHost<TView>
+    {
+        void PresentView(TView view);
+    }
+
     public interface INavigableViewModel
     {
         IReactiveCommand<object> Back { get; }
@@ -106,7 +111,7 @@ namespace RxApp
             return retval;
         }
 
-        private sealed class NavigationStackBinding<TView, TModel, TViewModel, TControllerModel> : IInitializable
+        private sealed class NavigationStackBinding<TView, TModel, TViewModel, TControllerModel> : IDisposable
             where TView : IDisposable
             where TModel : class, TViewModel, TControllerModel, INavigableModel
             where TViewModel : class, INavigableViewModel
