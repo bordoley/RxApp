@@ -85,6 +85,7 @@ namespace RxApp
     public interface INavigationStackControllerModel<TModel> 
         where TModel: INavigableModel
     {
+        void Pop();
         void Push(TModel model);
         void SetRoot(TModel model);
     }
@@ -149,7 +150,7 @@ namespace RxApp
                 navStateChangedSubscription = Observable.FromEventPattern<NotifyNavigationStackChangedEventArgs<TModel>>(navStack, "NavigationStackChanged").Subscribe(e =>
                     {
                         var head = e.EventArgs.NewHead;
-                        var oldHead = e.EventArgs.OldHead;
+                        var removed = e.EventArgs.Removed;
 
                         if (head != null && !bindings.ContainsKey(head))
                         {
@@ -165,11 +166,10 @@ namespace RxApp
                             bindings[head] = binding;
                         }    
 
-                        if(oldHead != null && bindings.ContainsKey(oldHead))
+                        foreach (var model in removed)
                         {
-                            var binding = bindings[oldHead];
-                            bindings.Remove(oldHead);
-
+                            var binding = bindings[model];
+                            bindings.Remove(model);
                             binding.Dispose();
                         }
                     });
@@ -243,7 +243,7 @@ namespace RxApp
                     NotifyNavigationStackChangedEventArgs<TModel>.Create(model, oldHead, Stack<TModel>.Empty));
             }
 
-            private void Pop()
+            public void Pop()
             {
                 var oldHead = navStack.Head;
                 Update(navStack.Tail);
