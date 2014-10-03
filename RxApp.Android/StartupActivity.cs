@@ -28,7 +28,7 @@ namespace RxApp
 
         private void StartApp()
         { 
-            var app = (IRxAndroidApplication) this.Application;
+            var app = (IService) this.Application;
             app.Start();
             this.Finish();
         }

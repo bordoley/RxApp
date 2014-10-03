@@ -3,11 +3,6 @@ using ReactiveUI;
 
 namespace RxApp
 {
-    public interface IMobileApplicationController : IService
-    {
-        IDisposable Bind(IMobileControllerModel model);
-    }
-
     public interface IMobileViewModel : INavigableViewModel, IServiceViewModel 
     {
     }

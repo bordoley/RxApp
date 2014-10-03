@@ -9,24 +9,16 @@ using Android.Runtime;
 namespace RxApp.Example.Android
 {
     [Application]
-    public sealed class RxAppExampleApplication : RxAndroidApplication
+    public sealed class RxAppExampleApplication : ActivityViewApplication
     {
-        private readonly IMobileApplicationController applicationController;
+        private readonly RxAppExampleApplicationController applicationController;
 
         public RxAppExampleApplication(IntPtr javaReference, JniHandleOwnership transfer) : base(javaReference, transfer)
         {
             applicationController = new RxAppExampleApplicationController(this.NavigationStack);
         }
 
-        public override IMobileApplicationController ApplicationController
-        {
-            get
-            {
-                return applicationController;
-            }
-        }
-
-        public override Type GetViewType(object model)
+        public override Type GetActivityType(IMobileViewModel model)
         {
             // This is a lot prettier in F# using pattern matching
             if (model is IMainViewModel)
@@ -36,13 +28,28 @@ namespace RxApp.Example.Android
 
             throw new Exception("No view for view model");
         }
+
+        public override IDisposable ProvideController(IMobileControllerModel model)
+        {
+            return applicationController.Bind(model);
+        }
+
+        public override void Start()
+        {
+            applicationController.Start();
+        }
+
+        public override void Stop()
+        {
+            applicationController.Stop();
+        }
     }
 
-    internal sealed class RxAppExampleApplicationController : IMobileApplicationController
+    internal sealed class RxAppExampleApplicationController
     {
-        private readonly INavigationStackControllerModel<IMobileModel> navStack;
+        private readonly INavigationStack<IMobileModel> navStack;
 
-        internal RxAppExampleApplicationController(INavigationStackControllerModel<IMobileModel> navStack)
+        internal RxAppExampleApplicationController(INavigationStack<IMobileModel> navStack)
         {
             this.navStack = navStack;
         }
@@ -70,4 +77,3 @@ namespace RxApp.Example.Android
         }
     }
 }
-

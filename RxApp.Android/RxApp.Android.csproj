@@ -62,8 +62,10 @@
   <Import Project="$(MSBuildExtensionsPath)\Novell\Novell.MonoDroid.CSharp.targets" />
   <ItemGroup>
     <Compile Include="StartupActivity.cs" />
-    <Compile Include="Activity.cs" />
-    <Compile Include="Application.cs" />
+    <Compile Include="AndroidInterfaces.cs" />
+    <Compile Include="ActivityApplication\Interfaces.cs" />
+    <Compile Include="ActivityApplication\ActivityViewApplication.cs" />
+    <Compile Include="ActivityApplication\ActivityView.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\RxApp\RxApp.csproj">
@@ -73,5 +75,8 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="ActivityApplication\" />
   </ItemGroup>
 </Project>

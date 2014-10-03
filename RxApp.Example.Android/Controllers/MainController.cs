@@ -7,11 +7,11 @@ namespace RxApp.Example.Android
     public class MainControllerService : IDisposableService
     {
         private readonly IMainControllerModel model;
-        private readonly INavigationStackControllerModel<IMobileModel> navStack;
+        private readonly INavigationStack<IMobileModel> navStack;
 
         private IDisposable subscription = null;
 
-        public MainControllerService(IMainControllerModel model, INavigationStackControllerModel<IMobileModel> navStack)
+        public MainControllerService(IMainControllerModel model, INavigationStack<IMobileModel> navStack)
         {
             this.model = model;
             this.navStack = navStack;
