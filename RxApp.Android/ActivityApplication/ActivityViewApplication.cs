@@ -69,12 +69,9 @@ namespace RxApp
 
                             foreach (var model in removed)
                             {
-                                IActivityView activity = null;
-                                if (activities.TryGetValue(model, out activity))
-                                {
-                                    activities.Remove(model);
-                                    activity.Finish();
-                                }
+                                IActivityView activity = activities[model];
+                                activities.Remove(model);
+                                activity.Finish();
                             }
                     }));
 

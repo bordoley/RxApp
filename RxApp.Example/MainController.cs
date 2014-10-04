@@ -2,7 +2,7 @@
 using RxApp;
 using System;
 
-namespace RxApp.Example.Android
+namespace RxApp.Example
 {      
     public class MainControllerService : IDisposableService
     {

@@ -44,36 +44,4 @@ namespace RxApp.Example.Android
             applicationController.Stop();
         }
     }
-
-    internal sealed class RxAppExampleApplicationController
-    {
-        private readonly INavigationStack<IMobileModel> navStack;
-
-        internal RxAppExampleApplicationController(INavigationStack<IMobileModel> navStack)
-        {
-            this.navStack = navStack;
-        }
-
-        public IDisposable Bind(IMobileControllerModel model)
-        {
-            // This is a lot prettier if you use F# pattern matching
-            if (model is IMainControllerModel)
-            {
-                return model.Bind(new MainControllerService((IMainControllerModel) model, navStack));
-            }
-            else
-            {
-                return Disposable.Empty;
-            }
-        }
-
-        public void Start()
-        {
-            navStack.Push(new MainModel());
-        }
-
-        public void Stop()
-        {
-        }
-    }
 }
