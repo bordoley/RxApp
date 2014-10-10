@@ -183,10 +183,9 @@ namespace RxApp
         {
             private readonly INavigationStack navStack;
             private readonly Func<object, IDisposable> provideController;
+            private readonly IDictionary<object, IDisposable> bindings = new Dictionary<object, IDisposable>();
 
             private IDisposable navStateChangedSubscription = null;
-
-            private IDisposable binding = null;
 
             internal NavigationStackControllerBinding(
                 INavigationStack navStack,  
@@ -208,16 +207,18 @@ namespace RxApp
                         var head = e.EventArgs.NewHead;
                         var removed = e.EventArgs.Removed;
 
-                        if (binding != null)
+                        if (head != null && !bindings.ContainsKey(head))
                         {
-                            binding.Dispose();
-                            binding = null;
-                        }
-
-                        if (head != null)
-                        {
-                            binding = provideController(head);
+                            var binding = provideController(head);
+                            bindings[head] = binding;
                         }    
+
+                        foreach (var model in removed)
+                        {
+                            var binding = bindings[model];
+                            binding.Dispose();
+                            bindings.Remove(model);
+                        }
                     });
             }
 
@@ -225,9 +226,11 @@ namespace RxApp
             {
                 navStateChangedSubscription.Dispose();
 
-                if (binding != null)
+                foreach (var model in bindings.Keys)
                 {
+                    var binding = bindings[model];
                     binding.Dispose();
+                    bindings.Remove(model);
                 }
             }
         }
