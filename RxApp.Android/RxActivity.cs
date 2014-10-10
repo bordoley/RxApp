@@ -12,20 +12,20 @@ using ReactiveUI;
 
 namespace RxApp
 {   
-    public sealed class ActivityViewDelegate<TViewModel> : INotifyPropertyChanged, IViewFor<TViewModel>
-        where TViewModel: class, IMobileViewModel
+    public sealed class RxActivityHelper<TViewModel> : INotifyPropertyChanged, IViewFor<TViewModel>
+        where TViewModel: class, INavigableViewModel, IServiceViewModel
     {
-        public static ActivityViewDelegate<TViewModel> Create(IActivityView activity)
+        public static RxActivityHelper<TViewModel> Create(IRxActivity activity)
         {
             Contract.Requires(activity != null);
-            return new ActivityViewDelegate<TViewModel>(activity);
+            return new RxActivityHelper<TViewModel>(activity);
         }
 
         private readonly IReactiveObject notify = ReactiveObject.Create();
-        private readonly IActivityView activity;
+        private readonly IRxActivity activity;
         private TViewModel viewModel;
 
-        private ActivityViewDelegate(IActivityView activity)
+        private RxActivityHelper(IRxActivity activity)
         {
             this.activity = activity;
         }
@@ -71,25 +71,25 @@ namespace RxApp
 
         public void OnCreate(Bundle bundle)
         {
-            var app = (IActivityViewApplication) activity.Application;
-            app.OnActivityViewCreated(activity);
+            var app = (IRxApplication) activity.Application;
+            app.OnActivityCreated(activity);
         }
 
         public void OnResume()
         {
-            ((IServiceViewModel) this.ViewModel).Start.Execute(null);
+            this.ViewModel.Start.Execute(null);
         }
 
         public void OnPause()
         {
-            ((IServiceViewModel) this.ViewModel).Stop.Execute(null);
+            this.ViewModel.Stop.Execute(null);
         }
 
         public void OnBackPressed()
         {
             if (!activity.FragmentManager.PopBackStackImmediate())
             {
-                ((INavigableViewModel) this.ViewModel).Back.Execute(null);
+                this.ViewModel.Back.Execute(null);
             }
         }
 
@@ -99,7 +99,7 @@ namespace RxApp
 
             if (item.ItemId == Android.Resource.Id.Home)
             {
-                ((INavigableViewModel) this.ViewModel).Up.Execute(null);
+                this.ViewModel.Up.Execute(null);
                 return true;
             }
 
@@ -107,26 +107,26 @@ namespace RxApp
         }
     }
 
-    public abstract class ActivityView<TViewModel> : Activity, IActivityView<TViewModel>
-        where TViewModel : class, IMobileViewModel
+    public abstract class RxActivity<TViewModel> : Activity, IRxActivity<TViewModel>
+        where TViewModel : class, INavigableViewModel, IServiceViewModel
     {
-        private readonly ActivityViewDelegate<TViewModel> deleg;
+        private readonly RxActivityHelper<TViewModel> helper;
 
-        protected ActivityView()
+        protected RxActivity()
         {
-            deleg = ActivityViewDelegate<TViewModel>.Create(this);
+            helper = RxActivityHelper<TViewModel>.Create(this);
         }
 
         public event PropertyChangedEventHandler PropertyChanged
         {
             add 
             { 
-                deleg.PropertyChanged += value; 
+                helper.PropertyChanged += value; 
             }
 
             remove 
             { 
-                deleg.PropertyChanged -= value; 
+                helper.PropertyChanged -= value; 
             }
         }
             
@@ -134,12 +134,12 @@ namespace RxApp
         {
             get
             {
-                return deleg.ViewModel;
+                return helper.ViewModel;
             }
 
             set
             {
-                deleg.ViewModel = value;
+                helper.ViewModel = value;
             }
         }
 
@@ -147,41 +147,41 @@ namespace RxApp
         {
             get
             {
-                return ((IViewFor)deleg).ViewModel;
+                return ((IViewFor)helper).ViewModel;
             }
 
             set
             {
-                ((IViewFor)deleg).ViewModel = value;
+                ((IViewFor)helper).ViewModel = value;
             }
         }
 
         protected override void OnCreate(Bundle bundle)
         {
             base.OnCreate(bundle);
-            deleg.OnCreate(bundle);
+            helper.OnCreate(bundle);
         }
 
         protected override void OnResume()
         {
             base.OnResume();
-            deleg.OnResume();
+            helper.OnResume();
         }
 
         protected override void OnPause()
         {
-            deleg.OnPause();
+            helper.OnPause();
             base.OnPause();
         }
 
         public override void OnBackPressed()
         {
-            deleg.OnBackPressed();
+            helper.OnBackPressed();
         }
 
         public override bool OnOptionsItemSelected(IMenuItem item)
         {
-            return deleg.OnOptionsItemSelected(item) ? true : base.OnOptionsItemSelected(item);
+            return helper.OnOptionsItemSelected(item) ? true : base.OnOptionsItemSelected(item);
         }
     }
 }

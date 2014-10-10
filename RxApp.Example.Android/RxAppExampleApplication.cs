@@ -9,7 +9,7 @@ using Android.Runtime;
 namespace RxApp.Example.Android
 {
     [Application]
-    public sealed class RxAppExampleApplication : ActivityViewApplication
+    public sealed class RxAppExampleApplication : RxApplication
     {
         private readonly RxAppExampleApplicationController applicationController;
 
@@ -18,7 +18,7 @@ namespace RxApp.Example.Android
             applicationController = new RxAppExampleApplicationController(this.NavigationStack);
         }
 
-        public override Type GetActivityType(IMobileViewModel model)
+        public override Type GetActivityType(object model)
         {
             // This is a lot prettier in F# using pattern matching
             if (model is IMainViewModel)
@@ -29,7 +29,7 @@ namespace RxApp.Example.Android
             throw new Exception("No view for view model");
         }
 
-        public override IDisposable ProvideController(IMobileControllerModel model)
+        public override IDisposable ProvideController(object model)
         {
             return applicationController.Bind(model);
         }

@@ -8,19 +8,20 @@ namespace RxApp.Example
 {
     public class RxAppExampleApplicationController
     {
-        private readonly INavigationStack<IMobileModel> navStack;
+        private readonly INavigationStack navStack;
 
-        public RxAppExampleApplicationController(INavigationStack<IMobileModel> navStack)
+        public RxAppExampleApplicationController(INavigationStack navStack)
         {
             this.navStack = navStack;
         }
 
-        public IDisposable Bind(IMobileControllerModel model)
+        public IDisposable Bind(object model)
         {
             // This is a lot prettier if you use F# pattern matching
             if (model is IMainControllerModel)
             {
-                return model.Bind(new MainControllerService((IMainControllerModel) model, navStack));
+                IService service = new MainControllerService((IMainControllerModel)model, navStack);
+                return ((IServiceControllerModel) model).Bind(service);
             }
             else
             {

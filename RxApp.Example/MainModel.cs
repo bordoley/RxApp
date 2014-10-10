@@ -4,25 +4,22 @@ using System;
 
 namespace RxApp.Example
 {   
-    public interface IMainViewModel : IMobileViewModel
+    public interface IMainViewModel : INavigableViewModel, IServiceViewModel
     {
         IReactiveCommand<object> OpenPage { get; }
     }
 
-    public interface IMainControllerModel : IMobileControllerModel
+    public interface IMainControllerModel
     {
         IObservable<object> OpenPage { get; }
     }
 
-    public interface IMainModel : IMainViewModel, IMainControllerModel, IMobileModel
-    {
-    }
-
-    public class MainModel : MobileModel, IMainModel
+    public class MainModel : MobileModel, IMainViewModel, IMainControllerModel
     {
         private readonly IReactiveCommand<object> openPage = ReactiveCommand.Create();
 
         public IReactiveCommand<object> OpenPage { get { return openPage; } }
+
         IObservable<object> IMainControllerModel.OpenPage { get { return (IObservable<object>) openPage; } }
     }
 }

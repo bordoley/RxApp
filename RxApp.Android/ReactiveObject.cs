@@ -3,13 +3,13 @@ using ReactiveUI;
 
 namespace RxApp
 {
-    public static class ReactiveObject
+    internal static class ReactiveObject
     {
         internal class InstantiableReactiveObject : ReactiveUI.ReactiveObject 
         {
         }
 
-        public static IReactiveObject Create() 
+        internal static IReactiveObject Create() 
         {
             return new InstantiableReactiveObject();
         }

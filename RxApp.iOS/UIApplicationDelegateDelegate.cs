@@ -12,29 +12,29 @@ namespace RxApp
     public sealed class UIApplicationDelegateDelegate
     {
         public static UIApplicationDelegateDelegate Create(
-            INavigationStack<IMobileModel> navStack,
+            INavigationStack navStack,
             IService applicationService,
-            Func<IMobileControllerModel, IDisposable> provideController,
-            Func<IMobileViewModel, UIViewController> provideView)
+            Func<object, IDisposable> provideController,
+            Func<object, UIViewController> provideView)
         {
             return new UIApplicationDelegateDelegate(navStack, applicationService, provideController, provideView);
         }
 
-        private readonly IDictionary<IMobileViewModel, UIViewController> views = new Dictionary<IMobileViewModel, UIViewController>();
+        private readonly IDictionary<object, UIViewController> views = new Dictionary<object, UIViewController>();
 
-        private readonly INavigationStack<IMobileModel> navStack;
+        private readonly INavigationStack navStack;
         private readonly IService applicationService;
-        private readonly Func<IMobileControllerModel, IDisposable> provideController;
-        private readonly Func<IMobileViewModel, UIViewController> provideView;
+        private readonly Func<object, IDisposable> provideController;
+        private readonly Func<object, UIViewController> provideView;
 
         private CompositeDisposable subscription = null;
         private UIWindow window;
 
         private UIApplicationDelegateDelegate(
-            INavigationStack<IMobileModel> navStack,
+            INavigationStack navStack,
             IService applicationService,
-            Func<IMobileControllerModel, IDisposable> provideController,
-            Func<IMobileViewModel, UIViewController> provideView)
+            Func<object, IDisposable> provideController,
+            Func<object, UIViewController> provideView)
         {
             this.navStack = navStack;
             this.applicationService = applicationService;
@@ -52,8 +52,8 @@ namespace RxApp
 
             subscription.Add(
                 Observable
-                    .FromEventPattern<NotifyNavigationStackChangedEventArgs<IMobileModel>>(navStack, "NavigationStackChanged")
-                    .Subscribe((EventPattern<NotifyNavigationStackChangedEventArgs<IMobileModel>> e) =>
+                    .FromEventPattern<NotifyNavigationStackChangedEventArgs>(navStack, "NavigationStackChanged")
+                    .Subscribe((EventPattern<NotifyNavigationStackChangedEventArgs> e) =>
                     {
                         var newHead = e.EventArgs.NewHead;
                         var oldHead = e.EventArgs.OldHead;
@@ -81,7 +81,7 @@ namespace RxApp
                         }
                     }));
 
-            subscription.Add(navStack.Bind<IMobileModel, IMobileControllerModel>(provideController));
+            subscription.Add(navStack.BindController(provideController));
 
             window.MakeKeyAndVisible();
             applicationService.Start();

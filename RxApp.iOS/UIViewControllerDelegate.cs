@@ -3,29 +3,30 @@ using System.Diagnostics.Contracts;
 
 namespace RxApp
 {
-    public sealed class UIViewControllerDelegate
+    public sealed class UIViewControllerDelegate<TModel>
+        where TModel: class, /*INavigableViewModel,*/ IServiceViewModel
     {
-        public static UIViewControllerDelegate Create(IMobileModel model)
+        public static UIViewControllerDelegate<TModel> Create(TModel model)
         {
             Contract.Requires(model != null);
-            return new UIViewControllerDelegate(model);
+            return new UIViewControllerDelegate<TModel>(model);
         }
 
-        private readonly IMobileModel model;
+        private readonly TModel model;
 
-        private UIViewControllerDelegate(IMobileModel model)
+        private UIViewControllerDelegate(TModel model)
         {
             this.model = model;
         }
 
         public void ViewDidAppear(bool animated)
         {
-            ((IMobileViewModel)model).Start.Execute(null);
+            model.Start.Execute(null);
         }
 
         public void ViewDidDisappear(bool animated)
         {
-            ((IMobileViewModel)model).Stop.Execute(null);
+            model.Stop.Execute(null);
         }
     }
 }

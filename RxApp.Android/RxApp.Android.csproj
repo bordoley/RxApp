@@ -63,9 +63,10 @@
   <ItemGroup>
     <Compile Include="StartupActivity.cs" />
     <Compile Include="AndroidInterfaces.cs" />
-    <Compile Include="ActivityApplication\Interfaces.cs" />
-    <Compile Include="ActivityApplication\ActivityViewApplication.cs" />
-    <Compile Include="ActivityApplication\ActivityView.cs" />
+    <Compile Include="Interfaces.cs" />
+    <Compile Include="ReactiveObject.cs" />
+    <Compile Include="RxActivity.cs" />
+    <Compile Include="RxApplication.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\RxApp\RxApp.csproj">
@@ -75,8 +76,5 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="ActivityApplication\" />
   </ItemGroup>
 </Project>

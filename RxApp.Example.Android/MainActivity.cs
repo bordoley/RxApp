@@ -9,7 +9,7 @@ using RxApp;
 namespace RxApp.Example.Android
 {
     [Activity(Label = "MainActivity")]            
-    public sealed class MainActivity : ActivityView<IMainViewModel>
+    public sealed class MainActivity : RxActivity<IMainViewModel>
     {
         private IDisposable subscription = null;
         private Button button;

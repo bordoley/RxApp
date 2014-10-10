@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics.Contracts;
 using System.Reactive.Disposables;
+using System.Windows.Input;
 using ReactiveUI;
 
 namespace RxApp
@@ -11,61 +12,45 @@ namespace RxApp
         void Stop();
     }
 
-    public interface IDisposableService : IDisposable, IService
-    {
-    }
-
     public interface IServiceViewModel 
     {
-        IReactiveCommand<object> Start { get; }
-        IReactiveCommand<object> Stop { get; }
+        ICommand Start { get; }
+        ICommand Stop { get; }
     }
 
     public interface IServiceControllerModel
     {
+        bool CanStart { set; }
+        bool CanStop { set; }
+
         IObservable<object> Start { get; }
         IObservable<object> Stop { get; }
     }
 
-    public interface IServiceModel : IServiceViewModel, IServiceControllerModel
-    {
-    }
-
     public static class Service
     {
-        public static IDisposable Bind(this IServiceControllerModel model, IDisposableService deleg)
+        public static IDisposable Bind(this IServiceControllerModel model, IService service)
         {
             Contract.Requires(model != null);
-            Contract.Requires(deleg != null);
+            Contract.Requires(service != null);
 
-            var retval = new ServiceControllerBinding(model, deleg);
-            retval.Initialize();
-            return retval;
-        }
+            CompositeDisposable subscription = new CompositeDisposable();
 
-        private sealed class ServiceControllerBinding : IDisposable
-        {
-            private readonly IServiceControllerModel model;
-            private readonly IDisposableService deleg;
-            private readonly CompositeDisposable subscription = new CompositeDisposable();
+            subscription.Add (model.Start.Subscribe(_ => 
+                { 
+                    model.CanStart = false;
+                    service.Start();
+                    model.CanStop = true;
+                }));
 
-            internal ServiceControllerBinding(IServiceControllerModel model, IDisposableService deleg)
-            {
-                this.model = model;
-                this.deleg = deleg;
-            }
+            subscription.Add (model.Stop.Subscribe(_ =>  
+                {
+                    model.CanStop = false;
+                    service.Stop();
+                    model.CanStart = true;
+                }));
 
-            public void Initialize()
-            {
-                subscription.Add (model.Start.Subscribe(_ => deleg.Start()));
-                subscription.Add (model.Stop.Subscribe(_ =>  deleg.Stop()));
-            }
-
-            public void Dispose()
-            {
-                subscription.Dispose();
-                deleg.Dispose();
-            }
+            return subscription;
         }
     }
 }

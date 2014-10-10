@@ -32,10 +32,10 @@
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Stack.cs" />
-    <Compile Include="ReactiveObject.cs" />
     <Compile Include="NavigationStack.cs" />
     <Compile Include="Service.cs" />
-    <Compile Include="Mobile.cs" />
+    <Compile Include="INavigableModel.cs" />
+    <Compile Include="MobileModel.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
   <ItemGroup>

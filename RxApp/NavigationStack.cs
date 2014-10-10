@@ -10,43 +10,26 @@ using System.Reactive.Linq;
 
 namespace RxApp
 {
-    public interface INavigableViewModel
+    public sealed class NotifyNavigationStackChangedEventArgs : EventArgs
     {
-        IReactiveCommand<object> Back { get; }
-        IReactiveCommand<object> Up { get; }
-    }
-
-    public interface INavigableControllerModel
-    {
-        IObservable<object> Back { get; }
-        IObservable<object> Up { get; }
-    }
-
-    public interface INavigableModel : INavigableViewModel, INavigableControllerModel
-    {
-
-    }
-
-    public sealed class NotifyNavigationStackChangedEventArgs<TModel> : EventArgs
-    {
-        public static NotifyNavigationStackChangedEventArgs<TModel> Create(TModel newHead, TModel oldHead, IEnumerable<TModel> removed)
+        public static NotifyNavigationStackChangedEventArgs Create(INavigableControllerModel newHead, INavigableControllerModel oldHead, IEnumerable<INavigableControllerModel> removed)
         {
             Contract.Requires(removed != null);
-            return new NotifyNavigationStackChangedEventArgs<TModel>(newHead, oldHead, removed);
+            return new NotifyNavigationStackChangedEventArgs(newHead, oldHead, removed);
         }
 
-        private readonly TModel newHead;
-        private readonly TModel oldHead;
-        private readonly IEnumerable<TModel> removed;
+        private readonly INavigableControllerModel newHead;
+        private readonly INavigableControllerModel oldHead;
+        private readonly IEnumerable<INavigableControllerModel> removed;
 
-        private  NotifyNavigationStackChangedEventArgs(TModel newHead, TModel oldHead, IEnumerable<TModel> removed)
+        private  NotifyNavigationStackChangedEventArgs(INavigableControllerModel newHead, INavigableControllerModel oldHead, IEnumerable<INavigableControllerModel> removed)
         {
             this.newHead = newHead;
             this.oldHead = oldHead;
             this.removed = removed;
         }
 
-        public TModel NewHead
+        public INavigableControllerModel NewHead
         {
             get
             {
@@ -54,7 +37,7 @@ namespace RxApp
             }
         }
 
-        public TModel OldHead
+        public INavigableControllerModel OldHead
         {
             get
             {
@@ -62,7 +45,7 @@ namespace RxApp
             }
         }
 
-        public IEnumerable<TModel> Removed
+        public IEnumerable<INavigableControllerModel> Removed
         {
             get
             {
@@ -71,43 +54,143 @@ namespace RxApp
         }
     }
 
-    public interface INavigationStack<TModel> : IEnumerable<TModel>
-        where TModel: INavigableModel
+    public interface INavigationStack : IEnumerable<INavigableControllerModel>
     {
-        event EventHandler<NotifyNavigationStackChangedEventArgs<TModel>> NavigationStackChanged;
+        event EventHandler<NotifyNavigationStackChangedEventArgs> NavigationStackChanged;
        
         void Pop();
-        void Push(TModel model);
-        void SetRoot(TModel model);
+        void Push(INavigableControllerModel model);
+        void SetRoot(INavigableControllerModel model);
     }
         
     public static class NavigationStack
     {
-        public static IDisposable Bind<TModel, TControllerModel>(
-                this INavigationStack<TModel> navStack,  
-                Func<TControllerModel, IDisposable> provideController)
-            where TModel : class, TControllerModel, INavigableModel
-            where TControllerModel : class, INavigableControllerModel
+        public static INavigationStack Create ()
         {
-            var retval = new NavigationStackControllerBinding<TModel, TControllerModel>(navStack, provideController);
+            return new NavigationStackImpl();
+        }
+
+        private sealed class NavigationStackImpl : INavigationStack
+        {
+            private IStack<INavigableControllerModel> navStack = Stack<INavigableControllerModel>.Empty;
+            private IDisposable backSubscription = null;
+
+            internal NavigationStackImpl()
+            {
+            }
+
+            public event EventHandler<NotifyNavigationStackChangedEventArgs> NavigationStackChanged = (o,e) => {};
+
+            public IEnumerator<INavigableControllerModel> GetEnumerator()
+            {
+                return this.navStack.GetEnumerator();
+            }
+
+            IEnumerator IEnumerable.GetEnumerator()
+            {
+                return ((IEnumerable)this.navStack).GetEnumerator();
+            }
+
+            private void GotoRoot()
+            {
+                if (!navStack.IsEmpty())
+                {
+                    var reversed = navStack.Reverse();
+                    var oldHead = navStack.Head;
+                    var newHead = reversed.Head;
+                    var removed = reversed.Tail;
+
+                    if (newHead != oldHead)
+                    { 
+                        Update(Stack<INavigableControllerModel>.Empty.Push(reversed.Head));
+                        NavigationStackChanged(
+                            this, 
+                            NotifyNavigationStackChangedEventArgs.Create(newHead, oldHead, removed));
+                    }
+                }              
+            }
+
+            public void Push(INavigableControllerModel model)
+            {
+                Contract.Requires(model != null);
+
+                var oldHead = navStack.Head;
+                Update(navStack.Push(model));
+                NavigationStackChanged(
+                    this, 
+                    NotifyNavigationStackChangedEventArgs.Create(model, oldHead, Stack<INavigableControllerModel>.Empty));
+            }
+
+            public void Pop()
+            {
+                var oldHead = navStack.Head;
+                Update(navStack.Tail);
+                var newHead = navStack.Head;
+                NavigationStackChanged(
+                    this, 
+                    NotifyNavigationStackChangedEventArgs.Create(newHead, oldHead, Stack<INavigableControllerModel>.Empty.Push(oldHead)));
+            }
+
+            public void SetRoot(INavigableControllerModel model)
+            {
+                Contract.Requires(model != null);
+
+                var oldHead = navStack.Head;
+                var removed = navStack;
+
+                Update(Stack<INavigableControllerModel>.Empty.Push(model));
+                NavigationStackChanged(
+                    this, 
+                    NotifyNavigationStackChangedEventArgs.Create(model, oldHead, removed));
+            }
+
+            private void Update(IStack<INavigableControllerModel> newStack)
+            {
+                navStack = newStack;
+
+                if (backSubscription != null)
+                {
+                    backSubscription.Dispose();
+                    backSubscription = null;
+                }
+
+                var newSubscription = new CompositeDisposable();
+                if (!navStack.IsEmpty())
+                {   
+                    INavigableControllerModel view = navStack.First();
+
+                    newSubscription.Add(view.Back.FirstAsync().Subscribe(_ => this.Pop()));
+                    newSubscription.Add(view.Up.FirstAsync().Subscribe(_ => this.GotoRoot()));
+                }
+
+                backSubscription = newSubscription;
+            }
+        }
+
+        public static IDisposable BindController(
+            this INavigationStack This,  
+            Func<object, IDisposable> provideController)
+        {
+            Contract.Requires(This != null);
+            Contract.Requires(provideController != null);
+
+            var retval = new NavigationStackControllerBinding(This, provideController);
             retval.Initialize();
             return retval;
         }
 
-        private sealed class NavigationStackControllerBinding<TModel, TControllerModel> : IDisposable
-            where TModel : class, TControllerModel, INavigableModel
-            where TControllerModel : class, INavigableControllerModel
+        private sealed class NavigationStackControllerBinding : IDisposable
         {
-            private readonly INavigationStack<TModel> navStack;
-            private readonly Func<TControllerModel, IDisposable> provideController;
+            private readonly INavigationStack navStack;
+            private readonly Func<object, IDisposable> provideController;
 
             private IDisposable navStateChangedSubscription = null;
 
             private IDisposable binding = null;
 
             internal NavigationStackControllerBinding(
-                INavigationStack<TModel> navStack,  
-                Func<TControllerModel, IDisposable> provideController)
+                INavigationStack navStack,  
+                Func<object, IDisposable> provideController)
             {
                 this.navStack = navStack;
                 this.provideController = provideController;
@@ -120,7 +203,7 @@ namespace RxApp
                     throw new NotSupportedException("Initialize can only be called once");
                 }
 
-                navStateChangedSubscription = Observable.FromEventPattern<NotifyNavigationStackChangedEventArgs<TModel>>(navStack, "NavigationStackChanged").Subscribe(e =>
+                navStateChangedSubscription = Observable.FromEventPattern<NotifyNavigationStackChangedEventArgs>(navStack, "NavigationStackChanged").Subscribe(e =>
                     {
                         var head = e.EventArgs.NewHead;
                         var removed = e.EventArgs.Removed;
@@ -146,109 +229,6 @@ namespace RxApp
                 {
                     binding.Dispose();
                 }
-            }
-        }
-
-        public static INavigationStack<TModel> Create<TModel> ()
-            where TModel: class, INavigableModel
-        {
-            return new NavigationStackImpl<TModel>();
-        }
-
-        private sealed class NavigationStackImpl<TModel> : INavigationStack<TModel> 
-            where TModel: class, INavigableModel
-        {
-            private IStack<TModel> navStack = Stack<TModel>.Empty;
-            private IDisposable backSubscription = null;
-
-            internal NavigationStackImpl()
-            {
-            }
-
-            public event EventHandler<NotifyNavigationStackChangedEventArgs<TModel>> NavigationStackChanged = (o,e) => {};
-
-            public IEnumerator<TModel> GetEnumerator()
-            {
-                return this.navStack.GetEnumerator();
-            }
-
-            IEnumerator IEnumerable.GetEnumerator()
-            {
-                return ((IEnumerable)this.navStack).GetEnumerator();
-            }
-
-            private void GotoRoot()
-            {
-                if (!navStack.IsEmpty())
-                {
-                    var reversed = navStack.Reverse();
-                    var oldHead = navStack.Head;
-                    var newHead = reversed.Head;
-                    var removed = reversed.Tail;
-
-                    if (newHead != oldHead)
-                    { 
-                        Update(Stack<TModel>.Empty.Push(reversed.Head));
-                        NavigationStackChanged(
-                            this, 
-                            NotifyNavigationStackChangedEventArgs<TModel>.Create(newHead, oldHead, removed));
-                    }
-                }              
-            }
-
-            public void Push(TModel model)
-            {
-                Contract.Requires(model != null);
-
-                var oldHead = navStack.Head;
-                Update(navStack.Push(model));
-                NavigationStackChanged(
-                    this, 
-                    NotifyNavigationStackChangedEventArgs<TModel>.Create(model, oldHead, Stack<TModel>.Empty));
-            }
-
-            public void Pop()
-            {
-                var oldHead = navStack.Head;
-                Update(navStack.Tail);
-                var newHead = navStack.Head;
-                NavigationStackChanged(
-                    this, 
-                    NotifyNavigationStackChangedEventArgs<TModel>.Create(newHead, oldHead, Stack<TModel>.Empty.Push(oldHead)));
-            }
-
-            public void SetRoot(TModel model)
-            {
-                Contract.Requires(model != null);
-
-                var oldHead = navStack.Head;
-                var removed = navStack;
-
-                Update(Stack<TModel>.Empty.Push(model));
-                NavigationStackChanged(
-                    this, 
-                    NotifyNavigationStackChangedEventArgs<TModel>.Create(model, oldHead, removed));
-            }
-
-            private void Update(IStack<TModel> newStack)
-            {
-                navStack = newStack;
-
-                if (backSubscription != null)
-                {
-                    backSubscription.Dispose();
-                    backSubscription = null;
-                }
-
-                var newSubscription = new CompositeDisposable();
-                if (!navStack.IsEmpty())
-                {   
-                    INavigableControllerModel view = navStack.First();
-                    newSubscription.Add(view.Back.FirstAsync().Subscribe(_ => this.Pop()));
-                    newSubscription.Add(view.Up.FirstAsync().Subscribe(_ => this.GotoRoot()));
-                }
-
-                backSubscription = newSubscription;
             }
         }
     }

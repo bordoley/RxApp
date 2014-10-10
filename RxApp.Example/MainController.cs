@@ -4,14 +4,14 @@ using System;
 
 namespace RxApp.Example
 {      
-    public class MainControllerService : IDisposableService
+    public class MainControllerService : IService
     {
         private readonly IMainControllerModel model;
-        private readonly INavigationStack<IMobileModel> navStack;
+        private readonly INavigationStack navStack;
 
         private IDisposable subscription = null;
 
-        public MainControllerService(IMainControllerModel model, INavigationStack<IMobileModel> navStack)
+        public MainControllerService(IMainControllerModel model, INavigationStack navStack)
         {
             this.model = model;
             this.navStack = navStack;
@@ -28,14 +28,6 @@ namespace RxApp.Example
         {
             subscription.Dispose();
             subscription = null;
-        }
-
-        public void Dispose()
-        {
-            if (subscription != null)
-            {
-                subscription.Dispose();
-            }
         }
     }
 }
