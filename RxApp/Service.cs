@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Diagnostics.Contracts;
 using System.Reactive.Disposables;
 using System.Windows.Input;
@@ -6,8 +7,10 @@ using ReactiveUI;
 
 namespace RxApp
 {
-    public interface IService
+    public interface IService: INotifyPropertyChanged
     {
+        bool IsStarted { get; }
+
         void Start();
         void Stop();
     }
@@ -36,19 +39,14 @@ namespace RxApp
 
             CompositeDisposable subscription = new CompositeDisposable();
 
-            subscription.Add (model.Start.Subscribe(_ => 
-                { 
-                    model.CanStart = false;
-                    service.Start();
-                    model.CanStop = true;
+            subscription.Add(service.WhenAnyValue(x => x.IsStarted).Subscribe(isStarted => 
+                {
+                    model.CanStart = !isStarted;
+                    model.CanStop = isStarted;
                 }));
 
-            subscription.Add (model.Stop.Subscribe(_ =>  
-                {
-                    model.CanStop = false;
-                    service.Stop();
-                    model.CanStart = true;
-                }));
+            subscription.Add (model.Start.Subscribe(_ => service.Start()));
+            subscription.Add (model.Stop.Subscribe(_ => service.Stop()));
 
             return subscription;
         }

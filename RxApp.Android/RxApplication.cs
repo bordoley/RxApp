@@ -3,6 +3,7 @@ using Android.Content;
 using ReactiveUI;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Reactive;
@@ -104,6 +105,9 @@ namespace RxApp
     {
         private readonly INavigationStack navStack = RxApp.NavigationStack.Create();
         private readonly RxApplicationHelper helper;
+        private readonly IReactiveObject notify = ReactiveObject.Create();
+
+        private bool isStarted = false;
 
         public RxApplication(IntPtr javaReference, Android.Runtime.JniHandleOwnership transfer) : base(javaReference, transfer)
         {
@@ -116,6 +120,25 @@ namespace RxApp
             {
                 return navStack;
             }
+        }
+
+        public event PropertyChangedEventHandler PropertyChanged
+        {
+            add 
+            {
+                notify.PropertyChanged += value;
+            }
+
+            remove
+            {
+                notify.PropertyChanged -= value;
+            }
+        }
+
+        public bool IsStarted 
+        { 
+            get { return isStarted; }
+            private set { notify.RaiseAndSetIfChanged(ref isStarted, true); }  
         }
 
         public abstract Type GetActivityType(object model);
@@ -141,10 +164,12 @@ namespace RxApp
 
         public virtual void Start()
         {
+            this.IsStarted = true;
         }
 
         public virtual void Stop()
         {
+            this.IsStarted = false;
         }
     }
 }
