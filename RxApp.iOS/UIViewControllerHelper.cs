@@ -3,18 +3,18 @@ using System.Diagnostics.Contracts;
 
 namespace RxApp
 {
-    public sealed class UIViewControllerDelegate<TModel>
+    public sealed class UIViewControllerHelper<TModel>
         where TModel: class, /*INavigableViewModel,*/ IServiceViewModel
     {
-        public static UIViewControllerDelegate<TModel> Create(TModel model)
+        public static UIViewControllerHelper<TModel> Create(TModel model)
         {
             Contract.Requires(model != null);
-            return new UIViewControllerDelegate<TModel>(model);
+            return new UIViewControllerHelper<TModel>(model);
         }
 
         private readonly TModel model;
 
-        private UIViewControllerDelegate(TModel model)
+        private UIViewControllerHelper(TModel model)
         {
             this.model = model;
         }

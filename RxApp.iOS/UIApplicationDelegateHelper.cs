@@ -9,15 +9,15 @@ using MonoTouch.UIKit;
 
 namespace RxApp
 {
-    public sealed class UIApplicationDelegateDelegate
+    public sealed class UIApplicationDelegateHelper
     {
-        public static UIApplicationDelegateDelegate Create(
+        public static UIApplicationDelegateHelper Create(
             INavigationStack navStack,
             IService applicationService,
             Func<object, IDisposable> provideController,
             Func<object, UIViewController> provideView)
         {
-            return new UIApplicationDelegateDelegate(navStack, applicationService, provideController, provideView);
+            return new UIApplicationDelegateHelper(navStack, applicationService, provideController, provideView);
         }
 
         private readonly IDictionary<object, UIViewController> views = new Dictionary<object, UIViewController>();
@@ -30,7 +30,7 @@ namespace RxApp
         private CompositeDisposable subscription = null;
         private UIWindow window;
 
-        private UIApplicationDelegateDelegate(
+        private UIApplicationDelegateHelper(
             INavigationStack navStack,
             IService applicationService,
             Func<object, IDisposable> provideController,

@@ -53,8 +53,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="UIApplicationDelegateDelegate.cs" />
-    <Compile Include="UIViewControllerDelegate.cs" />
+    <Compile Include="UIApplicationDelegateHelper.cs" />
+    <Compile Include="UIViewControllerHelper.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\iOS\Xamarin.MonoTouch.CSharp.targets" />
   <ItemGroup>
