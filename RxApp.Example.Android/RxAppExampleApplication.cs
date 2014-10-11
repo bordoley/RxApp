@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using RxApp;
 using Android.App;
 using Android.Runtime;
 
-namespace RxApp.Example.Android
+namespace RxApp.Example
 {
     [Application]
     public sealed class RxAppExampleApplication : RxApplication
@@ -32,6 +33,19 @@ namespace RxApp.Example.Android
         public override IDisposable ProvideController(object model)
         {
             return applicationController.Bind(model);
+        }
+
+        public override void OnCreate()
+        {
+            base.OnCreate();
+
+            AndroidEnvironment.UnhandledExceptionRaiser += (sender, args) =>
+                {
+                    var path = Context.GetExternalFilesDir("exception.txt").Path;
+                    StreamWriter file = File.CreateText(path);
+                    file.Write(args.Exception.StackTrace); // save the exception description and clean stack trace
+                    file.Close();
+                };
         }
 
         public override void Start()

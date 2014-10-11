@@ -6,7 +6,7 @@ using System;
 using ReactiveUI;
 using RxApp;
 
-namespace RxApp.Example.Android
+namespace RxApp.Example
 {
     [Activity(Label = "MainActivity")]            
     public sealed class MainActivity : RxActivity<IMainViewModel>
