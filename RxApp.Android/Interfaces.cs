@@ -15,7 +15,7 @@ namespace RxApp
     {
     }
 
-    public interface IRxActivity<TViewModel> : IRxActivity, IViewFor<TViewModel>
+    public interface IRxActivity<TViewModel> : IRxActivity, IViewFor<TViewModel>, INotifyPropertyChanged
         where TViewModel: class
     {
     }
