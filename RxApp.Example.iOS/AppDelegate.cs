@@ -5,6 +5,8 @@ using System.Linq;
 using MonoTouch.Foundation;
 using MonoTouch.UIKit;
 
+using ReactiveUI;
+
 namespace RxApp.Example.iOS
 {
     [Register("AppDelegate")]
@@ -23,9 +25,9 @@ namespace RxApp.Example.iOS
                     // This is a lot prettier in F# using pattern matching
                     if (model is IMainViewModel)
                     {
-                        var view = UIStoryboard.FromName("Views", null).InstantiateViewController("ExampleViewController") as ExampleViewController;
-                        view.ViewModel = model as IMainViewModel;
-                        return view;
+                        var view = UIStoryboard.FromName("Views", null).InstantiateViewController("ExampleViewController");
+                        (view as IViewFor).ViewModel = model;
+                        return view as UIViewController;
                     } 
 
                     throw new Exception("No view for view model");

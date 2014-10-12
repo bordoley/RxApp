@@ -68,10 +68,8 @@ namespace RxApp
                         {
                             var view = provideView(newHead);
                             views[newHead] = view;
+                            navController.PushViewController(view, true);
                         }
-
-                        var viewControllers = navStack.Reverse().Select(x => views[x]).ToArray();
-                        navController.SetViewControllers(viewControllers, true);
 
                         foreach (var model in removed)
                         {
