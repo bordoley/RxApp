@@ -20,8 +20,6 @@ namespace RxApp
             return new RxUIApplicationDelegateHelper(navStack, applicationService, provideController, provideView);
         }
 
-        private readonly IDictionary<object, UIViewController> views = new Dictionary<object, UIViewController>();
-
         private readonly INavigationStack navStack;
         private readonly IService applicationService;
         private readonly Func<object, IDisposable> provideController;
@@ -45,8 +43,8 @@ namespace RxApp
         public bool FinishedLaunching(UIApplication app, NSDictionary options)
         {
             var navController = new BufferedNavigationController(navStack);
-            window = new UIWindow(UIScreen.MainScreen.Bounds);
-            window.RootViewController = navController;
+
+            var  views = new Dictionary<object, UIViewController>();
 
             subscription = new CompositeDisposable();
 
@@ -83,7 +81,10 @@ namespace RxApp
 
             subscription.Add(navStack.BindController(provideController));
 
+            window = new UIWindow(UIScreen.MainScreen.Bounds);
+            window.RootViewController = navController;
             window.MakeKeyAndVisible();
+
             applicationService.Start();
             return true;
         }
@@ -123,7 +124,7 @@ namespace RxApp
 
         public override UIViewController[] PopToViewController(UIViewController viewController, bool animated)
         {
-            throw new NotSupportedException();
+            return null;
         }
 
         public override void SetViewControllers(UIViewController[] controllers, bool animated)
