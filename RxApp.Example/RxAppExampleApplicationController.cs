@@ -29,8 +29,9 @@ namespace RxApp.Example
             // This is a lot prettier if you use F# pattern matching
             if (model is IMainControllerModel)
             {
-                IService service = new MainControllerService((IMainControllerModel)model, navStack);
-                return ((IServiceControllerModel) model).Bind(service);
+
+                var service = new MainControllerService((IMainControllerModel)model, navStack);
+                return (model as IServiceControllerModel).BindAndDispose(service);
             }
             else
             {

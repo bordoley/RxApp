@@ -4,7 +4,7 @@ using System;
 
 namespace RxApp.Example
 {      
-    public class MainControllerService : ReactiveObject, IService
+    public class MainControllerService : ReactiveObject, IService, IDisposable
     {
         private readonly IMainControllerModel model;
         private readonly INavigationStack navStack;
@@ -39,6 +39,16 @@ namespace RxApp.Example
             subscription = null;
 
             this.IsStarted = false;
+        }
+
+        public void Dispose()
+        {
+            if (subscription != null)
+            {
+                subscription.Dispose();
+                subscription = null;
+                this.IsStarted = false;
+            }
         }
     }
 }
