@@ -9,7 +9,7 @@ using MonoTouch.Foundation;
 using MonoTouch.UIKit;
 using System.CodeDom.Compiler;
 
-namespace RxApp.Example.iOS
+namespace RxApp.Example
 {
 	[Register ("ExampleViewController")]
 	partial class ExampleViewController
@@ -18,11 +18,19 @@ namespace RxApp.Example.iOS
 		[GeneratedCode ("iOS Designer", "1.0")]
 		UIButton OpenButton { get; set; }
 
+		[Outlet]
+		[GeneratedCode ("iOS Designer", "1.0")]
+		UIButton UpButton { get; set; }
+
 		void ReleaseDesignerOutlets ()
 		{
 			if (OpenButton != null) {
 				OpenButton.Dispose ();
 				OpenButton = null;
+			}
+			if (UpButton != null) {
+				UpButton.Dispose ();
+				UpButton = null;
 			}
 		}
 	}

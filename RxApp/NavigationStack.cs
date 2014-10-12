@@ -58,6 +58,7 @@ namespace RxApp
     {
         event EventHandler<NotifyNavigationStackChangedEventArgs> NavigationStackChanged;
        
+        void GotoRoot();
         void Pop();
         void Push(INavigableControllerModel model);
         void SetRoot(INavigableControllerModel model);
@@ -91,7 +92,7 @@ namespace RxApp
                 return ((IEnumerable)this.navStack).GetEnumerator();
             }
 
-            private void GotoRoot()
+            public void GotoRoot()
             {
                 if (!navStack.IsEmpty())
                 {

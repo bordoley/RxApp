@@ -44,7 +44,7 @@ namespace RxApp
 
         public bool FinishedLaunching(UIApplication app, NSDictionary options)
         {
-            var navController = new NavigationController(navStack);
+            var navController = new BufferedNavigationController(navStack);
             window = new UIWindow(UIScreen.MainScreen.Bounds);
             window.RootViewController = navController;
 
@@ -68,8 +68,10 @@ namespace RxApp
                         {
                             var view = provideView(newHead);
                             views[newHead] = view;
-                            navController.PushViewController(view, true);
                         }
+
+                        var viewControllers = navStack.Reverse().Select(x => views[x]).ToArray();
+                        navController.SetViewControllers(viewControllers, true);
 
                         foreach (var model in removed)
                         {
@@ -93,21 +95,86 @@ namespace RxApp
         }
     }
 
-
-    internal class NavigationController : UINavigationController
+    // See: https://github.com/Plasma/BufferedNavigationController/blob/master/BufferedNavigationController.m
+    internal class BufferedNavigationController : UINavigationController
     {
+        private readonly Queue<Action> actions = new Queue<Action>();
         private readonly INavigationStack navStack;
 
-        public NavigationController(INavigationStack navStack): base()
+        private bool transitioning = false;
+
+        public BufferedNavigationController(INavigationStack navStack): base()
         {
             this.navStack = navStack;
+            this.WeakDelegate = this;
         }
 
         public override UIViewController PopViewControllerAnimated (bool animated)
         {
-            var retval = base.PopViewControllerAnimated(animated);
-            navStack.Pop();
-            return retval;
+            this.actions.Enqueue(() => navStack.Pop());
+            return base.PopViewControllerAnimated(animated);
+        }
+
+        public override UIViewController[] PopToRootViewController(bool animated)
+        {
+            this.actions.Enqueue(() => navStack.GotoRoot());
+            return base.PopToRootViewController(animated);
+        }
+
+        public override UIViewController[] PopToViewController(UIViewController viewController, bool animated)
+        {
+            throw new NotSupportedException();
+        }
+
+        public override void SetViewControllers(UIViewController[] controllers, bool animated)
+        {
+            if (this.transitioning)
+            {
+                this.actions.Enqueue(() => this.SetViewControllers(controllers, animated));
+            }
+            else
+            {
+                base.SetViewControllers(controllers, animated);
+            }
+        }
+
+        public override void PushViewController(UIViewController viewController, bool animated)
+        {
+            throw new NotSupportedException();
+        }
+
+        [Export("navigationController:didShowViewController:animated:")]
+        public void DidShowViewController(UINavigationController navigationController, UIViewController viewController, bool animated)
+        {
+            this.transitioning = false;
+            runNextAction();
+        }
+
+        [Export("navigationController:willShowViewController:animated:")]
+        public void WillShowViewController(UINavigationController navigationController, UIViewController viewController, bool animated)
+        {
+            this.transitioning = true;
+
+            var transitionCoordinator = this.TopViewController.GetTransitionCoordinator();
+            if (transitionCoordinator != null)
+            {
+                transitionCoordinator.NotifyWhenInteractionEndsUsingBlock(ctx =>
+                    {
+                        if (ctx.IsCancelled)
+                        {
+                            this.transitioning = false;
+                        }
+                    });
+            }
+        }
+
+        private void runNextAction()
+        {
+            if (actions.Count > 0)
+            {
+                var action = actions.Dequeue();
+                action();
+            }
         }
     }
 }

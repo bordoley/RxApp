@@ -7,7 +7,7 @@ using MonoTouch.UIKit;
 
 using ReactiveUI;
 
-namespace RxApp.Example.iOS
+namespace RxApp.Example
 {
     [Register("AppDelegate")]
     public partial class AppDelegate : UIApplicationDelegate

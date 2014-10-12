@@ -5,7 +5,7 @@ using System.Linq;
 using MonoTouch.Foundation;
 using MonoTouch.UIKit;
 
-namespace RxApp.Example.iOS
+namespace RxApp.Example
 {
     public class Application
     {
