@@ -53,8 +53,9 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="UIApplicationDelegateHelper.cs" />
-    <Compile Include="UIViewControllerHelper.cs" />
+    <Compile Include="ReactiveObject.cs" />
+    <Compile Include="RxUIApplicationDelegateHelper.cs" />
+    <Compile Include="RxUIViewController.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\iOS\Xamarin.MonoTouch.CSharp.targets" />
   <ItemGroup>

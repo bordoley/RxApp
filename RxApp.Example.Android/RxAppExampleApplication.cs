@@ -41,8 +41,8 @@ namespace RxApp.Example
 
             AndroidEnvironment.UnhandledExceptionRaiser += (sender, args) =>
                 {
-                    var path = Context.GetExternalFilesDir("exception.txt").Path;
-                    StreamWriter file = File.CreateText(path);
+                    var path = Context.GetExternalFilesDir("exceptions").Path;
+                    StreamWriter file = File.CreateText(path, "exception.txt");
                     file.Write(args.Exception.StackTrace); // save the exception description and clean stack trace
                     file.Close();
                 };

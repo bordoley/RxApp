@@ -127,6 +127,6 @@ Global
 		{89E96EE2-9C28-49B3-AD8D-1FFF4AAD9417}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(MonoDevelopProperties) = preSolution
-		StartupItem = RxApp.Example.Android\RxApp.Example.Android.csproj
+		StartupItem = RxApp.Example.iOS\RxApp.Example.iOS.csproj
 	EndGlobalSection
 EndGlobal

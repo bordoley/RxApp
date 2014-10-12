@@ -12,7 +12,7 @@ using ReactiveUI;
 
 namespace RxApp
 {   
-    public sealed class RxActivityHelper<TViewModel> : INotifyPropertyChanged, IViewFor<TViewModel>
+    public sealed class RxActivityHelper<TViewModel> : INotifyPropertyChanged
         where TViewModel: class, INavigableViewModel, IServiceViewModel
     {
         public static RxActivityHelper<TViewModel> Create(IRxActivity activity)
@@ -53,19 +53,6 @@ namespace RxApp
             set 
             { 
                 notify.RaiseAndSetIfChanged(ref viewModel, value); 
-            }
-        }
-
-        object IViewFor.ViewModel
-        {
-            get 
-            { 
-                return viewModel; 
-            }
-
-            set 
-            { 
-                this.ViewModel = (TViewModel)value; 
             }
         }
 
@@ -147,12 +134,12 @@ namespace RxApp
         {
             get
             {
-                return ((IViewFor)helper).ViewModel;
+                return helper.ViewModel;
             }
 
             set
             {
-                ((IViewFor)helper).ViewModel = value;
+                this.ViewModel = (TViewModel) value;
             }
         }
 

@@ -9,15 +9,15 @@ using MonoTouch.UIKit;
 
 namespace RxApp
 {
-    public sealed class UIApplicationDelegateHelper
+    public sealed class RxUIApplicationDelegateHelper
     {
-        public static UIApplicationDelegateHelper Create(
+        public static RxUIApplicationDelegateHelper Create(
             INavigationStack navStack,
             IService applicationService,
             Func<object, IDisposable> provideController,
             Func<object, UIViewController> provideView)
         {
-            return new UIApplicationDelegateHelper(navStack, applicationService, provideController, provideView);
+            return new RxUIApplicationDelegateHelper(navStack, applicationService, provideController, provideView);
         }
 
         private readonly IDictionary<object, UIViewController> views = new Dictionary<object, UIViewController>();
@@ -30,7 +30,7 @@ namespace RxApp
         private CompositeDisposable subscription = null;
         private UIWindow window;
 
-        private UIApplicationDelegateHelper(
+        private RxUIApplicationDelegateHelper(
             INavigationStack navStack,
             IService applicationService,
             Func<object, IDisposable> provideController,
@@ -44,7 +44,7 @@ namespace RxApp
 
         public bool FinishedLaunching(UIApplication app, NSDictionary options)
         {
-            var navController = new UINavigationController();
+            var navController = new NavigationController(navStack);
             window = new UIWindow(UIScreen.MainScreen.Bounds);
             window.RootViewController = navController;
 
@@ -92,6 +92,24 @@ namespace RxApp
         {
             applicationService.Stop();
             subscription.Dispose();
+        }
+    }
+
+
+    internal class NavigationController : UINavigationController
+    {
+        private readonly INavigationStack navStack;
+
+        public NavigationController(INavigationStack navStack): base()
+        {
+            this.navStack = navStack;
+        }
+
+        public override UIViewController PopViewControllerAnimated (bool animated)
+        {
+            var retval = base.PopViewControllerAnimated(animated);
+            navStack.Pop();
+            return retval;
         }
     }
 }

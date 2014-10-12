@@ -1,4 +1,5 @@
-﻿using RxApp;
+﻿using ReactiveUI;
+using RxApp;
 using System;
 using System.Collections.Generic;
 using System.Reactive.Disposables;
@@ -6,13 +7,21 @@ using System.Reactive.Linq;
 
 namespace RxApp.Example
 {
-    public class RxAppExampleApplicationController
+    public class RxAppExampleApplicationController : ReactiveObject, IService
     {
         private readonly INavigationStack navStack;
+
+        private bool isStarted = false;
 
         public RxAppExampleApplicationController(INavigationStack navStack)
         {
             this.navStack = navStack;
+        }
+            
+        public Boolean IsStarted
+        {
+            get { return isStarted; }
+            set { this.RaiseAndSetIfChanged(ref isStarted, value); }
         }
 
         public IDisposable Bind(object model)

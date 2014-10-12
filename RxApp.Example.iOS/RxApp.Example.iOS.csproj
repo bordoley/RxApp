@@ -111,9 +111,9 @@
   <ItemGroup>
     <Compile Include="Main.cs" />
     <Compile Include="AppDelegate.cs" />
-    <Compile Include="ExampleView.cs" />
-    <Compile Include="ExampleView.designer.cs">
-      <DependentUpon>ExampleView.cs</DependentUpon>
+    <Compile Include="ExampleViewController.cs" />
+    <Compile Include="ExampleViewController.designer.cs">
+      <DependentUpon>ExampleViewController.cs</DependentUpon>
     </Compile>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\iOS\Xamarin.MonoTouch.CSharp.targets" />
@@ -126,9 +126,12 @@
       <Project>{CC5733DE-CD02-451A-8371-2F6067A5CE07}</Project>
       <Name>RxApp</Name>
     </ProjectReference>
+    <ProjectReference Include="..\RxApp.Example\RxApp.Example.csproj">
+      <Project>{45AD3C90-23ED-4424-9F50-D8E843A59B7A}</Project>
+      <Name>RxApp.Example</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <InterfaceDefinition Include="ExampleView_iPhone.xib" />
-    <InterfaceDefinition Include="ExampleView_iPad.xib" />
+    <InterfaceDefinition Include="Views.storyboard" />
   </ItemGroup>
 </Project>
