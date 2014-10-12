@@ -32,6 +32,15 @@ namespace RxApp
 
     public static class Service
     {
+        public static IDisposable BindAndDispose<TDisposableService> (this IServiceControllerModel model, TDisposableService service)
+            where TDisposableService: IDisposable, IService
+        {
+            CompositeDisposable retval = new CompositeDisposable();
+            retval.Add(model.Bind(service));
+            retval.Add(service);
+            return retval;
+        }
+
         public static IDisposable Bind(this IServiceControllerModel model, IService service)
         {
             Contract.Requires(model != null);
