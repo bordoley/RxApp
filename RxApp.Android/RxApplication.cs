@@ -107,8 +107,6 @@ namespace RxApp
         private readonly RxApplicationHelper helper;
         private readonly IReactiveObject notify = ReactiveObject.Create();
 
-        private bool isStarted = false;
-
         public RxApplication(IntPtr javaReference, Android.Runtime.JniHandleOwnership transfer) : base(javaReference, transfer)
         {
             helper = RxApplicationHelper.Create(this, ProvideController, GetActivityType);
@@ -135,12 +133,6 @@ namespace RxApp
             }
         }
 
-        public bool IsStarted 
-        { 
-            get { return isStarted; }
-            private set { notify.RaiseAndSetIfChanged(ref isStarted, true); }  
-        }
-
         public abstract Type GetActivityType(object model);
 
         public abstract IDisposable ProvideController(object model);
@@ -164,12 +156,10 @@ namespace RxApp
 
         public virtual void Start()
         {
-            this.IsStarted = true;
         }
 
         public virtual void Stop()
         {
-            this.IsStarted = false;
         }
     }
 }
