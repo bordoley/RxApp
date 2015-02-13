@@ -1,6 +1,6 @@
 ﻿using System;
+using System.Reactive;
 using System.Windows.Input;
-
 
 namespace RxApp
 {
@@ -12,8 +12,8 @@ namespace RxApp
 
     public interface INavigableControllerModel
     {
-        IObservable<object> Back { get; }
-        IObservable<object> Up { get; }
+        IObservable<Unit> Back { get; }
+        IObservable<Unit> Up { get; }
     }
 }
 

@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Windows.Input;
 using ReactiveUI;
+using System.Reactive;
+using System.Reactive.Linq;
 
 namespace RxApp
 {
@@ -32,11 +34,11 @@ namespace RxApp
             set { this.RaiseAndSetIfChanged(ref canStop, value); }
         }
 
-        IObservable<object> INavigableControllerModel.Back
+        IObservable<Unit> INavigableControllerModel.Back
         {
             get
             {
-                return back;
+                return back.Select(_ => Unit.Default);
             }
         }
 
@@ -48,11 +50,11 @@ namespace RxApp
             }
         }
 
-        IObservable<object> INavigableControllerModel.Up
+        IObservable<Unit> INavigableControllerModel.Up
         {
             get
             {
-                return up;
+                return up.Select(_ => Unit.Default);
             }
         }
 
@@ -64,11 +66,11 @@ namespace RxApp
             }
         }
 
-        IObservable<object> IServiceControllerModel.Stop
+        IObservable<Unit> IServiceControllerModel.Stop
         {
             get
             {
-                return stop;
+                return stop.Select(_ => Unit.Default);
             }
         }
 
@@ -80,11 +82,11 @@ namespace RxApp
             }
         }
 
-        IObservable<object> IServiceControllerModel.Start
+        IObservable<Unit> IServiceControllerModel.Start
         {
             get
             {
-                return start;
+                return start.Select(_ => Unit.Default);
             }
         }
 

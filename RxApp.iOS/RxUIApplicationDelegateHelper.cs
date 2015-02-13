@@ -13,7 +13,7 @@ namespace RxApp
     {
         public static RxUIApplicationDelegateHelper Create(
             INavigationStack navStack,
-            IService applicationService,
+            Func<IDisposable> applicationService,
             Func<object, IDisposable> provideController,
             Func<object, UIViewController> provideView)
         {
@@ -21,21 +21,22 @@ namespace RxApp
         }
 
         private readonly INavigationStack navStack;
-        private readonly IService applicationService;
+        private readonly Func<IDisposable> applicationServiceProvider;
         private readonly Func<object, IDisposable> provideController;
         private readonly Func<object, UIViewController> provideView;
 
         private CompositeDisposable subscription = null;
         private UIWindow window;
+        private IDisposable applicationService;
 
         private RxUIApplicationDelegateHelper(
             INavigationStack navStack,
-            IService applicationService,
+            Func<IDisposable> applicationServiceProvider,
             Func<object, IDisposable> provideController,
             Func<object, UIViewController> provideView)
         {
             this.navStack = navStack;
-            this.applicationService = applicationService;
+            this.applicationServiceProvider = applicationServiceProvider;
             this.provideController = provideController;
             this.provideView = provideView;
         }
@@ -60,7 +61,7 @@ namespace RxApp
                         if (oldHead != null && newHead == null)
                         {
                             // On iOS this case can't really happen
-                            applicationService.Stop();
+                            applicationService.Dispose();
                         }
                         else if (newHead != null && !views.ContainsKey(newHead))
                         {
@@ -85,13 +86,13 @@ namespace RxApp
             window.RootViewController = navController;
             window.MakeKeyAndVisible();
 
-            applicationService.Start();
+            applicationService = applicationServiceProvider();
             return true;
         }
 
         public void WillTerminate(UIApplication app)
         {
-            applicationService.Stop();
+            applicationService.Dispose();
             subscription.Dispose();
         }
     }

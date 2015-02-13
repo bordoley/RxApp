@@ -12,11 +12,11 @@ namespace RxApp.Example
     [Application]
     public sealed class RxAppExampleApplication : RxApplication
     {
-        private readonly RxAppExampleApplicationController applicationController;
+        private RxAppExampleApplicationController applicationController;
 
         public RxAppExampleApplication(IntPtr javaReference, JniHandleOwnership transfer) : base(javaReference, transfer)
         {
-            applicationController = new RxAppExampleApplicationController(this.NavigationStack);
+
         }
 
         public override Type GetActivityType(object model)
@@ -50,12 +50,13 @@ namespace RxApp.Example
 
         public override void Start()
         {
-            applicationController.Start();
+            applicationController = new RxAppExampleApplicationController(this.NavigationStack);
+            applicationController.Init();
         }
 
         public override void Stop()
         {
-            applicationController.Stop();
+            applicationController.Dispose();
         }
     }
 }
