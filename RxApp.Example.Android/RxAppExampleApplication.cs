@@ -12,8 +12,6 @@ namespace RxApp.Example
     [Application]
     public sealed class RxAppExampleApplication : RxApplication
     {
-        private RxAppExampleApplicationController applicationController;
-
         public RxAppExampleApplication(IntPtr javaReference, JniHandleOwnership transfer) : base(javaReference, transfer)
         {
 
@@ -30,9 +28,9 @@ namespace RxApp.Example
             throw new Exception("No view for view model");
         }
 
-        public override IDisposable ProvideController(object model)
+        public override IApplication ProvideApplication()
         {
-            return applicationController.Bind(model);
+            return new RxAppExampleApplicationController(this.NavigationStack);
         }
 
         public override void OnCreate()
@@ -46,17 +44,6 @@ namespace RxApp.Example
                     file.Write(args.Exception.StackTrace); // save the exception description and clean stack trace
                     file.Close();
                 };
-        }
-
-        public override void Start()
-        {
-            applicationController = new RxAppExampleApplicationController(this.NavigationStack);
-            applicationController.Init();
-        }
-
-        public override void Stop()
-        {
-            applicationController.Dispose();
         }
     }
 }

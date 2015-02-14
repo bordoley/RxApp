@@ -107,9 +107,11 @@ namespace RxApp
         private readonly RxApplicationHelper helper;
         private readonly IReactiveObject notify = ReactiveObject.Create();
 
+        private IApplication application;
+
         public RxApplication(IntPtr javaReference, Android.Runtime.JniHandleOwnership transfer) : base(javaReference, transfer)
         {
-            helper = RxApplicationHelper.Create(this, ProvideController, GetActivityType);
+            helper = RxApplicationHelper.Create(this, model => application.Bind(model), GetActivityType);
         }
 
         public INavigationStack NavigationStack
@@ -135,7 +137,7 @@ namespace RxApp
 
         public abstract Type GetActivityType(object model);
 
-        public abstract IDisposable ProvideController(object model);
+        public abstract IApplication ProvideApplication();
 
         public override void OnCreate()
         {
@@ -154,12 +156,15 @@ namespace RxApp
             helper.OnActivityCreated(activity);
         }
 
-        public virtual void Start()
+        public void Start()
         {
+            application = ProvideApplication();
+            application.Init();
         }
 
-        public virtual void Stop()
+        public void Stop()
         {
+            application.Dispose();
         }
     }
 }

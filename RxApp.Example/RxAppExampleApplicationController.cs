@@ -6,7 +6,7 @@ using System.Reactive.Linq;
 
 namespace RxApp.Example
 {
-    public class RxAppExampleApplicationController : IDisposable
+    public class RxAppExampleApplicationController : IApplication
     {
         private readonly INavigationStack navStack;
 

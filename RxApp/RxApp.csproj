@@ -36,6 +36,7 @@
     <Compile Include="Service.cs" />
     <Compile Include="INavigableModel.cs" />
     <Compile Include="MobileModel.cs" />
+    <Compile Include="IApplication.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
   <ItemGroup>
