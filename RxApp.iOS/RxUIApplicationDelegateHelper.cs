@@ -24,9 +24,7 @@ namespace RxApp
         private readonly Func<INavigationStack, IApplication> applicationProvider;
         private readonly Func<object, UIViewController> provideView;
 
-        private CompositeDisposable subscription = null;
-        private UIWindow window;
-        private IApplication application;
+        private IDisposable subscription;
 
         private RxUIApplicationDelegateHelper(
             Func<INavigationStack, IApplication> applicationProvider,
@@ -39,9 +37,11 @@ namespace RxApp
         public bool FinishedLaunching(UIApplication app, NSDictionary options)
         {
             var navController = new BufferedNavigationController(navStack);
-            var  views = new Dictionary<object, UIViewController>();
+            var application = applicationProvider(navStack);
+            var views = new Dictionary<object, UIViewController>();
 
-            subscription = new CompositeDisposable();
+            var subscription = new CompositeDisposable();
+            subscription.Add(application);
             subscription.Add(
                 Observable
                     .FromEventPattern<NotifyNavigationStackChangedEventArgs>(navStack, "NavigationStackChanged")
@@ -54,7 +54,6 @@ namespace RxApp
                         if (oldHead != null && newHead == null)
                         {
                             // On iOS this case can't really happen
-                            application.Dispose();
                         }
                         else if (newHead != null && !views.ContainsKey(newHead))
                         {
@@ -75,11 +74,12 @@ namespace RxApp
 
             subscription.Add(navStack.BindController(model => application.Bind(model)));
 
-            window = new UIWindow(UIScreen.MainScreen.Bounds);
+            this.subscription = subscription;
+
+            var window = new UIWindow(UIScreen.MainScreen.Bounds);
             window.RootViewController = navController;
             window.MakeKeyAndVisible();
 
-            application = applicationProvider(navStack);
             application.Init();
             return true;
         }
@@ -87,7 +87,6 @@ namespace RxApp
         public void WillTerminate(UIApplication app)
         {
             subscription.Dispose();
-            //application.Dispose();
         }
     }
 
