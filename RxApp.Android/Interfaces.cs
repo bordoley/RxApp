@@ -15,7 +15,7 @@ namespace RxApp
         void Stop();
     }
 
-    public interface IRxActivity : IActivity, IViewFor, INotifyPropertyChanged
+    public interface IRxActivity : IActivity, IViewFor
     {
     }
 

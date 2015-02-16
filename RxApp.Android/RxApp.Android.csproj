@@ -70,7 +70,6 @@
     <Compile Include="StartupActivity.cs" />
     <Compile Include="AndroidInterfaces.cs" />
     <Compile Include="Interfaces.cs" />
-    <Compile Include="ReactiveObject.cs" />
     <Compile Include="RxActivity.cs" />
     <Compile Include="RxApplication.cs" />
   </ItemGroup>

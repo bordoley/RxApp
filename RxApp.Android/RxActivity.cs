@@ -14,7 +14,7 @@ using ReactiveUI;
 
 namespace RxApp
 {   
-    public sealed class RxActivityHelper<TViewModel> : INotifyPropertyChanged
+    public sealed class RxActivityHelper<TViewModel>
         where TViewModel: class, INavigableViewModel, IServiceViewModel
     {
         public static RxActivityHelper<TViewModel> Create(IRxActivity activity)
@@ -23,7 +23,6 @@ namespace RxApp
             return new RxActivityHelper<TViewModel>(activity);
         }
 
-        private readonly IReactiveObject notify = ReactiveObject.Create();
         private readonly IRxActivity activity;
         private TViewModel viewModel;
 
@@ -32,30 +31,11 @@ namespace RxApp
             this.activity = activity;
         }
 
-        public event PropertyChangedEventHandler PropertyChanged
-        {
-            add 
-            {
-                notify.PropertyChanged += value;
-            }
-
-            remove
-            {
-                notify.PropertyChanged -= value;
-            }
-        }
-
         public TViewModel ViewModel
         {
-            get 
-            { 
-                return viewModel; 
-            }
+            get { return viewModel; }
 
-            set 
-            { 
-                notify.RaiseAndSetIfChanged(ref viewModel, value); 
-            }
+            set { this.viewModel = value; }
         }
 
         public void OnCreate(Bundle bundle)
@@ -105,44 +85,19 @@ namespace RxApp
         {
             helper = RxActivityHelper<TViewModel>.Create(this);
         }
-
-        public event PropertyChangedEventHandler PropertyChanged
-        {
-            add 
-            { 
-                helper.PropertyChanged += value; 
-            }
-
-            remove 
-            { 
-                helper.PropertyChanged -= value; 
-            }
-        }
-            
+             
         public TViewModel ViewModel
         {
-            get
-            {
-                return helper.ViewModel;
-            }
+            get { return helper.ViewModel; }
 
-            set
-            {
-                helper.ViewModel = value;
-            }
+            set { helper.ViewModel = value; }
         }
 
         object IViewFor.ViewModel
         {
-            get
-            {
-                return helper.ViewModel;
-            }
+            get { return helper.ViewModel; }
 
-            set
-            {
-                this.ViewModel = (TViewModel) value;
-            }
+            set { this.ViewModel = (TViewModel) value; }
         }
 
         protected override void OnCreate(Bundle bundle)
@@ -183,44 +138,19 @@ namespace RxApp
         {
             helper = RxActivityHelper<TViewModel>.Create(this);
         }
-
-        public event PropertyChangedEventHandler PropertyChanged
-        {
-            add 
-            { 
-                helper.PropertyChanged += value; 
-            }
-
-            remove 
-            { 
-                helper.PropertyChanged -= value; 
-            }
-        }
             
         public TViewModel ViewModel
         {
-            get
-            {
-                return helper.ViewModel;
-            }
+            get { return helper.ViewModel; }
 
-            set
-            {
-                helper.ViewModel = value;
-            }
+            set { helper.ViewModel = value; }
         }
 
         object IViewFor.ViewModel
         {
-            get
-            {
-                return helper.ViewModel;
-            }
+            get { return helper.ViewModel; }
 
-            set
-            {
-                this.ViewModel = (TViewModel) value;
-            }
+            set { this.ViewModel = (TViewModel) value; }
         }
 
         protected override void OnCreate(Bundle bundle)
@@ -261,44 +191,19 @@ namespace RxApp
         {
             helper = RxActivityHelper<TViewModel>.Create(this);
         }
-
-        public event PropertyChangedEventHandler PropertyChanged
-        {
-            add 
-            { 
-                helper.PropertyChanged += value; 
-            }
-
-            remove 
-            { 
-                helper.PropertyChanged -= value; 
-            }
-        }
             
         public TViewModel ViewModel
         {
-            get
-            {
-                return helper.ViewModel;
-            }
+            get { return helper.ViewModel; }
 
-            set
-            {
-                helper.ViewModel = value;
-            }
+            set { helper.ViewModel = value; }
         }
 
         object IViewFor.ViewModel
         {
-            get
-            {
-                return helper.ViewModel;
-            }
+            get { return helper.ViewModel; }
 
-            set
-            {
-                this.ViewModel = (TViewModel) value;
-            }
+            set { this.ViewModel = (TViewModel) value; }
         }
 
         protected override void OnCreate(Bundle bundle)
