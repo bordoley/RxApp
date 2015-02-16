@@ -6,6 +6,7 @@ using System.Reactive.Linq;
 using RxApp;
 using Android.App;
 using Android.Runtime;
+using Xamarin;
 
 namespace RxApp.Example
 {
@@ -37,13 +38,7 @@ namespace RxApp.Example
         {
             base.OnCreate();
 
-            AndroidEnvironment.UnhandledExceptionRaiser += (sender, args) =>
-                {
-                    var path = Context.GetExternalFilesDir("exceptions").Path;
-                    StreamWriter file = File.CreateText(path + "/exception.txt");
-                    file.Write(args.Exception.StackTrace); // save the exception description and clean stack trace
-                    file.Close();
-                };
+            Insights.Initialize("2435d94d2dae17b47f305d2cf5f3413fb1d3aa8d", this.ApplicationContext);
         }
     }
 }

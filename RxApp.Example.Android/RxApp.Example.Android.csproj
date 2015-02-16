@@ -67,6 +67,9 @@
     <Reference Include="Xamarin.Android.Support.v7.AppCompat">
       <HintPath>..\packages\Xamarin.Android.Support.v7.AppCompat.21.0.3.0\lib\MonoAndroid403\Xamarin.Android.Support.v7.AppCompat.dll</HintPath>
     </Reference>
+    <Reference Include="Xamarin.Insights">
+      <HintPath>..\packages\Xamarin.Insights.1.9.0.106\lib\MonoAndroid10\Xamarin.Insights.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Resources\Resource.designer.cs" />

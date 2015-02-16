@@ -96,7 +96,10 @@ namespace RxApp
             }
             else
             {
-                throw new Exception("View created when no model available");
+                // Used to throw an exception here, but that crash showed 
+                // up frequently in crash reports. So lets just restart the application.
+                application.Stop();
+                application.Start();
             }
         }
     }
