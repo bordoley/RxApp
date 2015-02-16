@@ -10,6 +10,7 @@ using System.Linq;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using System.Threading;
 using Android.Content.PM;
 
 namespace RxApp
@@ -31,19 +32,16 @@ namespace RxApp
 
         private readonly IDictionary<object, IRxActivity> activities = new Dictionary<object, IRxActivity> ();
 
+        private readonly INavigationStack navStack = RxApp.NavigationStack.Create();
+
         private readonly Context context;
 
         private readonly Func<object,Type> getActivityType;
 
         private readonly Func<INavigationStack,IApplication> provideApplication;
 
-        private readonly INavigationStack navStack = RxApp.NavigationStack.Create();
-   
 
-        private CompositeDisposable subscription;
-
-        private IApplication application;
-
+        private IDisposable subscription;
 
         private RxApplicationHelper(
             Context context,
@@ -55,10 +53,44 @@ namespace RxApp
             this.provideApplication = provideApplication;
         }
 
-        public void OnCreate()
+        public void OnTerminate()
         {
-            subscription = new CompositeDisposable();
+            this.Stop();
+        }
 
+        public void OnActivityCreated(IRxActivity activity)
+        {
+            Contract.Requires(activity != null);
+
+            var head = navStack.FirstOrDefault();
+            if (head != null)
+            {
+                activity.ViewModel = head;
+                this.activities[head] = activity;
+            }
+            else if (subscription == null)
+            {
+                // Either the startup activity called OnActivityCreated or the application was killed and restarted by android.
+                // If the application is backgrounded, android will kill all the activities and the application class.
+                // When the application is reopened from the background, it creates the application and starts the last activity 
+                // that was opened, not the startup activity. 
+
+                this.Start();
+                activity.Finish();
+            }
+            else
+            {
+                throw new InvalidOperationException( 
+                    "Activity of type " + activity.GetType() + " created when the navigation stack head was null, but the application was running. Something is badly broken.");
+            }
+        }
+
+        private void Start()
+        {
+            var application = provideApplication(navStack);
+
+            var subscription = new CompositeDisposable();
+            subscription.Add(application);
             subscription.Add(
                 Observable
                     .FromEventPattern<NotifyNavigationStackChangedEventArgs>(navStack, "NavigationStackChanged")
@@ -70,7 +102,8 @@ namespace RxApp
 
                             if (oldHead != null && newHead == null)
                             {
-                                this.Stop();
+                                // Post the call to stop on the event loop to avoid deadlocking.
+                                SynchronizationContext.Current.Post(_ => this.Stop(), null);
                             } 
                             else if (newHead != null && !activities.ContainsKey(newHead))
                             {
@@ -88,47 +121,16 @@ namespace RxApp
                     }));
 
             subscription.Add(navStack.BindController(model => application.Bind(model)));
-        }
 
-        public void OnTerminate()
-        {
-            subscription.Dispose();
-        }
-
-        public void OnActivityCreated(IRxActivity activity)
-        {
-            Contract.Requires(activity != null);
-
-            var head = navStack.FirstOrDefault();
-            if (head != null)
-            {
-                activity.ViewModel = head;
-                this.activities[head] = activity;
-            }
-            else
-            {
-                // Either the startup activity called OnActivityCreated or the application was killed and restarted by android.
-                // If the application is backgrounded, android will kill all the activities and the application class.
-                // When the application is reopened from the background, it creates the application and starts the last activity 
-                // that was opened, not the startup activity. 
-
-                this.Start();
-                activity.Finish();
-
-                Log.Debug("RxApplicationHelper", "Activity of type " + activity.GetType() + " created when the navigation stack was empty."); 
-            }
-        }
-
-        private void Start()
-        {
-            application = provideApplication(navStack);
+            this.subscription = subscription;
+        
             application.Init();
         }
 
         private void Stop()
         {
-            Log.Debug("RxApplicationHelper", "RxApplication.Stop()"); 
-            application.Dispose(); 
+            subscription.Dispose(); 
+            subscription = null;
         }
     }
 
@@ -145,19 +147,9 @@ namespace RxApp
 
         public abstract IApplication ProvideApplication(INavigationStack navStack);
 
-        public override void OnCreate()
-        {
-            base.OnCreate();
-
-            Log.Debug("RxApplication", "RxApplication.OnCreate()");
-            helper.OnCreate();
-        }
-
         public override void OnTerminate()
         {
             helper.OnTerminate();
-            Log.Debug("RxApplication", "RxApplication.OnTerminate()");
-
             base.OnTerminate();
         }
 
