@@ -1,5 +1,6 @@
 ﻿using Android.App;
 using Android.Content;
+using Android.Util;
 using ReactiveUI;
 using System;
 using System.Collections.Generic;
@@ -9,6 +10,7 @@ using System.Linq;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using Android.Content.PM;
 
 namespace RxApp
 {
@@ -96,10 +98,14 @@ namespace RxApp
             }
             else
             {
-                // Used to throw an exception here, but that crash showed 
-                // up frequently in crash reports. So lets just restart the application.
-                application.Stop();
+                // If the application is backgrounded, android will kill all the activities and the application class.
+                // When the application is reopened from the background, it creates the application and starts the last activity 
+                // that was opened, not the startup activity. So instead, we start the application and finish the activity that was 
+                // started by android.
                 application.Start();
+                activity.Finish();
+
+                Log.Debug("RxApplicationHelper", "Activity of type " + activity.GetType() + " created when the navigation stack was empty."); 
             }
         }
     }
@@ -131,12 +137,16 @@ namespace RxApp
         public override void OnCreate()
         {
             base.OnCreate();
+
+            Log.Debug("RxApplication", "RxApplication.OnCreate()");
             helper.OnCreate();
         }
 
         public override void OnTerminate()
         {
             helper.OnTerminate();
+            Log.Debug("RxApplication", "RxApplication.OnTerminate()");
+
             base.OnTerminate();
         }
 
@@ -153,7 +163,8 @@ namespace RxApp
 
         public void Stop()
         {
-            application.Dispose();
+            Log.Debug("RxApplication", "RxApplication.Stop()"); 
+            application.Dispose(); 
         }
     }
 }

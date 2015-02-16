@@ -18,6 +18,9 @@ namespace RxApp.Example
 
         protected override void OnCreate(Bundle bundle)
         {
+            // Update the activity theme. Must be the first thing done in OnCreate();
+            this.SetTheme(Resource.Style.RxAppTheme);
+
             base.OnCreate(bundle);
 
             this.SetContentView(Resource.Layout.Main);
@@ -25,8 +28,6 @@ namespace RxApp.Example
             button = this.FindViewById<Button>(Resource.Id.myButton);
 
             var toolbar = FindViewById<Toolbar> (Resource.Id.toolbar);
-
-            //Toolbar will now take on default actionbar characteristics
             SetSupportActionBar (toolbar);
             SupportActionBar.SetDisplayHomeAsUpEnabled (true);
             SupportActionBar.SetHomeButtonEnabled (true);
