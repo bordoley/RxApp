@@ -1,14 +1,14 @@
-﻿using Android.App;
-using Android.OS;
-using Android.Views;
-
-using System;
+﻿using System;
 using System.ComponentModel;
 using System.Diagnostics.Contracts;
 using System.Reactive.Linq;
 
-using ReactiveUI;
+using Android.App;
+using Android.OS;
+using Android.Support.V4.App;
+using Android.Views;
 
+using ReactiveUI;
 
 namespace RxApp
 {   
@@ -94,7 +94,8 @@ namespace RxApp
         }
     }
 
-    public abstract class RxActivity<TViewModel> : Activity, IRxActivity<TViewModel>
+    // FIXME: using Android.Support.V4.App should be optional. Probably have RxFragmentActivity, RxActivity, RxSupportV4FragmentACtivity etc.
+    public abstract class RxActivity<TViewModel> : FragmentActivity, IRxActivity<TViewModel>
         where TViewModel : class, INavigableViewModel, IServiceViewModel
     {
         private readonly RxActivityHelper<TViewModel> helper;
