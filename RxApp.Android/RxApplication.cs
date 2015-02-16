@@ -17,33 +17,34 @@ namespace RxApp
     public sealed class RxApplicationHelper
     {
         public static RxApplicationHelper Create(
-            IRxApplication application,
-            Func<object, IDisposable> provideController,
-            Func<object, Type> getActivityType) 
+            IRxApplication androidApplication,
+            Func<IApplication> provideApplication) 
         {
-            Contract.Requires(application != null);
-            Contract.Requires(provideController != null);
-            Contract.Requires(getActivityType != null);
+            Contract.Requires(androidApplication != null);
+            Contract.Requires(provideApplication != null);
 
-            return new RxApplicationHelper(application, provideController, getActivityType);
+            return new RxApplicationHelper(androidApplication, provideApplication);
         }
+
 
         private readonly IDictionary<object, IRxActivity> activities = new Dictionary<object, IRxActivity> ();
 
-        private readonly IRxApplication application;
-        private readonly Func<object, IDisposable> provideController;
-        private readonly Func<object, Type> getActivityType;
+        private readonly IRxApplication androidApplication;
+
+        private readonly Func<IApplication> provideApplication;
    
-        private CompositeDisposable subscription = null;
+
+        private CompositeDisposable subscription;
+
+        private IApplication application;
+
 
         private RxApplicationHelper(
-            IRxApplication application,
-            Func<object, IDisposable> provideController,
-            Func<object, Type> getActivityType)
+            IRxApplication androidApplication,
+            Func<IApplication> provideApplication)
         {
-            this.application = application;
-            this.provideController = provideController;
-            this.getActivityType = getActivityType;
+            this.androidApplication = androidApplication;
+            this.provideApplication = provideApplication;
         }
 
         public void OnCreate()
@@ -52,7 +53,7 @@ namespace RxApp
 
             subscription.Add(
                 Observable
-                    .FromEventPattern<NotifyNavigationStackChangedEventArgs>(application.NavigationStack, "NavigationStackChanged")
+                    .FromEventPattern<NotifyNavigationStackChangedEventArgs>(androidApplication.NavigationStack, "NavigationStackChanged")
                     .Subscribe((EventPattern<NotifyNavigationStackChangedEventArgs> e) => 
                         {
                             var newHead = e.EventArgs.NewHead;
@@ -61,13 +62,13 @@ namespace RxApp
 
                             if (oldHead != null && newHead == null)
                             {
-                                application.Stop();
+                                androidApplication.Stop();
                             } 
                             else if (newHead != null && !activities.ContainsKey(newHead))
                             {
-                                var viewType = getActivityType(newHead);
-                                var intent = new Intent(application.ApplicationContext, viewType).SetFlags(ActivityFlags.NewTask);
-                                application.ApplicationContext.StartActivity(intent);
+                                var viewType = androidApplication.GetActivityType(newHead);
+                                var intent = new Intent(androidApplication.ApplicationContext, viewType).SetFlags(ActivityFlags.NewTask);
+                                androidApplication.ApplicationContext.StartActivity(intent);
                             }
 
                             foreach (var model in removed)
@@ -78,7 +79,7 @@ namespace RxApp
                             }
                     }));
 
-            subscription.Add(application.NavigationStack.BindController(provideController));
+            subscription.Add(androidApplication.NavigationStack.BindController(model => application.Bind(model)));
         }
 
         public void OnTerminate()
@@ -90,7 +91,7 @@ namespace RxApp
         {
             Contract.Requires(activity != null);
 
-            var head = application.NavigationStack.FirstOrDefault();
+            var head = androidApplication.NavigationStack.FirstOrDefault();
             if (head != null)
             {
                 activity.ViewModel = head;
@@ -102,11 +103,23 @@ namespace RxApp
                 // When the application is reopened from the background, it creates the application and starts the last activity 
                 // that was opened, not the startup activity. So instead, we start the application and finish the activity that was 
                 // started by android.
-                application.Start();
+                androidApplication.Start();
                 activity.Finish();
 
                 Log.Debug("RxApplicationHelper", "Activity of type " + activity.GetType() + " created when the navigation stack was empty."); 
             }
+        }
+
+        public void Start()
+        {
+            application = provideApplication();
+            application.Init();
+        }
+
+        public void Stop()
+        {
+            Log.Debug("RxApplicationHelper", "RxApplication.Stop()"); 
+            application.Dispose(); 
         }
     }
 
@@ -115,11 +128,9 @@ namespace RxApp
         private readonly INavigationStack navStack = RxApp.NavigationStack.Create();
         private readonly RxApplicationHelper helper;
 
-        private IApplication application;
-
         public RxApplication(IntPtr javaReference, Android.Runtime.JniHandleOwnership transfer) : base(javaReference, transfer)
         {
-            helper = RxApplicationHelper.Create(this, model => application.Bind(model), GetActivityType);
+            helper = RxApplicationHelper.Create(this, ProvideApplication);
         }
 
         public INavigationStack NavigationStack
@@ -157,14 +168,12 @@ namespace RxApp
 
         public void Start()
         {
-            application = ProvideApplication();
-            application.Init();
+            helper.Start();
         }
 
         public void Stop()
         {
-            Log.Debug("RxApplication", "RxApplication.Stop()"); 
-            application.Dispose(); 
+            helper.Stop();
         }
     }
 }
