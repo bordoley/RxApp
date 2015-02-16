@@ -105,7 +105,6 @@ namespace RxApp
     {
         private readonly INavigationStack navStack = RxApp.NavigationStack.Create();
         private readonly RxApplicationHelper helper;
-        private readonly IReactiveObject notify = ReactiveObject.Create();
 
         private IApplication application;
 
@@ -119,19 +118,6 @@ namespace RxApp
             get
             {
                 return navStack;
-            }
-        }
-
-        public event PropertyChangedEventHandler PropertyChanged
-        {
-            add 
-            {
-                notify.PropertyChanged += value;
-            }
-
-            remove
-            {
-                notify.PropertyChanged -= value;
             }
         }
 
