@@ -6,8 +6,6 @@ namespace RxApp
 {
     public interface IRxApplication : IAndroidApplication
     {
-        INavigationStack NavigationStack { get; }
-
         void OnActivityCreated(IRxActivity activity);
 
         Type GetActivityType(object model);

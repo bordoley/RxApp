@@ -18,7 +18,7 @@ namespace RxApp
     {
         public static RxApplicationHelper Create(
             IRxApplication androidApplication,
-            Func<IApplication> provideApplication) 
+            Func<INavigationStack,IApplication> provideApplication) 
         {
             Contract.Requires(androidApplication != null);
             Contract.Requires(provideApplication != null);
@@ -31,7 +31,9 @@ namespace RxApp
 
         private readonly IRxApplication androidApplication;
 
-        private readonly Func<IApplication> provideApplication;
+        private readonly Func<INavigationStack,IApplication> provideApplication;
+
+        private readonly INavigationStack navStack = RxApp.NavigationStack.Create();
    
 
         private CompositeDisposable subscription;
@@ -41,7 +43,7 @@ namespace RxApp
 
         private RxApplicationHelper(
             IRxApplication androidApplication,
-            Func<IApplication> provideApplication)
+            Func<INavigationStack,IApplication> provideApplication)
         {
             this.androidApplication = androidApplication;
             this.provideApplication = provideApplication;
@@ -53,7 +55,7 @@ namespace RxApp
 
             subscription.Add(
                 Observable
-                    .FromEventPattern<NotifyNavigationStackChangedEventArgs>(androidApplication.NavigationStack, "NavigationStackChanged")
+                    .FromEventPattern<NotifyNavigationStackChangedEventArgs>(navStack, "NavigationStackChanged")
                     .Subscribe((EventPattern<NotifyNavigationStackChangedEventArgs> e) => 
                         {
                             var newHead = e.EventArgs.NewHead;
@@ -79,7 +81,7 @@ namespace RxApp
                             }
                     }));
 
-            subscription.Add(androidApplication.NavigationStack.BindController(model => application.Bind(model)));
+            subscription.Add(navStack.BindController(model => application.Bind(model)));
         }
 
         public void OnTerminate()
@@ -91,7 +93,7 @@ namespace RxApp
         {
             Contract.Requires(activity != null);
 
-            var head = androidApplication.NavigationStack.FirstOrDefault();
+            var head = navStack.FirstOrDefault();
             if (head != null)
             {
                 activity.ViewModel = head;
@@ -112,7 +114,7 @@ namespace RxApp
 
         public void Start()
         {
-            application = provideApplication();
+            application = provideApplication(navStack);
             application.Init();
         }
 
@@ -125,7 +127,6 @@ namespace RxApp
 
     public abstract class RxApplication : Application, IRxApplication
     {
-        private readonly INavigationStack navStack = RxApp.NavigationStack.Create();
         private readonly RxApplicationHelper helper;
 
         public RxApplication(IntPtr javaReference, Android.Runtime.JniHandleOwnership transfer) : base(javaReference, transfer)
@@ -133,17 +134,9 @@ namespace RxApp
             helper = RxApplicationHelper.Create(this, ProvideApplication);
         }
 
-        public INavigationStack NavigationStack
-        {
-            get
-            {
-                return navStack;
-            }
-        }
-
         public abstract Type GetActivityType(object model);
 
-        public abstract IApplication ProvideApplication();
+        public abstract IApplication ProvideApplication(INavigationStack navStack);
 
         public override void OnCreate()
         {
