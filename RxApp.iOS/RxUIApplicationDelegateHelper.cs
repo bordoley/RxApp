@@ -1,54 +1,47 @@
-﻿using MonoTouch.Foundation;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using MonoTouch.UIKit;
+
+using Foundation;
+using UIKit;
 
 namespace RxApp
 {
     public sealed class RxUIApplicationDelegateHelper
     {
         public static RxUIApplicationDelegateHelper Create(
-            INavigationStack navStack,
-            Func<IDisposable> applicationService,
-            Func<object, IDisposable> provideController,
+            Func<INavigationStack, IApplication> applicationProvider,
             Func<object, UIViewController> provideView)
         {
-            return new RxUIApplicationDelegateHelper(navStack, applicationService, provideController, provideView);
+            return new RxUIApplicationDelegateHelper(applicationProvider, provideView);
         }
 
-        private readonly INavigationStack navStack;
-        private readonly Func<IDisposable> applicationServiceProvider;
-        private readonly Func<object, IDisposable> provideController;
+        private readonly INavigationStack navStack = NavigationStack.Create();
+        private readonly Func<INavigationStack, IApplication> applicationProvider;
         private readonly Func<object, UIViewController> provideView;
 
         private CompositeDisposable subscription = null;
         private UIWindow window;
-        private IDisposable applicationService;
+        private IApplication application;
 
         private RxUIApplicationDelegateHelper(
-            INavigationStack navStack,
-            Func<IDisposable> applicationServiceProvider,
-            Func<object, IDisposable> provideController,
+            Func<INavigationStack, IApplication> applicationProvider,
             Func<object, UIViewController> provideView)
         {
-            this.navStack = navStack;
-            this.applicationServiceProvider = applicationServiceProvider;
-            this.provideController = provideController;
+            this.applicationProvider = applicationProvider;
             this.provideView = provideView;
         }
 
         public bool FinishedLaunching(UIApplication app, NSDictionary options)
         {
             var navController = new BufferedNavigationController(navStack);
-
             var  views = new Dictionary<object, UIViewController>();
 
             subscription = new CompositeDisposable();
-
             subscription.Add(
                 Observable
                     .FromEventPattern<NotifyNavigationStackChangedEventArgs>(navStack, "NavigationStackChanged")
@@ -61,7 +54,7 @@ namespace RxApp
                         if (oldHead != null && newHead == null)
                         {
                             // On iOS this case can't really happen
-                            applicationService.Dispose();
+                            application.Dispose();
                         }
                         else if (newHead != null && !views.ContainsKey(newHead))
                         {
@@ -80,20 +73,21 @@ namespace RxApp
                         }
                     }));
 
-            subscription.Add(navStack.BindController(provideController));
+            subscription.Add(navStack.BindController(model => application.Bind(model)));
 
             window = new UIWindow(UIScreen.MainScreen.Bounds);
             window.RootViewController = navController;
             window.MakeKeyAndVisible();
 
-            applicationService = applicationServiceProvider();
+            application = applicationProvider(navStack);
+            application.Init();
             return true;
         }
 
         public void WillTerminate(UIApplication app)
         {
-            applicationService.Dispose();
             subscription.Dispose();
+            //application.Dispose();
         }
     }
 
@@ -109,12 +103,13 @@ namespace RxApp
         {
             this.navStack = navStack;
             this.WeakDelegate = this;
-        }
 
-        public override UIViewController PopViewControllerAnimated (bool animated)
+        }
+            
+        public override UIViewController PopViewController (bool animated)
         {
             this.actions.Enqueue(() => navStack.Pop());
-            return base.PopViewControllerAnimated(animated);
+            return base.PopViewController(animated);
         }
 
         public override UIViewController[] PopToRootViewController(bool animated)

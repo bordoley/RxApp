@@ -2,40 +2,25 @@
 using System.ComponentModel;
 using System.Diagnostics.Contracts;
 
-using MonoTouch.Foundation;
-using MonoTouch.UIKit;
+using Foundation;
+using UIKit;
 
 using ReactiveUI;
 
 namespace RxApp
 {
-    public sealed class RxUIViewControllerHelper<TViewModel> : INotifyPropertyChanged
+    public sealed class RxUIViewControllerHelper<TViewModel>
         where TViewModel: class, /*INavigableViewModel,*/ IServiceViewModel
     {
         public static RxUIViewControllerHelper<TViewModel> Create()
         {
             return new RxUIViewControllerHelper<TViewModel>();
         }
-
-        private readonly IReactiveObject notify = ReactiveObject.Create();
        
         private TViewModel viewModel;
 
         private RxUIViewControllerHelper()
         {
-        }
-
-        public event PropertyChangedEventHandler PropertyChanged
-        {
-            add 
-            {
-                notify.PropertyChanged += value;
-            }
-
-            remove
-            {
-                notify.PropertyChanged -= value;
-            }
         }
 
         public TViewModel ViewModel
@@ -47,7 +32,7 @@ namespace RxApp
 
             set 
             { 
-                notify.RaiseAndSetIfChanged(ref viewModel, value); 
+                this.viewModel = value;
             }
         }
 
@@ -87,43 +72,18 @@ namespace RxApp
         {
         }
 
-        public event PropertyChangedEventHandler PropertyChanged
+        public TViewModel ViewModel 
         {
-            add 
-            { 
-                helper.PropertyChanged += value; 
-            }
+            get { return helper.ViewModel; }
 
-            remove 
-            { 
-                helper.PropertyChanged -= value; 
-            }
-        }
-
-        public TViewModel ViewModel
-        {
-            get
-            {
-                return helper.ViewModel;
-            }
-
-            set
-            {
-                helper.ViewModel = value;
-            }
+            set { helper.ViewModel = value; }
         }
 
         object IViewFor.ViewModel
         {
-            get
-            {
-                return helper.ViewModel;
-            }
+            get { return helper.ViewModel; }
 
-            set
-            {
-                this.ViewModel = (TViewModel) value;
-            }
+            set { this.ViewModel = (TViewModel) value; }
         }
 
         public override void ViewDidAppear(bool animated)
