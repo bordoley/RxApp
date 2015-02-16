@@ -5,8 +5,10 @@ using System.Reactive.Linq;
 
 using Android.App;
 using Android.OS;
-using Android.Support.V4.App;
 using Android.Views;
+
+using Android.Support.V4.App;
+using Android.Support.V7.App;
 
 using ReactiveUI;
 
@@ -93,14 +95,169 @@ namespace RxApp
             return false;
         }
     }
-
-    // FIXME: using Android.Support.V4.App should be optional. Probably have RxFragmentActivity, RxActivity, RxSupportV4FragmentACtivity etc.
-    public abstract class RxActivity<TViewModel> : FragmentActivity, IRxActivity<TViewModel>
+        
+    public abstract class RxActivity<TViewModel> : Activity, IRxActivity<TViewModel>
         where TViewModel : class, INavigableViewModel, IServiceViewModel
     {
         private readonly RxActivityHelper<TViewModel> helper;
 
         protected RxActivity()
+        {
+            helper = RxActivityHelper<TViewModel>.Create(this);
+        }
+
+        public event PropertyChangedEventHandler PropertyChanged
+        {
+            add 
+            { 
+                helper.PropertyChanged += value; 
+            }
+
+            remove 
+            { 
+                helper.PropertyChanged -= value; 
+            }
+        }
+            
+        public TViewModel ViewModel
+        {
+            get
+            {
+                return helper.ViewModel;
+            }
+
+            set
+            {
+                helper.ViewModel = value;
+            }
+        }
+
+        object IViewFor.ViewModel
+        {
+            get
+            {
+                return helper.ViewModel;
+            }
+
+            set
+            {
+                this.ViewModel = (TViewModel) value;
+            }
+        }
+
+        protected override void OnCreate(Bundle bundle)
+        {
+            base.OnCreate(bundle);
+            helper.OnCreate(bundle);
+        }
+
+        protected override void OnResume()
+        {
+            base.OnResume();
+            helper.OnResume();
+        }
+
+        protected override void OnPause()
+        {
+            helper.OnPause();
+            base.OnPause();
+        }
+
+        public override void OnBackPressed()
+        {
+            helper.OnBackPressed();
+        }
+
+        public override bool OnOptionsItemSelected(IMenuItem item)
+        {
+            return helper.OnOptionsItemSelected(item) ? true : base.OnOptionsItemSelected(item);
+        }
+    }
+
+    public abstract class RxFragmentActivity<TViewModel> : FragmentActivity, IRxActivity<TViewModel>
+        where TViewModel : class, INavigableViewModel, IServiceViewModel
+    {
+        private readonly RxActivityHelper<TViewModel> helper;
+
+        protected RxFragmentActivity()
+        {
+            helper = RxActivityHelper<TViewModel>.Create(this);
+        }
+
+        public event PropertyChangedEventHandler PropertyChanged
+        {
+            add 
+            { 
+                helper.PropertyChanged += value; 
+            }
+
+            remove 
+            { 
+                helper.PropertyChanged -= value; 
+            }
+        }
+            
+        public TViewModel ViewModel
+        {
+            get
+            {
+                return helper.ViewModel;
+            }
+
+            set
+            {
+                helper.ViewModel = value;
+            }
+        }
+
+        object IViewFor.ViewModel
+        {
+            get
+            {
+                return helper.ViewModel;
+            }
+
+            set
+            {
+                this.ViewModel = (TViewModel) value;
+            }
+        }
+
+        protected override void OnCreate(Bundle bundle)
+        {
+            base.OnCreate(bundle);
+            helper.OnCreate(bundle);
+        }
+
+        protected override void OnResume()
+        {
+            base.OnResume();
+            helper.OnResume();
+        }
+
+        protected override void OnPause()
+        {
+            helper.OnPause();
+            base.OnPause();
+        }
+
+        public override void OnBackPressed()
+        {
+            helper.OnBackPressed();
+        }
+
+        public override bool OnOptionsItemSelected(IMenuItem item)
+        {
+            return helper.OnOptionsItemSelected(item) ? true : base.OnOptionsItemSelected(item);
+        }
+    }
+
+    public abstract class RxActionBarActivity<TViewModel> : ActionBarActivity, IRxActivity<TViewModel>
+        where TViewModel : class, INavigableViewModel, IServiceViewModel
+    {
+        private readonly RxActivityHelper<TViewModel> helper;
+
+        protected RxActionBarActivity()
         {
             helper = RxActivityHelper<TViewModel>.Create(this);
         }
