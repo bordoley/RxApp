@@ -9,10 +9,6 @@ namespace RxApp
         void OnActivityCreated(IRxActivity activity);
 
         Type GetActivityType(object model);
-
-        void Start();
-
-        void Stop();
     }
 
     public interface IRxActivity : IActivity, IViewFor

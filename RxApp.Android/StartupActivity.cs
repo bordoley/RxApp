@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace RxApp
 {
-    public sealed class StartupActivity : Activity
+    public sealed class StartupActivity : Activity, IRxActivity
     {
         private static bool isColdBoot = true;
 
@@ -26,11 +26,17 @@ namespace RxApp
             StartApp();
         }
 
+        public object ViewModel
+        {
+            get { return null; }
+
+            set {  }
+        }
+
         private void StartApp()
         { 
             var app = (IRxApplication) this.Application;
-            app.Start();
-            this.Finish();
+            app.OnActivityCreated(this);
         }
     }
 }

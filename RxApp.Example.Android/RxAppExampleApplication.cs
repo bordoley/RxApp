@@ -29,9 +29,9 @@ namespace RxApp.Example
             throw new Exception("No view for view model");
         }
 
-        public override IApplication ProvideApplication()
+        public override IApplication ProvideApplication(INavigationStack navStack)
         {
-            return new RxAppExampleApplicationController(this.NavigationStack);
+            return new RxAppExampleApplicationController(navStack);
         }
 
         public override void OnCreate()

@@ -17,19 +17,23 @@ namespace RxApp
     public sealed class RxApplicationHelper
     {
         public static RxApplicationHelper Create(
-            IRxApplication androidApplication,
+            Context context,
+            Func<object,Type> getActivityType,
             Func<INavigationStack,IApplication> provideApplication) 
         {
-            Contract.Requires(androidApplication != null);
+            Contract.Requires(context != null);
+            Contract.Requires(getActivityType != null);
             Contract.Requires(provideApplication != null);
 
-            return new RxApplicationHelper(androidApplication, provideApplication);
+            return new RxApplicationHelper(context, getActivityType, provideApplication);
         }
 
 
         private readonly IDictionary<object, IRxActivity> activities = new Dictionary<object, IRxActivity> ();
 
-        private readonly IRxApplication androidApplication;
+        private readonly Context context;
+
+        private readonly Func<object,Type> getActivityType;
 
         private readonly Func<INavigationStack,IApplication> provideApplication;
 
@@ -42,10 +46,12 @@ namespace RxApp
 
 
         private RxApplicationHelper(
-            IRxApplication androidApplication,
+            Context context,
+            Func<object,Type> getActivityType,
             Func<INavigationStack,IApplication> provideApplication)
         {
-            this.androidApplication = androidApplication;
+            this.context = context;
+            this.getActivityType = getActivityType;
             this.provideApplication = provideApplication;
         }
 
@@ -64,13 +70,13 @@ namespace RxApp
 
                             if (oldHead != null && newHead == null)
                             {
-                                androidApplication.Stop();
+                                this.Stop();
                             } 
                             else if (newHead != null && !activities.ContainsKey(newHead))
                             {
-                                var viewType = androidApplication.GetActivityType(newHead);
-                                var intent = new Intent(androidApplication.ApplicationContext, viewType).SetFlags(ActivityFlags.NewTask);
-                                androidApplication.ApplicationContext.StartActivity(intent);
+                                var viewType = getActivityType(newHead);
+                                var intent = new Intent(context, viewType).SetFlags(ActivityFlags.NewTask);
+                                context.StartActivity(intent);
                             }
 
                             foreach (var model in removed)
@@ -101,24 +107,25 @@ namespace RxApp
             }
             else
             {
+                // Either the startup activity called OnActivityCreated or the application was killed and restarted by android.
                 // If the application is backgrounded, android will kill all the activities and the application class.
                 // When the application is reopened from the background, it creates the application and starts the last activity 
-                // that was opened, not the startup activity. So instead, we start the application and finish the activity that was 
-                // started by android.
-                androidApplication.Start();
+                // that was opened, not the startup activity. 
+
+                this.Start();
                 activity.Finish();
 
                 Log.Debug("RxApplicationHelper", "Activity of type " + activity.GetType() + " created when the navigation stack was empty."); 
             }
         }
 
-        public void Start()
+        private void Start()
         {
             application = provideApplication(navStack);
             application.Init();
         }
 
-        public void Stop()
+        private void Stop()
         {
             Log.Debug("RxApplicationHelper", "RxApplication.Stop()"); 
             application.Dispose(); 
@@ -131,7 +138,7 @@ namespace RxApp
 
         public RxApplication(IntPtr javaReference, Android.Runtime.JniHandleOwnership transfer) : base(javaReference, transfer)
         {
-            helper = RxApplicationHelper.Create(this, ProvideApplication);
+            helper = RxApplicationHelper.Create(this.ApplicationContext, this.GetActivityType, this.ProvideApplication);
         }
 
         public abstract Type GetActivityType(object model);
@@ -157,16 +164,6 @@ namespace RxApp
         public void OnActivityCreated(IRxActivity activity)
         {
             helper.OnActivityCreated(activity);
-        }
-
-        public void Start()
-        {
-            helper.Start();
-        }
-
-        public void Stop()
-        {
-            helper.Stop();
         }
     }
 }
