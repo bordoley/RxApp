@@ -54,6 +54,11 @@ namespace RxApp
             {
                 this.valuesDisp.Dispose();
             }
+
+            public override string ToString()
+            {
+                return string.Format("[RxPropertyImpl: Value={0}]", Value);
+            }
         }
     }
 }

@@ -66,6 +66,7 @@
     <Compile Include="Interfaces.cs" />
     <Compile Include="RxActivity.cs" />
     <Compile Include="RxApplication.cs" />
+    <Compile Include="RxListAdapter.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\RxApp\RxApp.csproj">
