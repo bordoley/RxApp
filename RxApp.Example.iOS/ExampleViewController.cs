@@ -24,12 +24,12 @@ namespace RxApp.Example
 
             // FIXME: Need to add some sort of simple binding layer.
             subscription.Add(
-                this.ViewModel.OpenPage.CanExecuteObservable.Subscribe(x => this.OpenButton.Enabled = x));
+                this.ViewModel.OpenPage.CanExecute.Subscribe(x => this.OpenButton.Enabled = x));
             subscription.Add(
                 Observable.FromEventPattern(this.OpenButton, "TouchUpInside").InvokeCommand(this.ViewModel.OpenPage));
 
             subscription.Add(
-                this.ViewModel.Up.CanExecuteObservable.Subscribe(x => this.UpButton.Enabled = x));
+                this.ViewModel.Up.CanExecute.Subscribe(x => this.UpButton.Enabled = x));
             subscription.Add(
                 Observable.FromEventPattern(this.UpButton, "TouchUpInside").InvokeCommand(this.ViewModel.Up)); 
 

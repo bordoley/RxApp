@@ -36,12 +36,12 @@ namespace RxApp
 
         public void ViewDidAppear(bool animated)
         {
-            viewModel.Start.Execute(null);
+            viewModel.Start.Execute();
         }
 
         public void ViewDidDisappear(bool animated)
         {
-            viewModel.Stop.Execute(null);
+            viewModel.Stop.Execute();
         }
     }
 

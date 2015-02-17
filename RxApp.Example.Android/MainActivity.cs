@@ -42,7 +42,7 @@ namespace RxApp.Example
 
             // FIXME: Need to add some sort of simple binding layer.
             subscription.Add(
-                this.ViewModel.OpenPage.CanExecuteObservable.Subscribe(x => this.button.Enabled = x));
+                this.ViewModel.OpenPage.CanExecute.Subscribe(x => this.button.Enabled = x));
             subscription.Add(
                 Observable.FromEventPattern(this.button, "Click").InvokeCommand(this.ViewModel.OpenPage));
 

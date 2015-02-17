@@ -3,13 +3,12 @@ using System.Reactive;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Threading;
-using System.Windows.Input;
 
 namespace RxApp
 {
-    public interface IRxCommand : IObservable<Unit>, ICommand, IDisposable
+    public interface IRxCommand : IObservable<Unit>, IDisposable
     {
-        IObservable<bool> CanExecuteObservable { get; }
+        IObservable<bool> CanExecute { get; }
 
         void Execute();
     }
@@ -26,16 +25,9 @@ namespace RxApp
             return new RxCommandImpl(This);
         }
 
-        public static IDisposable InvokeCommand<T>(this IObservable<T> This, ICommand command)
-        {
-            return This.Throttle(x => Observable.FromEventPattern(command, "CanExecuteChanged")
-                    .Select(_ => Unit.Default).StartWith(Unit.Default).Where(_ => command.CanExecute(x)))
-                .Subscribe(x => command.Execute(x));
-        }
-
         public static IDisposable InvokeCommand<T>(this IObservable<T> This, IRxCommand command)
         {
-            return This.Throttle(x => command.CanExecuteObservable.StartWith(command.CanExecute(x)).Where(b => b))
+            return This.Throttle(x => command.CanExecute)
                 .Subscribe(x => command.Execute());
         }
 
@@ -56,24 +48,18 @@ namespace RxApp
                     .Do(x =>
                         {
                             this.canExecuteLatest = x;
-                            this.CanExecuteChanged(this, EventArgs.Empty);
                         })
                     .Publish();
 
                 canExecuteDisp = this.canExecute.Connect();
             }
 
-            // FIXME: In ReactiveUI they use the weak event pattern for 
-            // all platforms except WPF. Not sure it matters. For reference:
-            // https://github.com/reactiveui/ReactiveUI/blob/master/ReactiveUI/ReactiveCommand.cs#L285
-            public event EventHandler CanExecuteChanged = (o, e) => {};
-
             public void Execute()
             {
                 executeResults.OnNext(Unit.Default);
             }
 
-            public IObservable<bool> CanExecuteObservable 
+            public IObservable<bool> CanExecute
             {
                 get { return canExecute.StartWith(canExecuteLatest); }
             }
@@ -81,16 +67,6 @@ namespace RxApp
             public IDisposable Subscribe(IObserver<Unit> observer)
             {
                 return executeResults.Subscribe(observer);
-            }
-                
-            public bool CanExecute(object parameter)
-            {
-                return canExecuteLatest;
-            }
-
-            public void Execute(object parameter)
-            {
-                this.Execute();
             }
 
             public void Dispose()

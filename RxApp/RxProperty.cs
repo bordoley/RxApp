@@ -25,7 +25,7 @@ namespace RxApp
         private class RxPropertyImpl<T> : IRxProperty<T>
         {
             private readonly Subject<T> setValues = new Subject<T>();
-            private readonly IConnectableObservable<T> values;
+            private readonly IObservable<T> values;
             private readonly IDisposable valuesDisp;
 
             private T value;
@@ -33,8 +33,10 @@ namespace RxApp
             internal RxPropertyImpl(T initialValue)
             {
                 this.value = initialValue;
-                this.values = this.setValues.DistinctUntilChanged().Do (x => { this.value = x; }).Publish();
-                this.valuesDisp = this.values.Connect();
+
+                var values = this.setValues.DistinctUntilChanged().Do (x => { this.value = x; }).Publish();
+                this.valuesDisp = values.Connect();
+                this.values = values;
             }
 
             public T Value

@@ -44,19 +44,19 @@ namespace RxApp
 
         public void OnResume()
         {
-            this.ViewModel.Start.Execute(null);
+            this.ViewModel.Start.Execute();
         }
 
         public void OnPause()
         {
-            this.ViewModel.Stop.Execute(null);
+            this.ViewModel.Stop.Execute();
         }
 
         public void OnBackPressed()
         {
             if (!activity.FragmentManager.PopBackStackImmediate())
             {
-                this.ViewModel.Back.Execute(null);
+                this.ViewModel.Back.Execute();
             }
         }
 
@@ -66,7 +66,7 @@ namespace RxApp
 
             if (item.ItemId == Android.Resource.Id.Home)
             {
-                this.ViewModel.Up.Execute(null);
+                this.ViewModel.Up.Execute();
                 return true;
             }
 
