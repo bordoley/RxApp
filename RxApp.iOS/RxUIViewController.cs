@@ -5,8 +5,6 @@ using System.Diagnostics.Contracts;
 using Foundation;
 using UIKit;
 
-using ReactiveUI;
-
 namespace RxApp
 {
     public sealed class RxUIViewControllerHelper<TViewModel>
