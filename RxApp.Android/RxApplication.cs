@@ -30,7 +30,7 @@ namespace RxApp
 
         private readonly IDictionary<object, IRxActivity> activities = new Dictionary<object, IRxActivity> ();
 
-        private readonly INavigationStack navStack = RxApp.NavigationStack.Create();
+        private readonly INavigationStack navStack = NavigationStack.Create();
 
         private readonly Context context;
 

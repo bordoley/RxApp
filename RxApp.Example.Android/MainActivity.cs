@@ -39,7 +39,7 @@ namespace RxApp.Example
             base.OnResume();
 
             var subscription = new CompositeDisposable();
-            subscription.Add(this.ViewModel.OpenPage.BindTo(button));
+            subscription.Add(this.ViewModel.OpenPage.Bind(button));
 
             this.subscription = subscription;
         }

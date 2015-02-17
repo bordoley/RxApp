@@ -10,14 +10,9 @@ using System.Threading.Tasks;
 
 namespace RxApp
 {
-    public interface IRxReadOnlyProperty<T> : IObservable<T>, IDisposable
+    public interface IRxProperty<T> : IObservable<T>
     {
-        T Value { get; }
-    }
-
-    public interface IRxProperty<T> : IObservable<T>, IDisposable
-    {
-        T Value { get; set; }
+        T Value { set; }
     }
 
     public static class RxProperty
@@ -27,42 +22,36 @@ namespace RxApp
             return new RxPropertyImpl<T>(initialValue);   
         }
 
+        public static async Task<T> GetValue<T>(this IRxProperty<T> This)
+        {
+            return await This.FirstAsync();
+        }
+
         private class RxPropertyImpl<T> : IRxProperty<T>
         {
-            private readonly Subject<T> setValues = new Subject<T>();
+            private readonly BehaviorSubject<T> setValues;
             private readonly IObservable<T> values;
-            private readonly IDisposable valuesDisp;
-
-            private T value;
 
             internal RxPropertyImpl(T initialValue)
             {
-                this.value = initialValue;
-
-                var values = this.setValues.DistinctUntilChanged().Do (x => { this.value = x; }).Publish();
-                this.valuesDisp = values.Connect();
-                this.values = values;
+                this.setValues = new BehaviorSubject<T>(initialValue);
+                this.values = this.setValues.DistinctUntilChanged();
             }
 
             public T Value
             { 
-                get { return value; } 
                 set { setValues.OnNext(value); }
             }
 
             public IDisposable Subscribe(IObserver<T> observer)
             {
-                return values.StartWith(this.value).DistinctUntilChanged().Subscribe(observer);
-            }
-
-            public void Dispose()
-            {
-                this.valuesDisp.Dispose();
+                return values.Subscribe(observer);
             }
 
             public override string ToString()
             {
-                return string.Format("[RxPropertyImpl: Value={0}]", Value);
+                // Behavior subject caches its most recent value so i think this is safe from deadlocks. Need to test.
+                return string.Format("[RxPropertyImpl: Value={0}]", this.values.FirstAsync().Wait());
             }
         }
     }

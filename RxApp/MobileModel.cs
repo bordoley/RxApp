@@ -22,7 +22,6 @@ namespace RxApp
 
         public bool CanStart 
         { 
-            internal get { return canStart.Value; }
             set { this.canStart.Value = value; }
         }
 
