@@ -34,9 +34,10 @@
     <Compile Include="Stack.cs" />
     <Compile Include="NavigationStack.cs" />
     <Compile Include="Service.cs" />
-    <Compile Include="INavigableModel.cs" />
     <Compile Include="MobileModel.cs" />
-    <Compile Include="IApplication.cs" />
+    <Compile Include="RxCommand.cs" />
+    <Compile Include="RxProperty.cs" />
+    <Compile Include="Interfaces.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
   <ItemGroup>
@@ -51,12 +52,6 @@
     </Reference>
     <Reference Include="System.Reactive.PlatformServices">
       <HintPath>..\packages\Rx-PlatformServices.2.2.5\lib\portable-windows8+net45+wp8\System.Reactive.PlatformServices.dll</HintPath>
-    </Reference>
-    <Reference Include="ReactiveUI">
-      <HintPath>..\packages\reactiveui-core.6.4.0.1\lib\Portable-Net45+Win8+WP8+WPA81\ReactiveUI.dll</HintPath>
-    </Reference>
-    <Reference Include="Splat">
-      <HintPath>..\packages\Splat.1.6.1\lib\Portable-net45+win+wpa81+wp80\Splat.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>

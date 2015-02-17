@@ -10,8 +10,6 @@ using Android.Views;
 using Android.Support.V4.App;
 using Android.Support.V7.App;
 
-using ReactiveUI;
-
 namespace RxApp
 {   
     public sealed class RxActivityHelper<TViewModel>

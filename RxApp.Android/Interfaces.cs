@@ -1,5 +1,4 @@
-﻿using ReactiveUI;
-using System;
+﻿using System;
 using System.ComponentModel;
 
 namespace RxApp

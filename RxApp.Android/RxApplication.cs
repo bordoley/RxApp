@@ -1,7 +1,6 @@
 ﻿using Android.App;
 using Android.Content;
 using Android.Util;
-using ReactiveUI;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
