@@ -10,6 +10,11 @@ using System.Threading.Tasks;
 
 namespace RxApp
 {
+    public interface IRxReadOnlyProperty<T> : IObservable<T>, IDisposable
+    {
+        T Value { get; }
+    }
+
     public interface IRxProperty<T> : IObservable<T>, IDisposable
     {
         T Value { get; set; }

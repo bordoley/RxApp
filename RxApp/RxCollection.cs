@@ -36,7 +36,7 @@ namespace RxApp
             return new RxListImpl<T>(new List<T>());
         }
 
-        public static IRxList<T> ToReactiveList<T>(this IEnumerable<T> initialValues)
+        public static IRxList<T> ToRxList<T>(this IEnumerable<T> initialValues)
         {
             var backingList = initialValues.ToList();
             return new RxListImpl<T>(backingList);

@@ -39,12 +39,7 @@ namespace RxApp.Example
             base.OnResume();
 
             var subscription = new CompositeDisposable();
-
-            // FIXME: Need to add some sort of simple binding layer.
-            subscription.Add(
-                this.ViewModel.OpenPage.CanExecute.Subscribe(x => this.button.Enabled = x));
-            subscription.Add(
-                Observable.FromEventPattern(this.button, "Click").InvokeCommand(this.ViewModel.OpenPage));
+            subscription.Add(this.ViewModel.OpenPage.BindTo(button));
 
             this.subscription = subscription;
         }
