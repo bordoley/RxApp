@@ -6,6 +6,8 @@ using System.Linq;
 using System.Collections.ObjectModel;
 using System.Reactive.Subjects;
 
+
+// FIXME: Remove this whole file
 namespace RxApp
 {   
     public interface IReactiveNotifyCollectionChanged<out T>

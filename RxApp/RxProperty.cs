@@ -22,11 +22,6 @@ namespace RxApp
             return new RxPropertyImpl<T>(initialValue);   
         }
 
-        public static async Task<T> GetValue<T>(this IRxProperty<T> This)
-        {
-            return await This.FirstAsync();
-        }
-
         private class RxPropertyImpl<T> : IRxProperty<T>
         {
             private readonly BehaviorSubject<T> setValues;
