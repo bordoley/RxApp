@@ -8,6 +8,8 @@ namespace RxApp
         void OnActivityCreated(IRxActivity activity);
     }
 
+    // FIXME: Consider exposing Activity callbacks as observables
+    // obvious example is OnOptionsItemSelected. Its a slippery slope though.
     public interface IRxActivity : IActivity, IViewFor
     {
     }
