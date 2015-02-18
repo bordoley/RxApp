@@ -12,14 +12,21 @@ namespace RxApp
 {
     public interface IRxProperty<T> : IObservable<T>
     {
-        T Value { set; }
+        T Value { get; set; }
     }
 
     public static class RxProperty
     {
         public static IRxProperty<T> Create<T>(T initialValue)
         {
-            return new RxPropertyImpl<T>(initialValue);   
+            var subject = new BehaviorSubject<T>(initialValue);
+            return new RxPropertyImpl<T>(subject);   
+        }
+
+        public IRxProperty<T> CreateSynchronized<T>(T initialValue)
+        {
+            var subject = new BehaviorSubject<T>(initialValue).Synchronize();
+            return new RxPropertyImpl<T>(subject);   
         }
 
         private class RxPropertyImpl<T> : IRxProperty<T>
@@ -27,14 +34,15 @@ namespace RxApp
             private readonly BehaviorSubject<T> setValues;
             private readonly IObservable<T> values;
 
-            internal RxPropertyImpl(T initialValue)
+            internal RxPropertyImpl(BehaviorSubject<T> setValues)
             {
-                this.setValues = new BehaviorSubject<T>(initialValue);
+                this.setValues = setValues;
                 this.values = this.setValues.DistinctUntilChanged();
             }
 
             public T Value
             { 
+                get { return setValues.Value; }
                 set { setValues.OnNext(value); }
             }
 
@@ -45,8 +53,7 @@ namespace RxApp
 
             public override string ToString()
             {
-                // Behavior subject caches its most recent value so i think this is safe from deadlocks. Need to test.
-                return string.Format("[RxPropertyImpl: Value={0}]", this.values.FirstAsync().Wait());
+                return string.Format("[RxPropertyImpl: Value={0}]", this.setValues.Value);
             }
         }
     }
