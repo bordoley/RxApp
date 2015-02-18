@@ -23,6 +23,11 @@ namespace RxApp
             return new RxPropertyImpl<T>(subject);   
         }
 
+        public static IDisposable BindTo<T>(this IObservable<T> This, IRxProperty<T> property)
+        {
+            return This.Subscribe(t => { property.Value = t; });
+        }
+
         private class RxPropertyImpl<T> : IRxProperty<T>
         {
             private readonly BehaviorSubject<T> setValues;

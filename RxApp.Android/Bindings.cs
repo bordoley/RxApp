@@ -11,7 +11,7 @@ using Android.Support.V4.Widget;
 
 namespace RxApp
 {
-    public static class Bindings
+    public static partial class Bindings
     {
         public static IDisposable Bind(this IRxCommand This, Button button)
         {
