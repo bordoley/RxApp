@@ -2,6 +2,7 @@
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 
+using Android.Text;
 using Android.Widget;
 using Android.Support.V4.Widget;
 
@@ -38,10 +39,8 @@ namespace RxApp
         {
             var subscription = new CompositeDisposable();
             subscription.Add(
-                Observable.FromEventPattern<CompoundButton.CheckedChangeEventArgs>(button, "CheckedChange").Subscribe(x =>
-                    {
-                        This.Value = x.EventArgs.IsChecked;
-                    }));
+                Observable.FromEventPattern<CompoundButton.CheckedChangeEventArgs>(button, "CheckedChange")
+                          .Subscribe(x => { This.Value = x.EventArgs.IsChecked; }));
             subscription.Add(This.ObserveOnMainThread().Subscribe(x => { if (button.Checked != x) { button.Checked = x; } }));
             return subscription;
         }
