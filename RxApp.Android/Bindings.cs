@@ -55,7 +55,17 @@ namespace RxApp
             Action<TViewModel, TView> bind)
             where TView:View
         {
-            var adapter = new RxEnumerableAdapter<TViewModel, TView>(This, viewProvider, bind);
+            return This.Select(x => x.ToList()).BindTo(listView, viewProvider, bind);
+        }
+
+        public static IDisposable BindTo<TViewModel,TView>(
+            this IObservable<IReadOnlyList<TViewModel>> This, 
+            ListView listView, 
+            Func<ViewGroup, TView> viewProvider, 
+            Action<TViewModel, TView> bind)
+            where TView:View
+        {
+            var adapter = new RxReadOnlyListAdapter<TViewModel, TView>(This, viewProvider, bind);
             listView.Adapter = adapter;
 
             return Disposable.Create(() =>
@@ -65,7 +75,7 @@ namespace RxApp
                 });
         }
 
-        private sealed class RxEnumerableAdapter<TViewModel, TView> : BaseAdapter<TViewModel>
+        private sealed class RxReadOnlyListAdapter<TViewModel, TView> : BaseAdapter<TViewModel>
             where TView : View
         {   
             private readonly IDisposable dataSubscription;
@@ -74,8 +84,8 @@ namespace RxApp
 
             private IReadOnlyList<TViewModel> list;
 
-            public RxEnumerableAdapter(
-                IObservable<IEnumerable<TViewModel>> data,
+            public RxReadOnlyListAdapter(
+                IObservable<IReadOnlyList<TViewModel>> data,
                 Func<ViewGroup, TView> viewProvider, 
                 Action<TViewModel, TView> bind)
             {
@@ -85,7 +95,7 @@ namespace RxApp
 
                 dataSubscription = 
                     data.ObserveOnMainThread()
-                        .Do(x => list = x.ToList())
+                        .Do(x => list = x)
                         .Subscribe(_ => NotifyDataSetChanged());
             }
 
@@ -115,6 +125,7 @@ namespace RxApp
                 return this.GetView(position, theView, parent);
             }
 
+            public override bool HasStableIds { get { return true; } }
 
             public override int Count
             {
