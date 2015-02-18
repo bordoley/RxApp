@@ -23,12 +23,6 @@ namespace RxApp
             return new RxPropertyImpl<T>(subject);   
         }
 
-        public IRxProperty<T> CreateSynchronized<T>(T initialValue)
-        {
-            var subject = new BehaviorSubject<T>(initialValue).Synchronize();
-            return new RxPropertyImpl<T>(subject);   
-        }
-
         private class RxPropertyImpl<T> : IRxProperty<T>
         {
             private readonly BehaviorSubject<T> setValues;
