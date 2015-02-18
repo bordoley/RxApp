@@ -10,7 +10,7 @@ using Android.OS;
 
 namespace RxApp
 {
-    public static class RxApp
+    public static partial class Observables
     {
         private static readonly IScheduler _mainThreadScheduler = new HandlerScheduler(new Handler(Looper.MainLooper), Looper.MainLooper.Thread.Id);
 
