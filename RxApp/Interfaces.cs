@@ -20,7 +20,7 @@ namespace RxApp
 
     public interface INavigableControllerModel
     {
-        IObservable<Unit> Back { get; }
+        IRxCommand Back { get; }
         IObservable<Unit> Up { get; }
     }
 

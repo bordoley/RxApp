@@ -25,14 +25,6 @@ namespace RxApp
             set { this.canStart.Value = value; }
         }
 
-        IObservable<Unit> INavigableControllerModel.Back
-        {
-            get
-            {
-                return back;
-            }
-        }
-
         public IRxCommand Back
         {
             get
