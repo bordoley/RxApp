@@ -34,16 +34,6 @@ namespace RxApp
             return subscription;
         }
 
-        public static IDisposable Bind(this IRxCommand This, SwipeRefreshLayout refresher)
-        {
-            var subscription = new CompositeDisposable();
-            subscription.Add(
-                This.CanExecute.Where(x => x).ObserveOnMainThread().Subscribe(x => refresher.Refreshing = !x));
-            subscription.Add(
-                Observable.FromEventPattern(refresher, "Refresh").InvokeCommand(This));
-            return subscription;
-        }
-
         public static IDisposable Bind(this IRxProperty<bool> This, CompoundButton button)
         {
             var subscription = new CompositeDisposable();
