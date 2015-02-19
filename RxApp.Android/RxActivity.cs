@@ -22,6 +22,8 @@ namespace RxApp
             return new RxActivityHelper<TViewModel>(activity);
         }
 
+        // FIXME: I'd rather actually allow two way bindings to the menuitems in setup so that
+        // they can be disabled/hidden etc.
         private readonly Subject<IMenuItem> optionsItemSelected = new Subject<IMenuItem>();
 
         private readonly IRxActivity activity;

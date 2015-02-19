@@ -71,10 +71,19 @@ namespace RxApp
 
     public static class Disposables 
     {
-        public static IDisposable Combine(IDisposable first, params IDisposable[] disposables)
+        public static IDisposable Combine(IDisposable first, IDisposable second)
         {
             var result = new CompositeDisposable();
             result.Add(first);
+            result.Add(second);
+            return result;
+        }
+
+        public static IDisposable Combine(IDisposable first, IDisposable second, params IDisposable[] disposables)
+        {
+            var result = new CompositeDisposable();
+            result.Add(first);
+            result.Add(second);
 
             foreach (var disposable in disposables)
             {
