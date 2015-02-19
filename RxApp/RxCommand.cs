@@ -27,8 +27,7 @@ namespace RxApp
 
         public static IDisposable InvokeCommand<T>(this IObservable<T> This, IRxCommand command)
         {
-            return This.Throttle(x => command.CanExecute)
-                .Subscribe(x => command.Execute());
+            return This.Subscribe(x => command.Execute());
         }
 
         private sealed class RxCommandImpl : IRxCommand
@@ -47,7 +46,7 @@ namespace RxApp
                     .DistinctUntilChanged()
                     .Do(x =>
                         {
-                            this.canExecuteLatest = x;
+                            System.Threading.Interlocked.Exchange(ref canExecute,x);
                         })
                     .Publish();
 
@@ -56,7 +55,10 @@ namespace RxApp
 
             public void Execute()
             {
-                executeResults.OnNext(Unit.Default);
+                if (canExecuteLatest)
+                {
+                    executeResults.OnNext(Unit.Default);
+                }
             }
 
             public IObservable<bool> CanExecute
@@ -72,7 +74,7 @@ namespace RxApp
             public void Dispose()
             {
                 canExecuteDisp.Dispose();
-                canExecuteLatest = false;
+                System.Threading.Interlocked.Exchange(ref canExecute, false);
             }
         }
     }
