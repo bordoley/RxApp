@@ -44,11 +44,6 @@ namespace RxApp
             return subscription;
         }
 
-        public static IDisposable BindTo(this IObservable<string> This, TextView textView)
-        {
-            return This.ObserveOnMainThread().Subscribe(x => textView.Text = x);
-        }
-
         public static IDisposable Bind(this IRxProperty<bool> This, CompoundButton button)
         {
             var subscription = new CompositeDisposable();
