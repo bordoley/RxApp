@@ -1,6 +1,8 @@
 ﻿using System;
 using System.ComponentModel;
 
+using Android.Views;
+
 namespace RxApp
 {
     public interface IRxApplication : IAndroidApplication

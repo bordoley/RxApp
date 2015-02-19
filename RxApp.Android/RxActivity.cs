@@ -2,6 +2,7 @@
 using System.ComponentModel;
 using System.Diagnostics.Contracts;
 using System.Reactive.Linq;
+using System.Reactive.Subjects;
 
 using Android.App;
 using Android.OS;
@@ -21,6 +22,8 @@ namespace RxApp
             return new RxActivityHelper<TViewModel>(activity);
         }
 
+        private readonly Subject<IMenuItem> optionsItemSelected = new Subject<IMenuItem>();
+
         private readonly IRxActivity activity;
         private TViewModel viewModel;
 
@@ -28,6 +31,8 @@ namespace RxApp
         {
             this.activity = activity;
         }
+
+        public IObservable<IMenuItem> OptionsItemSelected { get { return optionsItemSelected; } }
 
         public TViewModel ViewModel
         {
@@ -66,11 +71,12 @@ namespace RxApp
 
             if (item.ItemId == Android.Resource.Id.Home)
             {
+                // We own this one
                 this.ViewModel.Up.Execute();
-                return true;
-            }
 
-            return false;
+            } else { optionsItemSelected.OnNext(item); }
+
+            return true;
         }
     }
         
@@ -83,6 +89,8 @@ namespace RxApp
         {
             helper = RxActivityHelper<TViewModel>.Create(this);
         }
+
+        public IObservable<IMenuItem> OptionsItemSelected { get { return helper.OptionsItemSelected; } }
              
         public TViewModel ViewModel
         {
@@ -116,14 +124,14 @@ namespace RxApp
             base.OnPause();
         }
 
-        public override void OnBackPressed()
+        public override sealed void OnBackPressed()
         {
             helper.OnBackPressed();
         }
 
-        public override bool OnOptionsItemSelected(IMenuItem item)
+        public override sealed bool OnOptionsItemSelected(IMenuItem item)
         {
-            return helper.OnOptionsItemSelected(item) ? true : base.OnOptionsItemSelected(item);
+            return helper.OnOptionsItemSelected(item);
         }
     }
 
@@ -136,6 +144,8 @@ namespace RxApp
         {
             helper = RxActivityHelper<TViewModel>.Create(this);
         }
+
+        public IObservable<IMenuItem> OptionsItemSelected { get { return helper.OptionsItemSelected; } }
             
         public TViewModel ViewModel
         {
@@ -169,14 +179,14 @@ namespace RxApp
             base.OnPause();
         }
 
-        public override void OnBackPressed()
+        public override sealed void OnBackPressed()
         {
             helper.OnBackPressed();
         }
 
-        public override bool OnOptionsItemSelected(IMenuItem item)
+        public override sealed bool OnOptionsItemSelected(IMenuItem item)
         {
-            return helper.OnOptionsItemSelected(item) ? true : base.OnOptionsItemSelected(item);
+            return helper.OnOptionsItemSelected(item);
         }
     }
 
@@ -189,6 +199,8 @@ namespace RxApp
         {
             helper = RxActivityHelper<TViewModel>.Create(this);
         }
+
+        public IObservable<IMenuItem> OptionsItemSelected { get { return helper.OptionsItemSelected; } }
             
         public TViewModel ViewModel
         {
@@ -222,14 +234,14 @@ namespace RxApp
             base.OnPause();
         }
 
-        public override void OnBackPressed()
+        public override sealed void OnBackPressed()
         {
             helper.OnBackPressed();
         }
 
-        public override bool OnOptionsItemSelected(IMenuItem item)
+        public override sealed bool OnOptionsItemSelected(IMenuItem item)
         {
-            return helper.OnOptionsItemSelected(item) ? true : base.OnOptionsItemSelected(item);
+            return helper.OnOptionsItemSelected(item);
         }
     }
 }
