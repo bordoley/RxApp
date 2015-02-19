@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Reactive.Disposables;
 using System.Reactive.Linq;
 
 namespace RxApp
@@ -65,6 +66,17 @@ namespace RxApp
         {
             return Observables.Combine(_1, _2, _3).Combine(_4, _5, _6, _7)
                               .Select(t => Tuple.Create(t.Item1.Item1, t.Item1.Item2, t.Item1.Item3, t.Item2, t.Item3, t.Item4, t.Item5));
+        }
+    }
+
+    public static class Disposables 
+    {
+        public static void AddAll(this CompositeDisposable This, params IDisposable[] disposables)
+        {
+            foreach (var disposable in disposables)
+            {
+                This.Add(disposable);
+            }
         }
     }
 }

@@ -8,11 +8,22 @@ using Android.Text;
 using Android.Views;
 using Android.Widget;
 using Android.Support.V4.Widget;
+using System.Linq.Expressions;
 
 namespace RxApp
 {
     public static partial class Bindings
     {
+        public static IDisposable BindTo<T, TView>(this IObservable<T> This, TView target, Expression<Func<TView, T>> property)
+            where TView : View
+        {
+            var propertySetter = Reflection.GetSetter(property);
+
+            return This.ObserveOnMainThread()
+                       .Subscribe(x => 
+                            propertySetter(target, x));
+        }
+
         public static IDisposable Bind(this IRxCommand This, Button button)
         {
             var subscription = new CompositeDisposable();
