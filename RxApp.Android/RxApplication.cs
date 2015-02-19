@@ -92,6 +92,9 @@ namespace RxApp
             subscription.Add(
                 Observable
                     .FromEventPattern<NotifyNavigationStackChangedEventArgs>(navStack, "NavigationStackChanged")
+
+                    // The Stack can be updated from multiple threads
+                    .ObserveOnMainThread()
                     .Subscribe((EventPattern<NotifyNavigationStackChangedEventArgs> e) => 
                         {
                             var newHead = e.EventArgs.NewHead;

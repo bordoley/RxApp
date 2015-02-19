@@ -51,14 +51,25 @@ namespace RxApp
             }
         }
     }
-        
+      
+    // FIXME FIXME FIME
+    // This class needs an overhaul to be made thread safe. 
+    // All the update methods 
+    //   public void GotoRoot()       
+    //   public void Push
+    //   public void Pop()
+    //   public void SetRoot
+    // 
+    // Probably use locks, and also use copy semantics for the enumerators
+    // so that callers of .GetEnumerator get a snapshot of the current state
+    // and don't have to worry about concurrent modification exceptions.
     public static class NavigationStack
     {
         public static INavigationStack Create ()
         {
             return new NavigationStackImpl();
         }
-
+          
         private sealed class NavigationStackImpl : INavigationStack
         {
             private IStack<INavigableControllerModel> navStack = Stack<INavigableControllerModel>.Empty;
