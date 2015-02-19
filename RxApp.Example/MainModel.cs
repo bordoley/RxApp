@@ -1,26 +1,27 @@
-﻿using ReactiveUI;
-using RxApp;
+﻿using RxApp;
 using System;
+using System.Reactive;
+using System.Windows.Input;
 
 namespace RxApp.Example
 {   
     public interface IMainViewModel : INavigableViewModel, IServiceViewModel
     {
-        IReactiveCommand<object> OpenPage { get; }
+        IRxCommand OpenPage { get; }
     }
 
     public interface IMainControllerModel
     {
-        IObservable<object> OpenPage { get; }
+        IObservable<Unit> OpenPage { get; }
     }
 
     public class MainModel : MobileModel, IMainViewModel, IMainControllerModel
     {
-        private readonly IReactiveCommand<object> openPage = ReactiveCommand.Create();
+        private readonly IRxCommand openPage = RxCommand.Create();
 
-        public IReactiveCommand<object> OpenPage { get { return openPage; } }
+        public IRxCommand OpenPage { get { return openPage; } }
 
-        IObservable<object> IMainControllerModel.OpenPage { get { return (IObservable<object>) openPage; } }
+        IObservable<Unit> IMainControllerModel.OpenPage { get { return openPage; } }
     }
 }
 

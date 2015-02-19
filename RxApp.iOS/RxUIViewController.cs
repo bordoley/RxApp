@@ -5,8 +5,6 @@ using System.Diagnostics.Contracts;
 using Foundation;
 using UIKit;
 
-using ReactiveUI;
-
 namespace RxApp
 {
     public sealed class RxUIViewControllerHelper<TViewModel>
@@ -38,12 +36,12 @@ namespace RxApp
 
         public void ViewDidAppear(bool animated)
         {
-            viewModel.Start.Execute(null);
+            viewModel.Start.Execute();
         }
 
         public void ViewDidDisappear(bool animated)
         {
-            viewModel.Stop.Execute(null);
+            viewModel.Stop.Execute();
         }
     }
 

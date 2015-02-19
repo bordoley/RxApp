@@ -1,17 +1,17 @@
 using System;
+using System.Reactive.Linq;
 using Foundation;
 using UIKit;
 using System.CodeDom.Compiler;
 using System.Reactive.Disposables;
 
-using ReactiveUI;
 using RxApp;
 
 namespace RxApp.Example
 {
     partial class ExampleViewController : RxUIViewController<IMainViewModel>
 	{
-        private CompositeDisposable subscription = null;
+        private IDisposable subscription = null;
 
 		public ExampleViewController (IntPtr handle) : base (handle)
 		{
@@ -20,19 +20,20 @@ namespace RxApp.Example
         public override void ViewDidAppear(bool animated)
         {
             base.ViewDidAppear(animated);
-            subscription = new CompositeDisposable();
+            var subscription = new CompositeDisposable();
 
-            subscription.Add( 
-                this.BindCommand(
-                    this.ViewModel, 
-                    vm => vm.OpenPage,
-                    view => view.OpenButton));
+            // FIXME: Need to add some sort of simple binding layer.
+            subscription.Add(
+                this.ViewModel.OpenPage.CanExecute.Subscribe(x => this.OpenButton.Enabled = x));
+            subscription.Add(
+                Observable.FromEventPattern(this.OpenButton, "TouchUpInside").InvokeCommand(this.ViewModel.OpenPage));
 
-            subscription.Add( 
-                this.BindCommand(
-                    this.ViewModel, 
-                    vm => vm.Up,
-                    view => view.UpButton));
+            subscription.Add(
+                this.ViewModel.Up.CanExecute.Subscribe(x => this.UpButton.Enabled = x));
+            subscription.Add(
+                Observable.FromEventPattern(this.UpButton, "TouchUpInside").InvokeCommand(this.ViewModel.Up)); 
+
+            this.subscription = subscription;
         }
 
         public override void ViewDidDisappear(bool animated)

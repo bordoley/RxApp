@@ -1,10 +1,8 @@
 ﻿using Android.App;
 using Android.Content;
 using Android.Util;
-using ReactiveUI;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Reactive;
@@ -32,7 +30,7 @@ namespace RxApp
 
         private readonly IDictionary<object, IRxActivity> activities = new Dictionary<object, IRxActivity> ();
 
-        private readonly INavigationStack navStack = RxApp.NavigationStack.Create();
+        private readonly INavigationStack navStack = NavigationStack.Create();
 
         private readonly Context context;
 

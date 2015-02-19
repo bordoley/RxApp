@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Reactive.Disposables;
@@ -51,16 +50,6 @@ namespace RxApp
                 return removed;
             }
         }
-    }
-
-    public interface INavigationStack : IEnumerable<INavigableControllerModel>
-    {
-        event EventHandler<NotifyNavigationStackChangedEventArgs> NavigationStackChanged;
-       
-        void GotoRoot();
-        void Pop();
-        void Push(INavigableControllerModel model);
-        void SetRoot(INavigableControllerModel model);
     }
         
     public static class NavigationStack

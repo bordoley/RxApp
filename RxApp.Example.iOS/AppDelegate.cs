@@ -5,8 +5,6 @@ using System.Linq;
 using Foundation;
 using UIKit;
 
-using ReactiveUI;
-
 namespace RxApp.Example
 {
     [Register("AppDelegate")]

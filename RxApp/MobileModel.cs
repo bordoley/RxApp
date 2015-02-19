@@ -1,48 +1,39 @@
 ﻿using System;
 using System.Windows.Input;
-using ReactiveUI;
 using System.Reactive;
 using System.Reactive.Linq;
 
 namespace RxApp
 {
-    public class MobileModel : ReactiveObject, INavigableControllerModel, INavigableViewModel, IServiceControllerModel, IServiceViewModel 
+    public class MobileModel : INavigableControllerModel, INavigableViewModel, IServiceControllerModel, IServiceViewModel 
     {
-        private readonly IReactiveCommand<object> back = ReactiveCommand.Create();
-        private readonly IReactiveCommand<object> up = ReactiveCommand.Create();
-        private readonly IReactiveCommand<object> start;
-        private readonly IReactiveCommand<object> stop;
+        private readonly IRxCommand back = RxCommand.Create();
+        private readonly IRxCommand up = RxCommand.Create();
+        private readonly IRxCommand start;
+        private readonly IRxCommand stop;
 
-        private bool canStart = true;
-        private bool canStop = false;
+        private IRxProperty<bool> canStart = RxProperty.Create<bool>(true);
 
         public MobileModel()
         {
-            start = ReactiveCommand.Create(this.WhenAnyValue(x => x.CanStart));
-            stop = ReactiveCommand.Create(this.WhenAnyValue(x => x.CanStop));
+            start = this.canStart.ToCommand();
+            stop = this.canStart.Select(x => !x).ToCommand();
         }
 
         public bool CanStart 
         { 
-            internal get { return canStart; }
-            set { this.RaiseAndSetIfChanged(ref canStart, value); }
-        }
-
-        public bool CanStop
-        { 
-            internal get { return canStop; }
-            set { this.RaiseAndSetIfChanged(ref canStop, value); }
+            set { this.canStart.Value = value; }
         }
 
         IObservable<Unit> INavigableControllerModel.Back
         {
             get
             {
-                return back.Select(_ => Unit.Default);
+                return back;
             }
         }
 
-        public ICommand Back
+        public IRxCommand Back
         {
             get
             {
@@ -54,11 +45,11 @@ namespace RxApp
         {
             get
             {
-                return up.Select(_ => Unit.Default);
+                return up;
             }
         }
 
-        public ICommand Up
+        public IRxCommand Up
         {
             get
             {
@@ -70,11 +61,11 @@ namespace RxApp
         {
             get
             {
-                return stop.Select(_ => Unit.Default);
+                return stop;
             }
         }
 
-        public ICommand Stop
+        public IRxCommand Stop
         {
             get
             {
@@ -86,11 +77,11 @@ namespace RxApp
         {
             get
             {
-                return start.Select(_ => Unit.Default);
+                return start;
             }
         }
 
-        public ICommand Start
+        public IRxCommand Start
         {
             get
             {

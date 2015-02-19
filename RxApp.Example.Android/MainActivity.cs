@@ -1,11 +1,12 @@
 ﻿using System;
+using System.Reactive.Disposables;
+using System.Reactive.Linq;
 
 using Android.App;
 using Android.OS;
 using Android.Widget;
 using Toolbar = Android.Support.V7.Widget.Toolbar;
 
-using ReactiveUI;
 using RxApp;
 
 namespace RxApp.Example
@@ -37,11 +38,10 @@ namespace RxApp.Example
         {
             base.OnResume();
 
-            subscription = 
-                this.BindCommand(
-                    this.ViewModel, 
-                    vm => vm.OpenPage,
-                    view => view.button);
+            var subscription = new CompositeDisposable();
+            subscription.Add(this.ViewModel.OpenPage.Bind(button));
+
+            this.subscription = subscription;
         }
 
         protected override void OnPause()

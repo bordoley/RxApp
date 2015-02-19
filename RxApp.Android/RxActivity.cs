@@ -10,8 +10,6 @@ using Android.Views;
 using Android.Support.V4.App;
 using Android.Support.V7.App;
 
-using ReactiveUI;
-
 namespace RxApp
 {   
     public sealed class RxActivityHelper<TViewModel>
@@ -46,19 +44,19 @@ namespace RxApp
 
         public void OnResume()
         {
-            this.ViewModel.Start.Execute(null);
+            this.ViewModel.Start.Execute();
         }
 
         public void OnPause()
         {
-            this.ViewModel.Stop.Execute(null);
+            this.ViewModel.Stop.Execute();
         }
 
         public void OnBackPressed()
         {
             if (!activity.FragmentManager.PopBackStackImmediate())
             {
-                this.ViewModel.Back.Execute(null);
+                this.ViewModel.Back.Execute();
             }
         }
 
@@ -68,7 +66,7 @@ namespace RxApp
 
             if (item.ItemId == Android.Resource.Id.Home)
             {
-                this.ViewModel.Up.Execute(null);
+                this.ViewModel.Up.Execute();
                 return true;
             }
 
