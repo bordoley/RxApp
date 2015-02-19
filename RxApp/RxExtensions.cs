@@ -71,12 +71,17 @@ namespace RxApp
 
     public static class Disposables 
     {
-        public static void AddAll(this CompositeDisposable This, params IDisposable[] disposables)
+        public static IDisposable Combine(IDisposable first, params IDisposable[] disposables)
         {
+            var result = new CompositeDisposable();
+            result.Add(first);
+
             foreach (var disposable in disposables)
             {
-                This.Add(disposable);
+                result.Add(disposable);
             }
+
+            return result;
         }
     }
 }
