@@ -38,7 +38,7 @@ namespace RxApp
         {
             var subscription = new CompositeDisposable();
             subscription.Add(
-                This.CanExecute.ObserveOnMainThread().Subscribe(x => refresher.Refreshing = x));
+                This.CanExecute.Where(x => x).ObserveOnMainThread().Subscribe(x => refresher.Refreshing = !x));
             subscription.Add(
                 Observable.FromEventPattern(refresher, "Refresh").InvokeCommand(This));
             return subscription;
