@@ -38,6 +38,7 @@ namespace RxApp
         IObservable<Unit> Stop { get; }
     }
 
+    // FIXME: Rework this interface/add extension methods to make it easier to bind it to/from Observables
     public interface INavigationStack : IEnumerable<INavigableControllerModel>
     {
         event EventHandler<NotifyNavigationStackChangedEventArgs> NavigationStackChanged;
