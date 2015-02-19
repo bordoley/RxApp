@@ -38,7 +38,7 @@ namespace RxApp
 
             private readonly IDisposable canExecuteDisp;
 
-            bool canExecuteLatest = false;
+            int canExecuteLatest = 0;
 
             internal RxCommandImpl(IObservable<bool> canExecute)
             {
@@ -46,7 +46,7 @@ namespace RxApp
                     .DistinctUntilChanged()
                     .Do(x =>
                         {
-                            System.Threading.Interlocked.Exchange(ref canExecute,x);
+                            System.Threading.Interlocked.Exchange(ref canExecuteLatest, x ? 1 : 0);
                         })
                     .Publish();
 
@@ -55,7 +55,7 @@ namespace RxApp
 
             public void Execute()
             {
-                if (canExecuteLatest)
+                if (canExecuteLatest > 0)
                 {
                     executeResults.OnNext(Unit.Default);
                 }
@@ -63,7 +63,7 @@ namespace RxApp
 
             public IObservable<bool> CanExecute
             {
-                get { return canExecute.StartWith(canExecuteLatest); }
+                get { return canExecute.StartWith(canExecuteLatest > 0); }
             }
 
             public IDisposable Subscribe(IObserver<Unit> observer)
@@ -74,7 +74,7 @@ namespace RxApp
             public void Dispose()
             {
                 canExecuteDisp.Dispose();
-                System.Threading.Interlocked.Exchange(ref canExecute, false);
+                System.Threading.Interlocked.Exchange(ref canExecuteLatest, 0);
             }
         }
     }
