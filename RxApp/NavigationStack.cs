@@ -6,6 +6,8 @@ using System.Linq;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 
+using RxObservable = System.Reactive.Linq.Observable;
+
 namespace RxApp
 {
     public sealed class NotifyNavigationStackChangedEventArgs : EventArgs
@@ -202,7 +204,7 @@ namespace RxApp
                     throw new NotSupportedException("Initialize can only be called once");
                 }
 
-                navStateChangedSubscription = Observable.FromEventPattern<NotifyNavigationStackChangedEventArgs>(navStack, "NavigationStackChanged").Subscribe(e =>
+                navStateChangedSubscription = RxObservable.FromEventPattern<NotifyNavigationStackChangedEventArgs>(navStack, "NavigationStackChanged").Subscribe(e =>
                     {
                         var head = e.EventArgs.NewHead;
                         var removed = e.EventArgs.Removed;

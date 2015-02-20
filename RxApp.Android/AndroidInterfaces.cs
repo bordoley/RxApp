@@ -2,7 +2,7 @@
 using Android.Content;
 using Android.Views;
 
-namespace RxApp
+namespace RxApp.Android
 {  
     public interface IAndroidApplication 
     {

@@ -6,12 +6,13 @@ using System.Reactive.Subjects;
 
 using Android.App;
 using Android.OS;
+using Android;
 using Android.Views;
 
 using Android.Support.V4.App;
 using Android.Support.V7.App;
 
-namespace RxApp
+namespace RxApp.Android
 {   
     public sealed class RxActivityHelper<TViewModel>
         where TViewModel: class, INavigableViewModel, IServiceViewModel
@@ -71,7 +72,7 @@ namespace RxApp
         {
             Contract.Requires(item != null);
 
-            if (item.ItemId == Android.Resource.Id.Home)
+            if (item.ItemId == Resource.Id.Home)
             {
                 // We own this one
                 this.ViewModel.Up.Execute();

@@ -4,9 +4,11 @@ using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Threading;
 
+using RxObservable = System.Reactive.Linq.Observable;
+
 namespace RxApp
 {
-    public interface IRxCommand : IObservable<Unit>, IDisposable
+    public interface IRxCommand : IObservable<Unit>
     {
         IObservable<bool> CanExecute { get; }
 
@@ -17,7 +19,7 @@ namespace RxApp
     {
         public static IRxCommand Create() 
         {
-            return new RxCommandImpl(Observable.Return(true));
+            return new RxCommandImpl(RxObservable.Return(true));
         }
 
         public static IRxCommand ToCommand(this IObservable<bool> This)
@@ -71,10 +73,10 @@ namespace RxApp
                 return executeResults.Subscribe(observer);
             }
 
+            // To Make the compiler happy. Not really necessary and not exposed on the interface intentionally.
             public void Dispose()
             {
                 canExecuteDisp.Dispose();
-                System.Threading.Interlocked.Exchange(ref canExecuteLatest, 0);
             }
         }
     }

@@ -3,7 +3,7 @@ using System.ComponentModel;
 
 using Android.Views;
 
-namespace RxApp
+namespace RxApp.Android
 {
     public interface IRxApplication : IAndroidApplication
     {

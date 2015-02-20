@@ -8,9 +8,11 @@ using System.Reactive.Linq;
 using Android.App;
 using Android.OS;
 
-namespace RxApp
+using RxDisposable = System.Reactive.Disposables.Disposable;
+
+namespace RxApp.Android
 {
-    public static partial class ObservablesExt
+    public static partial class Observable
     {
         private static readonly IScheduler _mainThreadScheduler = new HandlerScheduler(new Handler(Looper.MainLooper), Looper.MainLooper.Thread.Id);
 
@@ -33,7 +35,7 @@ namespace RxApp
             public IDisposable Schedule<TState>(TState state, Func<IScheduler, TState, IDisposable> action)
             {
                 bool isCancelled = false;
-                var innerDisp = new SerialDisposable() { Disposable = Disposable.Empty };
+                var innerDisp = new SerialDisposable() { Disposable = RxDisposable.Empty };
 
                 if (looperId > 0 && looperId == Java.Lang.Thread.CurrentThread().Id) 
                 {
@@ -47,14 +49,14 @@ namespace RxApp
                     });
 
                 return new CompositeDisposable(
-                    Disposable.Create(() => isCancelled = true),
+                    RxDisposable.Create(() => isCancelled = true),
                     innerDisp);
             }
 
             public IDisposable Schedule<TState>(TState state, TimeSpan dueTime, Func<IScheduler, TState, IDisposable> action)
             {
                 bool isCancelled = false;
-                var innerDisp = new SerialDisposable() { Disposable = Disposable.Empty };
+                var innerDisp = new SerialDisposable() { Disposable = RxDisposable.Empty };
 
                 handler.PostDelayed(() => 
                     {
@@ -63,7 +65,7 @@ namespace RxApp
                     }, dueTime.Ticks / 10 / 1000);
 
                 return new CompositeDisposable(
-                    Disposable.Create(() => isCancelled = true),
+                    RxDisposable.Create(() => isCancelled = true),
                     innerDisp);
             }
 

@@ -3,7 +3,7 @@ using Android.OS;
 using System;
 using System.Threading.Tasks;
 
-namespace RxApp
+namespace RxApp.Android
 {
     public sealed class StartupActivity : Activity, IRxActivity
     {

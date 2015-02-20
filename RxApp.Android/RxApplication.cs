@@ -10,8 +10,11 @@ using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Threading;
 using Android.Content.PM;
+using Android.Runtime;
 
-namespace RxApp
+using RxObservable = System.Reactive.Linq.Observable;
+
+namespace RxApp.Android
 {
     public sealed class RxApplicationHelper
     {
@@ -90,8 +93,7 @@ namespace RxApp
             var subscription = new CompositeDisposable();
             subscription.Add(application);
             subscription.Add(
-                Observable
-                    .FromEventPattern<NotifyNavigationStackChangedEventArgs>(navStack, "NavigationStackChanged")
+                RxObservable.FromEventPattern<NotifyNavigationStackChangedEventArgs>(navStack, "NavigationStackChanged")
 
                     // The Stack can be updated from multiple threads
                     .ObserveOnMainThread()
@@ -139,7 +141,7 @@ namespace RxApp
     {
         private readonly RxApplicationHelper helper;
 
-        public RxApplication(IntPtr javaReference, Android.Runtime.JniHandleOwnership transfer) : base(javaReference, transfer)
+        public RxApplication(IntPtr javaReference, JniHandleOwnership transfer) : base(javaReference, transfer)
         {
             helper = RxApplicationHelper.Create(this.ApplicationContext, this.GetActivityType, this.ProvideApplication);
         }

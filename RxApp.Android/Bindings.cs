@@ -10,7 +10,10 @@ using Android.Widget;
 using Android.Support.V4.Widget;
 using System.Linq.Expressions;
 
-namespace RxApp
+using RxObservable = System.Reactive.Linq.Observable;
+using RxDisposable = System.Reactive.Disposables.Disposable;
+
+namespace RxApp.Android
 {
     public static partial class Bindings
     {
@@ -30,7 +33,7 @@ namespace RxApp
             subscription.Add(
                 This.CanExecute.ObserveOnMainThread().Subscribe(x => button.Enabled = x));
             subscription.Add(
-                Observable.FromEventPattern(button, "Click").InvokeCommand(This));
+                RxObservable.FromEventPattern(button, "Click").InvokeCommand(This));
             return subscription;
         }
 
@@ -38,7 +41,7 @@ namespace RxApp
         {
             var subscription = new CompositeDisposable();
             subscription.Add(
-                Observable.FromEventPattern<CompoundButton.CheckedChangeEventArgs>(button, "CheckedChange")
+                RxObservable.FromEventPattern<CompoundButton.CheckedChangeEventArgs>(button, "CheckedChange")
                           .Subscribe(x => { This.Value = x.EventArgs.IsChecked; }));
             subscription.Add(This.ObserveOnMainThread().Subscribe(x => { if (button.Checked != x) { button.Checked = x; } }));
             return subscription;
@@ -64,7 +67,7 @@ namespace RxApp
             var adapter = new RxReadOnlyListAdapter<TViewModel, TView>(This, viewProvider, bind);
             listView.Adapter = adapter;
 
-            return Disposable.Create(() =>
+            return RxDisposable.Create(() =>
                 {
                     listView.Adapter = null;
                     adapter.Dispose();
