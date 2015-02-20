@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 
@@ -35,6 +36,15 @@ namespace RxApp.Android
             subscription.Add(
                 RxObservable.FromEventPattern(button, "Click").InvokeCommand(This));
             return subscription;
+        }
+
+        public static IDisposable Bind(this IRxCommand This, SwipeRefreshLayout refresher)
+        {   
+            return Disposable.Combine(
+                RxObservable.FromEventPattern(refresher, "Refresh").Select(_ => Unit.Default)
+                            .Subscribe(x => This.Execute()),
+                This.CanExecute.ObserveOnMainThread().Subscribe(x => refresher.Enabled = x)
+            );
         }
 
         public static IDisposable Bind(this IRxProperty<bool> This, CompoundButton button)
