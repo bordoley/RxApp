@@ -9,6 +9,8 @@ using System.Reactive.Linq;
 using Foundation;
 using UIKit;
 
+using RxObservable = System.Reactive.Linq.Observable;
+
 namespace RxApp
 {
     public sealed class RxUIApplicationDelegateHelper
@@ -43,7 +45,7 @@ namespace RxApp
             var subscription = new CompositeDisposable();
             subscription.Add(application);
             subscription.Add(
-                Observable
+                RxObservable
                     .FromEventPattern<NotifyNavigationStackChangedEventArgs>(navStack, "NavigationStackChanged")
                     .Subscribe((EventPattern<NotifyNavigationStackChangedEventArgs> e) =>
                     {

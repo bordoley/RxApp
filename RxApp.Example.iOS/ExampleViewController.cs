@@ -7,6 +7,8 @@ using System.Reactive.Disposables;
 
 using RxApp;
 
+using RxObservable = System.Reactive.Linq.Observable;
+
 namespace RxApp.Example
 {
     partial class ExampleViewController : RxUIViewController<IMainViewModel>
@@ -26,12 +28,12 @@ namespace RxApp.Example
             subscription.Add(
                 this.ViewModel.OpenPage.CanExecute.Subscribe(x => this.OpenButton.Enabled = x));
             subscription.Add(
-                Observable.FromEventPattern(this.OpenButton, "TouchUpInside").InvokeCommand(this.ViewModel.OpenPage));
+                RxObservable.FromEventPattern(this.OpenButton, "TouchUpInside").InvokeCommand(this.ViewModel.OpenPage));
 
             subscription.Add(
                 this.ViewModel.Up.CanExecute.Subscribe(x => this.UpButton.Enabled = x));
             subscription.Add(
-                Observable.FromEventPattern(this.UpButton, "TouchUpInside").InvokeCommand(this.ViewModel.Up)); 
+                RxObservable.FromEventPattern(this.UpButton, "TouchUpInside").InvokeCommand(this.ViewModel.Up)); 
 
             this.subscription = subscription;
         }

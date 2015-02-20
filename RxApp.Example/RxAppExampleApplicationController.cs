@@ -1,8 +1,9 @@
 ﻿using RxApp;
 using System;
 using System.Collections.Generic;
-using System.Reactive.Disposables;
 using System.Reactive.Linq;
+
+using RxDisposable = System.Reactive.Disposables.Disposable;
 
 namespace RxApp.Example
 {
@@ -32,7 +33,7 @@ namespace RxApp.Example
             }
             else
             {
-                return Disposable.Empty;
+                return RxDisposable.Empty;
             }
         }
 

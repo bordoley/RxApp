@@ -8,6 +8,7 @@ using Android.Widget;
 using Toolbar = Android.Support.V7.Widget.Toolbar;
 
 using RxApp;
+using RxApp.Android;
 
 namespace RxApp.Example
 {

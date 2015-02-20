@@ -5,7 +5,7 @@
                  android:name=".RxAppExampleApplication"
                  android:theme="@style/SplashTheme">
 
-        <activity android:name="rxapp.StartupActivity" 
+        <activity android:name="rxapp.android.StartupActivity" 
                   android:label="@string/app_name">
             <intent-filter >
                 <action android:name="android.intent.action.MAIN" />

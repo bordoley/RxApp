@@ -4,6 +4,7 @@ using System.IO;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using RxApp;
+using RxApp.Android;
 using Android.App;
 using Android.Runtime;
 using Xamarin;
