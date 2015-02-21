@@ -17,6 +17,5 @@ namespace RxApp.Android
         Application Application { get; }
         FragmentManager FragmentManager { get; }
         void Finish();
-        bool OnOptionsItemSelected(IMenuItem item);
     }
 }
