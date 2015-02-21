@@ -75,7 +75,7 @@ namespace RxApp.Android
                     var activityType = activity.GetType().ToString();
                     var modelType = activity.GetType().ToString();
 
-                    throw new InvalidOperationException("Current model is of type: " + modelType + " which can not be bound to an Activity of type: " + activityType);
+                    throw new InvalidOperationException("Current model is of type: " + modelType + " which can not be bound to an Activity of type: " + activityType, e);
                 }
                 this.activities[head] = activity;
             }
