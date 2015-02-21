@@ -5,14 +5,14 @@ using System.Reactive.Linq;
 
 namespace RxApp
 {
-    public class MobileModel : INavigableControllerModel, INavigableViewModel, IServiceControllerModel, IServiceViewModel 
+    public class MobileModel : INavigationModel, IServiceControllerModel, IServiceViewModel 
     {
         private readonly IRxCommand back = RxCommand.Create();
         private readonly IRxCommand up = RxCommand.Create();
         private readonly IRxCommand start;
         private readonly IRxCommand stop;
 
-        private IRxProperty<bool> canStart = RxProperty.Create<bool>(true);
+        private readonly IRxProperty<bool> canStart = RxProperty.Create<bool>(true);
 
         public MobileModel()
         {
@@ -20,9 +20,9 @@ namespace RxApp
             stop = this.canStart.Select(x => !x).ToCommand();
         }
 
-        public bool CanStart 
+        public IRxProperty<bool> CanStart 
         { 
-            set { this.canStart.Value = value; }
+            get { return canStart; }
         }
 
         public IRxCommand Back
@@ -30,14 +30,6 @@ namespace RxApp
             get
             {
                 return back;
-            }
-        }
-
-        IObservable<Unit> INavigableControllerModel.Up
-        {
-            get
-            {
-                return up;
             }
         }
 

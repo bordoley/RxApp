@@ -15,16 +15,35 @@ namespace RxApp
         void Execute();
     }
 
+    public interface IRxCommand<T> : IObservable<T>
+    {
+        IObservable<bool> CanExecute { get; }
+
+        void Execute(T parameter);
+    }
+
     public static class RxCommand
     {
         public static IRxCommand Create() 
         {
-            return new RxCommandImpl(RxObservable.Return(true));
+            var deleg = new RxCommandImpl<Unit>(RxObservable.Return(true));
+            return new RxCommandImpl(deleg);
+        }
+
+        public static IRxCommand<T> Create<T>() 
+        {
+            return new RxCommandImpl<T>(RxObservable.Return(true));
         }
 
         public static IRxCommand ToCommand(this IObservable<bool> This)
         {
-            return new RxCommandImpl(This);
+            var deleg = new RxCommandImpl<Unit>(This);
+            return new RxCommandImpl(deleg);
+        }
+
+        public static IRxCommand<T> ToCommand<T>(this IObservable<bool> This)
+        {
+            return new RxCommandImpl<T>(This);
         }
 
         public static IDisposable InvokeCommand<T>(this IObservable<T> This, IRxCommand command)
@@ -32,9 +51,39 @@ namespace RxApp
             return This.Subscribe(x => command.Execute());
         }
 
+        public static IDisposable InvokeCommand<T>(this IObservable<T> This, IRxCommand<T> command)
+        {
+            return This.Subscribe(x => command.Execute(x));
+        }
+
         private sealed class RxCommandImpl : IRxCommand
         {
-            private readonly Subject<Unit> executeResults = new Subject<Unit>();
+            private readonly IRxCommand<Unit> deleg;
+
+            internal RxCommandImpl(IRxCommand<Unit> deleg)
+            {
+                this.deleg = deleg;
+            }
+
+            public void Execute()
+            {
+                deleg.Execute(Unit.Default);
+            }
+
+            public IObservable<bool> CanExecute
+            {
+                get { return this.deleg.CanExecute; }
+            }
+
+            public IDisposable Subscribe(IObserver<Unit> observer)
+            {
+                return this.deleg.Subscribe(observer);
+            }
+        }
+
+        private sealed class RxCommandImpl<T> : IRxCommand<T>
+        {
+            private readonly Subject<T> executeResults = new Subject<T>();
 
             private readonly IConnectableObservable<bool> canExecute;
 
@@ -55,11 +104,11 @@ namespace RxApp
                 canExecuteDisp = this.canExecute.Connect();
             }
 
-            public void Execute()
+            public void Execute(T parameter)
             {
                 if (canExecuteLatest > 0)
                 {
-                    executeResults.OnNext(Unit.Default);
+                    executeResults.OnNext(parameter);
                 }
             }
 
@@ -68,7 +117,7 @@ namespace RxApp
                 get { return canExecute.StartWith(canExecuteLatest > 0); }
             }
 
-            public IDisposable Subscribe(IObserver<Unit> observer)
+            public IDisposable Subscribe(IObserver<T> observer)
             {
                 return executeResults.Subscribe(observer);
             }

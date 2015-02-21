@@ -19,7 +19,7 @@ namespace RxApp
                 {
                     if (serv == null)
                     {
-                        model.CanStart = false;
+                        model.CanStart.Value = false;
                         serv = start ();
                     }
                 }));
@@ -31,7 +31,7 @@ namespace RxApp
                         serv.Dispose();
                     }
 
-                    model.CanStart = true;
+                    model.CanStart.Value = true;
                     serv = null;
                 }));
 

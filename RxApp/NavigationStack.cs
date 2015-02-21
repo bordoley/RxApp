@@ -3,33 +3,35 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Linq;
+using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 
+using RxDisposable = System.Reactive.Disposables.Disposable;
 using RxObservable = System.Reactive.Linq.Observable;
 
 namespace RxApp
 {
     public sealed class NotifyNavigationStackChangedEventArgs : EventArgs
     {
-        public static NotifyNavigationStackChangedEventArgs Create(INavigableControllerModel newHead, INavigableControllerModel oldHead, IEnumerable<INavigableControllerModel> removed)
+        public static NotifyNavigationStackChangedEventArgs Create(INavigationModel newHead, INavigationModel oldHead, IEnumerable<INavigationModel> removed)
         {
             Contract.Requires(removed != null);
             return new NotifyNavigationStackChangedEventArgs(newHead, oldHead, removed);
         }
 
-        private readonly INavigableControllerModel newHead;
-        private readonly INavigableControllerModel oldHead;
-        private readonly IEnumerable<INavigableControllerModel> removed;
+        private readonly INavigationModel newHead;
+        private readonly INavigationModel oldHead;
+        private readonly IEnumerable<INavigationModel> removed;
 
-        private  NotifyNavigationStackChangedEventArgs(INavigableControllerModel newHead, INavigableControllerModel oldHead, IEnumerable<INavigableControllerModel> removed)
+        private  NotifyNavigationStackChangedEventArgs(INavigationModel newHead, INavigationModel oldHead, IEnumerable<INavigationModel> removed)
         {
             this.newHead = newHead;
             this.oldHead = oldHead;
             this.removed = removed;
         }
 
-        public INavigableControllerModel NewHead
+        public INavigationModel NewHead
         {
             get
             {
@@ -37,7 +39,7 @@ namespace RxApp
             }
         }
 
-        public INavigableControllerModel OldHead
+        public INavigationModel OldHead
         {
             get
             {
@@ -45,7 +47,7 @@ namespace RxApp
             }
         }
 
-        public IEnumerable<INavigableControllerModel> Removed
+        public IEnumerable<INavigationModel> Removed
         {
             get
             {
@@ -54,36 +56,28 @@ namespace RxApp
         }
     }
       
-    // FIXME FIXME FIME
-    // This class needs an overhaul to be made thread safe. 
-    // All the update methods 
-    //   public void GotoRoot()       
-    //   public void Push
-    //   public void Pop()
-    //   public void SetRoot
-    // 
-    // Probably use locks, and also use copy semantics for the enumerators
-    // so that callers of .GetEnumerator get a snapshot of the current state
-    // and don't have to worry about concurrent modification exceptions.
     public static class NavigationStack
     {
-        public static INavigationStack Create ()
+        public static INavigationStack Create (IScheduler mainThreadScheduler)
         {
-            return new NavigationStackImpl();
+            return new NavigationStackImpl(mainThreadScheduler);
         }
           
         private sealed class NavigationStackImpl : INavigationStack
         {
-            private IStack<INavigableControllerModel> navStack = Stack<INavigableControllerModel>.Empty;
+            private readonly IScheduler mainThreadScheduler;
+
+            private IStack<INavigationModel> navStack = Stack<INavigationModel>.Empty;
             private IDisposable backSubscription = null;
 
-            internal NavigationStackImpl()
+            internal NavigationStackImpl(IScheduler mainThreadScheduler)
             {
+                this.mainThreadScheduler = mainThreadScheduler;
             }
 
             public event EventHandler<NotifyNavigationStackChangedEventArgs> NavigationStackChanged = (o,e) => {};
 
-            public IEnumerator<INavigableControllerModel> GetEnumerator()
+            public IEnumerator<INavigationModel> GetEnumerator()
             {
                 return this.navStack.GetEnumerator();
             }
@@ -104,7 +98,7 @@ namespace RxApp
 
                     if (newHead != oldHead)
                     { 
-                        Update(Stack<INavigableControllerModel>.Empty.Push(reversed.Head));
+                        Update(Stack<INavigationModel>.Empty.Push(reversed.Head));
                         NavigationStackChanged(
                             this, 
                             NotifyNavigationStackChangedEventArgs.Create(newHead, oldHead, removed));
@@ -112,7 +106,7 @@ namespace RxApp
                 }              
             }
 
-            public void Push(INavigableControllerModel model)
+            public void Push(INavigationModel model)
             {
                 Contract.Requires(model != null);
 
@@ -120,7 +114,7 @@ namespace RxApp
                 Update(navStack.Push(model));
                 NavigationStackChanged(
                     this, 
-                    NotifyNavigationStackChangedEventArgs.Create(model, oldHead, Stack<INavigableControllerModel>.Empty));
+                    NotifyNavigationStackChangedEventArgs.Create(model, oldHead, Stack<INavigationModel>.Empty));
             }
 
             public void Pop()
@@ -130,39 +124,41 @@ namespace RxApp
                 var newHead = navStack.Head;
                 NavigationStackChanged(
                     this, 
-                    NotifyNavigationStackChangedEventArgs.Create(newHead, oldHead, Stack<INavigableControllerModel>.Empty.Push(oldHead)));
+                    NotifyNavigationStackChangedEventArgs.Create(newHead, oldHead, Stack<INavigationModel>.Empty.Push(oldHead)));
             }
 
-            public void SetRoot(INavigableControllerModel model)
+            public void SetRoot(INavigationModel model)
             {
                 Contract.Requires(model != null);
 
                 var oldHead = navStack.Head;
                 var removed = navStack;
 
-                Update(Stack<INavigableControllerModel>.Empty.Push(model));
+                Update(Stack<INavigationModel>.Empty.Push(model));
                 NavigationStackChanged(
                     this, 
                     NotifyNavigationStackChangedEventArgs.Create(model, oldHead, removed));
             }
 
-            private void Update(IStack<INavigableControllerModel> newStack)
+            private void Update(IStack<INavigationModel> newStack)
             {
                 navStack = newStack;
 
                 if (backSubscription != null)
                 {
                     backSubscription.Dispose();
-                    backSubscription = null;
                 }
 
-                var newSubscription = new CompositeDisposable();
+                var newSubscription = RxDisposable.Empty;
+
                 if (!navStack.IsEmpty())
                 {   
-                    INavigableControllerModel view = navStack.First();
+                    INavigationModel view = navStack.First();
 
-                    newSubscription.Add(view.Back.FirstAsync().Subscribe(_ => this.Pop()));
-                    newSubscription.Add(view.Up.FirstAsync().Subscribe(_ => this.GotoRoot()));
+                    newSubscription = Disposable.Combine(
+                        view.Back.FirstAsync().ObserveOn(mainThreadScheduler).Subscribe(_ => this.Pop()),
+                        view.Up.FirstAsync().ObserveOn(mainThreadScheduler).Subscribe(_ => this.GotoRoot())
+                    );
                 }
 
                 backSubscription = newSubscription;

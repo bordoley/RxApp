@@ -16,6 +16,8 @@ namespace RxApp.Android
     {
         private static readonly IScheduler _mainThreadScheduler = new HandlerScheduler(new Handler(Looper.MainLooper), Looper.MainLooper.Thread.Id);
 
+        internal static IScheduler MainThreadScheduler { get { return _mainThreadScheduler; } } 
+
         public static IObservable<T> ObserveOnMainThread<T>(this IObservable<T> observable)
         {
             return observable.ObserveOn(_mainThreadScheduler);

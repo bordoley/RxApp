@@ -12,18 +12,14 @@ namespace RxApp
         IDisposable Bind(object controllerModel);
     }
 
-    public interface INavigableViewModel
+    public interface INavigationModel
     {
         IRxCommand Back { get; }
         IRxCommand Up { get; }
+        //IRxCommand<INavigationModel> Open { get; }
     }
-
-    public interface INavigableControllerModel
-    {
-        IRxCommand Back { get; }
-        IObservable<Unit> Up { get; }
-    }
-
+       
+        
     public interface IServiceViewModel 
     {
         IRxCommand Start { get; }
@@ -32,21 +28,21 @@ namespace RxApp
 
     public interface IServiceControllerModel
     {
-        bool CanStart { set; }
+        IRxProperty<bool> CanStart { get; }
 
         IObservable<Unit> Start { get; }
         IObservable<Unit> Stop { get; }
     }
 
     // FIXME: Rework this interface/add extension methods to make it easier to bind it to/from Observables
-    public interface INavigationStack : IEnumerable<INavigableControllerModel>
+    public interface INavigationStack : IEnumerable<INavigationModel>
     {
         event EventHandler<NotifyNavigationStackChangedEventArgs> NavigationStackChanged;
        
         void GotoRoot();
         void Pop();
-        void Push(INavigableControllerModel model);
-        void SetRoot(INavigableControllerModel model);
+        void Push(INavigationModel model);
+        void SetRoot(INavigationModel model);
     }
 
     public interface IViewFor
