@@ -20,8 +20,7 @@ namespace RxApp
             IObservable<T2> _2,
             IObservable<T3> _3)
         {
-            return Observable.CombineLatest(_1, _2).CombineLatest(_3)
-                              .Select(t => Tuple.Create(t.Item1.Item1, t.Item1.Item2, t.Item2));
+            return RxObservable.CombineLatest(_1, _2, _3, (_r1, _r2, _r3) => Tuple.Create(_r1, _r2, _r3));
         }
 
         public static IObservable<Tuple<T1,T2,T3,T4>> CombineLatest<T1,T2,T3,T4>(
@@ -30,8 +29,7 @@ namespace RxApp
             IObservable<T3> _3,
             IObservable<T4> _4)
         {
-            return Observable.CombineLatest(_1, _2).CombineLatest(_3, _4)
-                              .Select(t => Tuple.Create(t.Item1.Item1, t.Item1.Item2, t.Item2, t.Item3));
+            return RxObservable.CombineLatest(_1, _2, _3, _4,  (_r1, _r2, _r3, _r4) => Tuple.Create(_r1, _r2, _r3, _r4));
         }
 
         public static IObservable<Tuple<T1,T2,T3,T4,T5>> CombineLatest<T1,T2,T3,T4,T5>(
@@ -41,8 +39,7 @@ namespace RxApp
             IObservable<T4> _4,
             IObservable<T5> _5)
         {
-            return Observable.CombineLatest(_1, _2, _3).CombineLatest(_4, _5)
-                              .Select(t => Tuple.Create(t.Item1.Item1, t.Item1.Item2, t.Item1.Item3, t.Item2, t.Item3));
+            return RxObservable.CombineLatest(_1, _2, _3, _4, _5, (_r1, _r2, _r3, _r4, _r5) => Tuple.Create(_r1, _r2, _r3, _r4, _r5));
         }
 
         public static IObservable<Tuple<T1,T2,T3,T4,T5,T6>> CombineLatest<T1,T2,T3,T4,T5,T6>(
@@ -53,8 +50,8 @@ namespace RxApp
             IObservable<T5> _5,
             IObservable<T6> _6)
         {
-            return Observable.CombineLatest(_1, _2, _3).CombineLatest(_4, _5, _6)
-                              .Select(t => Tuple.Create(t.Item1.Item1, t.Item1.Item2, t.Item1.Item3, t.Item2, t.Item3, t.Item4));
+            return RxObservable.CombineLatest(_1, _2, _3, _4, _5, _6, (_r1, _r2, _r3, _r4, _r5, _r6) => 
+                Tuple.Create(_r1, _r2, _r3, _r4, _r5, _r6));
         }
 
         public static IObservable<Tuple<T1,T2,T3,T4,T5,T6,T7>> CombineLatest<T1,T2,T3,T4,T5,T6,T7>(
@@ -66,8 +63,15 @@ namespace RxApp
             IObservable<T6> _6,
             IObservable<T7> _7)
         {
-            return Observable.CombineLatest(_1, _2, _3).CombineLatest(_4, _5, _6, _7)
-                              .Select(t => Tuple.Create(t.Item1.Item1, t.Item1.Item2, t.Item1.Item3, t.Item2, t.Item3, t.Item4, t.Item5));
+            return RxObservable.CombineLatest(_1, _2, _3, _4, _5, _6, _7, (_r1, _r2, _r3, _r4, _r5, _r6, _r7) => 
+                Tuple.Create(_r1, _r2, _r3, _r4, _r5, _r6, _r7));
+        }
+
+        public static IObservable<Tuple<T1,T2>> Zip<T1, T2>(
+            this IObservable<T1> _1, 
+            IObservable<T2> _2)
+        {
+            return RxObservable.Zip(_1, _2, (_r1, _r2) => Tuple.Create(_r1, _r2));
         }
     }
 

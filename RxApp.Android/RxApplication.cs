@@ -31,7 +31,6 @@ namespace RxApp.Android
             return new RxApplicationHelper(context, application, getActivityType);
         }
 
-
         private readonly IDictionary<object, IRxActivity> activities = new Dictionary<object, IRxActivity> ();
 
         private readonly INavigationStack navStack = NavigationStack.Create(Observable.MainThreadScheduler);
@@ -84,44 +83,12 @@ namespace RxApp.Android
 
         private void Start()
         {
+            var navStackChanged = 
+                RxObservable.FromEventPattern<NotifyNavigationStackChangedEventArgs>(navStack, "NavigationStackChanged");
+
             subscription = Disposable.Combine(
-                this.activityCreated.Subscribe(activity =>
-                    {
-                        var head = navStack.FirstOrDefault();
-                        if (head != null)
-                        {
-                            try
-                            {
-                                activity.ViewModel = head;
-                            }
-                            catch (InvalidCastException e)
-                            {
-                                var activityType = activity.GetType().ToString();
-                                var modelType = head.GetType().ToString();
-
-                                throw new InvalidOperationException("Current model is of type: " + modelType + " which can not be bound to an Activity of type: " + activityType, e);
-                            }
-                            this.activities[head] = activity;
-                        }
-                        else if (subscription == null)
-                        {
-                            // Either the startup activity called OnActivityCreated or the application was killed and restarted by android.
-                            // If the application is backgrounded, android will kill all the activities and the application class.
-                            // When the application is reopened from the background, it creates the application and starts the last activity 
-                            // that was opened, not the startup activity. 
-
-                            this.Start();
-                            activity.Finish();
-                        }
-                        else
-                        {
-                            throw new InvalidOperationException( 
-                                "Activity of type " + activity.GetType() + " created when the navigation stack head was null, but the application was running. Something is badly broken.");
-                        }
-                    }),
-                
-                RxObservable.FromEventPattern<NotifyNavigationStackChangedEventArgs>(navStack, "NavigationStackChanged")
-                    .Subscribe((EventPattern<NotifyNavigationStackChangedEventArgs> e) => 
+                navStackChanged
+                    .Do(e =>
                         {
                             var newHead = e.EventArgs.NewHead;
                             var oldHead = e.EventArgs.OldHead;
@@ -145,7 +112,21 @@ namespace RxApp.Android
                                 activities.Remove(model);
                                 activity.Finish();
                             }     
-                    }),
+                        })
+                    .Select(x => x.EventArgs.NewHead)
+                    .Where(x => x != null)
+                    .SelectMany(x => 
+                        this.activityCreated
+                            .Select(y => Tuple.Create(x, y))
+                            .TakeUntil(navStackChanged))
+                    .Subscribe(x => 
+                        {
+                            var activity = x.Item2;
+                            var model = x.Item1;
+
+                            activity.ViewModel = model;
+                            activities[model] = activity;
+                        }),
 
                 navStack.BindController(model => application.Bind(model)),
                     
