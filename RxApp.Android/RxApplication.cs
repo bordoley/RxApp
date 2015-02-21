@@ -66,7 +66,17 @@ namespace RxApp.Android
             var head = navStack.FirstOrDefault();
             if (head != null)
             {
-                activity.ViewModel = head;
+                try
+                {
+                    activity.ViewModel = head;
+                }
+                catch (InvalidCastException e)
+                {
+                    var activityType = activity.GetType().ToString();
+                    var modelType = activity.GetType().ToString();
+
+                    throw new InvalidOperationException("Current model is of type: " + modelType + " which can not be bound to an Activity of type: " + activityType);
+                }
                 this.activities[head] = activity;
             }
             else if (subscription == null)
