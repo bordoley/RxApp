@@ -5,12 +5,12 @@ using System.Windows.Input;
 
 namespace RxApp.Example
 {   
-    public interface IMainViewModel : INavigableViewModel, IServiceViewModel
+    public interface IMainViewModel : INavigationModel, IServiceViewModel
     {
         IRxCommand OpenPage { get; }
     }
 
-    public interface IMainControllerModel
+    public interface IMainControllerModel : INavigationModel
     {
         IObservable<Unit> OpenPage { get; }
     }

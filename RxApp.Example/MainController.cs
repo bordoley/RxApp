@@ -1,26 +1,24 @@
 ﻿using RxApp;
 using System;
+using System.Reactive.Linq;
 
 namespace RxApp.Example
 {      
     public class MainControllerService : IDisposable
     {
         private readonly IMainControllerModel model;
-        private readonly INavigationStack navStack;
 
         private IDisposable subscription = null;
 
-        public MainControllerService(IMainControllerModel model, INavigationStack navStack)
+        public MainControllerService(IMainControllerModel model)
         {
             this.model = model;
-            this.navStack = navStack;
         }
 
         public void Init()
         {
             subscription = 
-                model.OpenPage.Subscribe(_ => 
-                    navStack.Push(new MainModel()));
+                model.OpenPage.Select(_ => new MainModel()).InvokeCommand(model.Open);
         }
 
         public void Dispose()

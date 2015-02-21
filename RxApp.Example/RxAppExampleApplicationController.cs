@@ -4,16 +4,19 @@ using System.Collections.Generic;
 using System.Reactive.Linq;
 
 using RxDisposable = System.Reactive.Disposables.Disposable;
+using RxObservable = System.Reactive.Linq.Observable;
 
 namespace RxApp.Example
 {
     public class RxAppExampleApplicationController : IApplication
     {
-        private readonly INavigationStack navStack;
-
-        public RxAppExampleApplicationController(INavigationStack navStack)
+        public RxAppExampleApplicationController()
         {
-            this.navStack = navStack;
+        }
+
+        public IObservable<INavigationModel> ResetApplicationState
+        { 
+            get { return RxObservable.Return(new MainModel()); }
         }
             
         public IDisposable Bind(object model)
@@ -24,7 +27,7 @@ namespace RxApp.Example
 
                 Func<IDisposable> service = () =>
                 {
-                    var ret = new MainControllerService((IMainControllerModel)model, navStack);
+                    var ret = new MainControllerService((IMainControllerModel)model);
                     ret.Init();
                     return ret;
                 };
@@ -35,15 +38,6 @@ namespace RxApp.Example
             {
                 return RxDisposable.Empty;
             }
-        }
-
-        public void Init()
-        {
-            navStack.Push(new MainModel());
-        }
-
-        public void Dispose()
-        {
         }
     }
 }

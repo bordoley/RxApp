@@ -53,7 +53,6 @@ namespace RxApp.Android
             this.context = context;
             this.application = application;
             this.getActivityType = getActivityType;
-
         }
 
         public void OnTerminate()
