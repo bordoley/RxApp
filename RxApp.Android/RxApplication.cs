@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Reactive;
+using System.Reactive.Subjects;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Threading;
@@ -20,14 +21,14 @@ namespace RxApp.Android
     {
         public static RxApplicationHelper Create(
             Context context,
-            Func<object,Type> getActivityType,
-            Func<INavigationStack,IApplication> provideApplication) 
+            IApplication application,
+            Func<object,Type> getActivityType) 
         {
             Contract.Requires(context != null);
             Contract.Requires(getActivityType != null);
-            Contract.Requires(provideApplication != null);
+            Contract.Requires(application != null);
 
-            return new RxApplicationHelper(context, getActivityType, provideApplication);
+            return new RxApplicationHelper(context, application, getActivityType);
         }
 
 
@@ -37,21 +38,23 @@ namespace RxApp.Android
 
         private readonly Context context;
 
+        private readonly IApplication application;
+
         private readonly Func<object,Type> getActivityType;
 
-        private readonly Func<INavigationStack,IApplication> provideApplication;
-
+        private readonly Subject<IRxActivity> activityCreated = new Subject<IRxActivity>();
 
         private IDisposable subscription;
 
         private RxApplicationHelper(
             Context context,
-            Func<object,Type> getActivityType,
-            Func<INavigationStack,IApplication> provideApplication)
+            IApplication application,
+            Func<object,Type> getActivityType)
         {
             this.context = context;
+            this.application = application;
             this.getActivityType = getActivityType;
-            this.provideApplication = provideApplication;
+
         }
 
         public void OnTerminate()
@@ -63,23 +66,7 @@ namespace RxApp.Android
         {
             Contract.Requires(activity != null);
 
-            var head = navStack.FirstOrDefault();
-            if (head != null)
-            {
-                try
-                {
-                    activity.ViewModel = head;
-                }
-                catch (InvalidCastException e)
-                {
-                    var activityType = activity.GetType().ToString();
-                    var modelType = activity.GetType().ToString();
-
-                    throw new InvalidOperationException("Current model is of type: " + modelType + " which can not be bound to an Activity of type: " + activityType, e);
-                }
-                this.activities[head] = activity;
-            }
-            else if (subscription == null)
+            if (subscription == null)
             {
                 // Either the startup activity called OnActivityCreated or the application was killed and restarted by android.
                 // If the application is backgrounded, android will kill all the activities and the application class.
@@ -91,22 +78,49 @@ namespace RxApp.Android
             }
             else
             {
-                throw new InvalidOperationException( 
-                    "Activity of type " + activity.GetType() + " created when the navigation stack head was null, but the application was running. Something is badly broken.");
+                this.activityCreated.OnNext(activity);
             }
         }
 
         private void Start()
         {
-            var application = provideApplication(navStack);
+            subscription = Disposable.Combine(
+                this.activityCreated.Subscribe(activity =>
+                    {
+                        var head = navStack.FirstOrDefault();
+                        if (head != null)
+                        {
+                            try
+                            {
+                                activity.ViewModel = head;
+                            }
+                            catch (InvalidCastException e)
+                            {
+                                var activityType = activity.GetType().ToString();
+                                var modelType = head.GetType().ToString();
 
-            var subscription = new CompositeDisposable();
-            subscription.Add(application);
-            subscription.Add(
+                                throw new InvalidOperationException("Current model is of type: " + modelType + " which can not be bound to an Activity of type: " + activityType, e);
+                            }
+                            this.activities[head] = activity;
+                        }
+                        else if (subscription == null)
+                        {
+                            // Either the startup activity called OnActivityCreated or the application was killed and restarted by android.
+                            // If the application is backgrounded, android will kill all the activities and the application class.
+                            // When the application is reopened from the background, it creates the application and starts the last activity 
+                            // that was opened, not the startup activity. 
+
+                            this.Start();
+                            activity.Finish();
+                        }
+                        else
+                        {
+                            throw new InvalidOperationException( 
+                                "Activity of type " + activity.GetType() + " created when the navigation stack head was null, but the application was running. Something is badly broken.");
+                        }
+                    }),
+                
                 RxObservable.FromEventPattern<NotifyNavigationStackChangedEventArgs>(navStack, "NavigationStackChanged")
-
-                    // The Stack can be updated from multiple threads
-                    .ObserveOnMainThread()
                     .Subscribe((EventPattern<NotifyNavigationStackChangedEventArgs> e) => 
                         {
                             var newHead = e.EventArgs.NewHead;
@@ -130,14 +144,14 @@ namespace RxApp.Android
                                 IRxActivity activity = activities[model];
                                 activities.Remove(model);
                                 activity.Finish();
-                            }
-                    }));
+                            }     
+                    }),
 
-            subscription.Add(navStack.BindController(model => application.Bind(model)));
-
-            this.subscription = subscription;
-        
-            application.Init();
+                navStack.BindController(model => application.Bind(model)),
+                    
+                application.ResetApplicationState.ObserveOnMainThread().Subscribe(x => 
+                    navStack.SetRoot(x))
+            );
         }
 
         private void Stop()
@@ -153,12 +167,12 @@ namespace RxApp.Android
 
         public RxApplication(IntPtr javaReference, JniHandleOwnership transfer) : base(javaReference, transfer)
         {
-            helper = RxApplicationHelper.Create(this.ApplicationContext, this.GetActivityType, this.ProvideApplication);
+            helper = RxApplicationHelper.Create(this.ApplicationContext, this.ProvideApplication(), this.GetActivityType);
         }
 
         public abstract Type GetActivityType(object model);
 
-        public abstract IApplication ProvideApplication(INavigationStack navStack);
+        public abstract IApplication ProvideApplication();
 
         public override void OnTerminate()
         {

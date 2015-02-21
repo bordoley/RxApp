@@ -7,10 +7,6 @@
     <ProjectGuid>{C25BB5A4-5A21-4837-8F8F-B46673937F6D}</ProjectGuid>
     <OutputType>Library</OutputType>
     <RootNamespace>RxApp</RootNamespace>
-    <MonoAndroidAssetsPrefix>Assets</MonoAndroidAssetsPrefix>
-    <MonoAndroidResourcePrefix>Resources</MonoAndroidResourcePrefix>
-    <AndroidResgenClass>Resource</AndroidResgenClass>
-    <AndroidResgenFile>Resources\Resource.designer.cs</AndroidResgenFile>
     <AndroidUseLatestPlatformSdk>True</AndroidUseLatestPlatformSdk>
     <AssemblyName>RxApp.Android</AssemblyName>
     <TargetFrameworkVersion>v5.0</TargetFrameworkVersion>

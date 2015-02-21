@@ -3,6 +3,8 @@ using Android.OS;
 using System;
 using System.Threading.Tasks;
 
+using Android.Util;
+
 namespace RxApp.Android
 {
     public sealed class StartupActivity : Activity, IRxActivity
@@ -16,14 +18,13 @@ namespace RxApp.Android
             if (isColdBoot)
             {
                 isColdBoot = false;
-
+                StartApp();
             }
             else
             {
-                await Task.Delay(new TimeSpan(10000000));
+                await Task.Delay(new TimeSpan(0, 0, 1));
+                StartApp();
             }
-
-            StartApp();
         }
 
         public object ViewModel

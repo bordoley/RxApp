@@ -5,9 +5,9 @@ using System.Windows.Input;
 
 namespace RxApp
 {
-    public interface IApplication : IDisposable
+    public interface IApplication 
     {
-        void Init();
+        IObservable<INavigationModel> ResetApplicationState { get; }
 
         IDisposable Bind(object controllerModel);
     }
@@ -32,8 +32,7 @@ namespace RxApp
         IObservable<Unit> Start { get; }
         IObservable<Unit> Stop { get; }
     }
-
-    // FIXME: Rework this interface/add extension methods to make it easier to bind it to/from Observables
+        
     public interface INavigationStack : IEnumerable<INavigationModel>
     {
         event EventHandler<NotifyNavigationStackChangedEventArgs> NavigationStackChanged;
