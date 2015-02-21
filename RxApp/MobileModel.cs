@@ -9,6 +9,7 @@ namespace RxApp
     {
         private readonly IRxCommand back = RxCommand.Create();
         private readonly IRxCommand up = RxCommand.Create();
+        private readonly IRxCommand<INavigationModel> open = RxCommand.Create<INavigationModel>();
         private readonly IRxCommand start;
         private readonly IRxCommand stop;
 
@@ -38,6 +39,14 @@ namespace RxApp
             get
             {
                 return up;
+            }
+        }
+
+        public IRxCommand<INavigationModel> Open
+        {
+            get
+            {
+                return open;
             }
         }
 

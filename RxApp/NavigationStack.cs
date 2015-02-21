@@ -68,7 +68,7 @@ namespace RxApp
             private readonly IScheduler mainThreadScheduler;
 
             private IStack<INavigationModel> navStack = Stack<INavigationModel>.Empty;
-            private IDisposable backSubscription = null;
+            private IDisposable subscription = null;
 
             internal NavigationStackImpl(IScheduler mainThreadScheduler)
             {
@@ -87,7 +87,7 @@ namespace RxApp
                 return ((IEnumerable)this.navStack).GetEnumerator();
             }
 
-            public void GotoRoot()
+            private void GotoRoot()
             {
                 if (!navStack.IsEmpty())
                 {
@@ -106,7 +106,7 @@ namespace RxApp
                 }              
             }
 
-            public void Push(INavigationModel model)
+            private void Push(INavigationModel model)
             {
                 Contract.Requires(model != null);
 
@@ -117,7 +117,7 @@ namespace RxApp
                     NotifyNavigationStackChangedEventArgs.Create(model, oldHead, Stack<INavigationModel>.Empty));
             }
 
-            public void Pop()
+            private void Pop()
             {
                 var oldHead = navStack.Head;
                 Update(navStack.Tail);
@@ -144,9 +144,9 @@ namespace RxApp
             {
                 navStack = newStack;
 
-                if (backSubscription != null)
+                if (subscription != null)
                 {
-                    backSubscription.Dispose();
+                    subscription.Dispose();
                 }
 
                 var newSubscription = RxDisposable.Empty;
@@ -157,11 +157,12 @@ namespace RxApp
 
                     newSubscription = Disposable.Combine(
                         view.Back.FirstAsync().ObserveOn(mainThreadScheduler).Subscribe(_ => this.Pop()),
-                        view.Up.FirstAsync().ObserveOn(mainThreadScheduler).Subscribe(_ => this.GotoRoot())
+                        view.Up.FirstAsync().ObserveOn(mainThreadScheduler).Subscribe(_ => this.GotoRoot()),
+                        view.Open.FirstAsync().ObserveOn(mainThreadScheduler).Subscribe(x => this.Push(x))
                     );
                 }
 
-                backSubscription = newSubscription;
+                subscription = newSubscription;
             }
         }
 

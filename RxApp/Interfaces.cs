@@ -16,10 +16,9 @@ namespace RxApp
     {
         IRxCommand Back { get; }
         IRxCommand Up { get; }
-        //IRxCommand<INavigationModel> Open { get; }
+        IRxCommand<INavigationModel> Open { get; }
     }
-       
-        
+      
     public interface IServiceViewModel 
     {
         IRxCommand Start { get; }
@@ -38,13 +37,11 @@ namespace RxApp
     public interface INavigationStack : IEnumerable<INavigationModel>
     {
         event EventHandler<NotifyNavigationStackChangedEventArgs> NavigationStackChanged;
-       
-        void GotoRoot();
-        void Pop();
-        void Push(INavigationModel model);
         void SetRoot(INavigationModel model);
     }
 
+    // Fixme: Not sure these should really be in core. They're sort of convenience
+    // since on android and ios you can't do constructor injection sanely.
     public interface IViewFor
     {
         object ViewModel { get; set; }
