@@ -20,11 +20,7 @@ namespace RxApp.Android
     {
         public static IDisposable BindTo<T, TView>(this IObservable<T> This, TView target, Expression<Func<TView, T>> property)
         {
-            var propertySetter = Reflection.GetSetter(property);
-
-            return This.ObserveOnMainThread()
-                       .Subscribe(x => 
-                            propertySetter(target, x));
+            return This.BindTo(target, property, Observable.MainThreadScheduler);
         }
 
         public static IDisposable Bind(this IRxCommand This, Button button)
