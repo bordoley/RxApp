@@ -5,6 +5,8 @@ using System.Linq;
 using Foundation;
 using UIKit;
 
+using RxApp.iOS;
+
 namespace RxApp.Example
 {
     [Register("AppDelegate")]
@@ -16,7 +18,7 @@ namespace RxApp.Example
         {
             helper = 
                 RxUIApplicationDelegateHelper.Create(
-                    navStack => new RxAppExampleApplicationController(navStack), 
+                    new RxAppExampleApplicationController(), 
                     model =>
                         {
                             // This is a lot prettier in F# using pattern matching

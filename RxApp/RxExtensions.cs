@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Linq.Expressions;
+using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 
@@ -8,6 +10,14 @@ namespace RxApp
 {
     public static partial class Observable
     {
+        internal static IDisposable BindTo<T, TView>(this IObservable<T> This, TView target, Expression<Func<TView, T>> property, IScheduler scheduler)
+        {
+            var propertySetter = Reflection.GetSetter(property);
+
+            return This.ObserveOn(scheduler)
+                       .Subscribe(x => propertySetter(target, x));
+        }
+
         public static IObservable<Tuple<T1,T2>> CombineLatest<T1,T2>(
             this IObservable<T1> _1, 
             IObservable<T2> _2)

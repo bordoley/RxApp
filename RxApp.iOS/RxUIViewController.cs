@@ -5,7 +5,7 @@ using System.Diagnostics.Contracts;
 using Foundation;
 using UIKit;
 
-namespace RxApp
+namespace RxApp.iOS
 {
     public sealed class RxUIViewControllerHelper<TViewModel>
         where TViewModel: class, /*INavigableViewModel,*/ IServiceViewModel

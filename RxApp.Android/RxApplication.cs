@@ -127,10 +127,9 @@ namespace RxApp.Android
                             activities[model] = activity;
                         }),
 
-                navStack.BindController(model => application.Bind(model)),
+                navStack.BindController(application.Bind),
                     
-                application.ResetApplicationState.ObserveOnMainThread().Subscribe(x => 
-                    navStack.SetRoot(x))
+                application.ResetApplicationState.ObserveOnMainThread().Subscribe(navStack.SetRoot)
             );
         }
 

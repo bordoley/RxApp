@@ -32,7 +32,8 @@ namespace RxApp
         IObservable<Unit> Start { get; }
         IObservable<Unit> Stop { get; }
     }
-        
+     
+    // Probably just expose the NavigationStack itself    
     public interface INavigationStack : IEnumerable<INavigationModel>
     {
         event EventHandler<NotifyNavigationStackChangedEventArgs> NavigationStackChanged;

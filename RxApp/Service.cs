@@ -11,31 +11,29 @@ namespace RxApp
             Contract.Requires(model != null);
             Contract.Requires(start != null);
 
-            CompositeDisposable subscription = new CompositeDisposable();
-
             IDisposable serv = null;
 
-            subscription.Add (model.Start.Subscribe(_ =>  
-                {
-                    if (serv == null)
+            return Disposable.Combine(
+                model.Start.Subscribe(_ =>  
                     {
-                        model.CanStart.Value = false;
-                        serv = start ();
-                    }
-                }));
+                        if (serv == null)
+                        {
+                            model.CanStart.Value = false;
+                            serv = start ();
+                        }
+                    }),
 
-            subscription.Add (model.Stop.Subscribe(_ => 
-                {
-                    if (serv != null)
+                model.Stop.Subscribe(_ => 
                     {
-                        serv.Dispose();
-                    }
+                        if (serv != null)
+                        {
+                            serv.Dispose();
+                        }
 
-                    model.CanStart.Value = true;
-                    serv = null;
-                }));
-
-            return subscription;
+                        model.CanStart.Value = true;
+                        serv = null;
+                    })
+            );
         }
     }
 }

@@ -14,7 +14,8 @@ namespace RxApp.Android
 {
     public static partial class Observable
     {
-        private static readonly IScheduler _mainThreadScheduler = new HandlerScheduler(new Handler(Looper.MainLooper), Looper.MainLooper.Thread.Id);
+        private static readonly IScheduler _mainThreadScheduler = 
+            new LooperScheduler(Looper.MainLooper);
 
         internal static IScheduler MainThreadScheduler { get { return _mainThreadScheduler; } } 
 
@@ -23,15 +24,15 @@ namespace RxApp.Android
             return observable.ObserveOn(_mainThreadScheduler);
         }
 
-        private sealed class HandlerScheduler : IScheduler
+        private sealed class LooperScheduler : IScheduler
         {
             Handler handler;
-            long looperId;
+            long threadId;
 
-            public HandlerScheduler(Handler handler, long? threadIdAssociatedWithHandler)
+            internal LooperScheduler(Looper looper)
             {
-                this.handler = handler;
-                looperId = threadIdAssociatedWithHandler ?? -1;
+                this.handler = new Handler(looper);
+                threadId = looper.Thread.Id;
             }
 
             public IDisposable Schedule<TState>(TState state, Func<IScheduler, TState, IDisposable> action)
@@ -39,7 +40,7 @@ namespace RxApp.Android
                 bool isCancelled = false;
                 var innerDisp = new SerialDisposable() { Disposable = RxDisposable.Empty };
 
-                if (looperId > 0 && looperId == Java.Lang.Thread.CurrentThread().Id) 
+                if (threadId == Java.Lang.Thread.CurrentThread().Id) 
                 {
                     return action(this, state);
                 }
