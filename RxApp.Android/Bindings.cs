@@ -19,7 +19,6 @@ namespace RxApp.Android
     public static partial class Bindings
     {
         public static IDisposable BindTo<T, TView>(this IObservable<T> This, TView target, Expression<Func<TView, T>> property)
-            where TView : View
         {
             var propertySetter = Reflection.GetSetter(property);
 
