@@ -13,7 +13,7 @@ namespace RxApp
 
             IDisposable serv = null;
 
-            return Disposable.Combine(
+            return Disposable.Compose(
                 model.Start.Subscribe(_ =>  
                     {
                         if (serv == null)

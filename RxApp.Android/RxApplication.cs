@@ -85,7 +85,7 @@ namespace RxApp.Android
             var navStackChanged = 
                 RxObservable.FromEventPattern<NotifyNavigationStackChangedEventArgs>(navStack, "NavigationStackChanged");
 
-            subscription = Disposable.Combine(
+            subscription = Disposable.Compose(
                 navStackChanged
                     .Do(e =>
                         {

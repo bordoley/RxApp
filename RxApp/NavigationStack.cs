@@ -155,7 +155,7 @@ namespace RxApp
                 {   
                     INavigationModel view = navStack.First();
 
-                    newSubscription = Disposable.Combine(
+                    newSubscription = Disposable.Compose(
                         view.Back.FirstAsync().ObserveOn(mainThreadScheduler).Subscribe(_ => this.Pop()),
                         view.Up.FirstAsync().ObserveOn(mainThreadScheduler).Subscribe(_ => this.GotoRoot()),
                         view.Open.FirstAsync().ObserveOn(mainThreadScheduler).Subscribe(x => this.Push(x))

@@ -87,7 +87,7 @@ namespace RxApp
 
     public static class Disposable
     {
-        public static IDisposable Combine(IDisposable first, IDisposable second)
+        public static IDisposable Compose(IDisposable first, IDisposable second)
         {
             var result = new CompositeDisposable();
             result.Add(first);
@@ -95,7 +95,7 @@ namespace RxApp
             return result;
         }
 
-        public static IDisposable Combine(IDisposable first, IDisposable second, params IDisposable[] disposables)
+        public static IDisposable Compose(IDisposable first, IDisposable second, params IDisposable[] disposables)
         {
             var result = new CompositeDisposable();
             result.Add(first);
