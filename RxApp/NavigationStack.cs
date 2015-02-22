@@ -166,32 +166,32 @@ namespace RxApp
             }
         }
 
-        public static IDisposable BindController(
+        public static IDisposable BindTo(
             this INavigationStack This,  
-            Func<object, IDisposable> provideController)
+            Func<object, IDisposable> createBinding)
         {
             Contract.Requires(This != null);
-            Contract.Requires(provideController != null);
+            Contract.Requires(createBinding != null);
 
-            var retval = new NavigationStackControllerBinding(This, provideController);
+            var retval = new NavigationStackBinding(This, createBinding);
             retval.Initialize();
             return retval;
         }
 
-        private sealed class NavigationStackControllerBinding : IDisposable
+        private sealed class NavigationStackBinding : IDisposable
         {
             private readonly INavigationStack navStack;
-            private readonly Func<object, IDisposable> provideController;
+            private readonly Func<object, IDisposable> createBinding;
             private readonly IDictionary<object, IDisposable> bindings = new Dictionary<object, IDisposable>();
 
             private IDisposable navStateChangedSubscription = null;
 
-            internal NavigationStackControllerBinding(
+            internal NavigationStackBinding(
                 INavigationStack navStack,  
                 Func<object, IDisposable> provideController)
             {
                 this.navStack = navStack;
-                this.provideController = provideController;
+                this.createBinding = provideController;
             }
 
             public void Initialize()
@@ -208,7 +208,7 @@ namespace RxApp
 
                         if (head != null && !bindings.ContainsKey(head))
                         {
-                            var binding = provideController(head);
+                            var binding = createBinding(head);
                             bindings[head] = binding;
                         }    
 

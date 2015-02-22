@@ -23,7 +23,7 @@ namespace RxApp.Example
         public override void ViewDidAppear(bool animated)
         {
             base.ViewDidAppear(animated);
-            subscription = Disposable.Combine(
+            subscription = Disposable.Compose(
                 this.ViewModel.OpenPage.Bind(this.OpenButton),
                 this.ViewModel.Up.Bind(this.UpButton)
             );

@@ -41,7 +41,7 @@ namespace RxApp.iOS
             var navController = new BufferedNavigationController(navStack);
             var views = new Dictionary<object, UIViewController>();
 
-            subscription = Disposable.Combine(
+            subscription = Disposable.Compose(
                 RxObservable
                     .FromEventPattern<NotifyNavigationStackChangedEventArgs>(navStack, "NavigationStackChanged")
                     .Subscribe((EventPattern<NotifyNavigationStackChangedEventArgs> e) =>
@@ -71,7 +71,7 @@ namespace RxApp.iOS
                         }
                     }),
 
-                navStack.BindController(application.Bind),
+                navStack.BindTo(application.Bind),
                 application.ResetApplicationState.ObserveOnMainThread().Subscribe(navStack.SetRoot)
             );
 

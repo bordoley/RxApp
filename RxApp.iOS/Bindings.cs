@@ -15,7 +15,7 @@ namespace RxApp.iOS
 
         public static IDisposable Bind(this IRxCommand This, UIButton button)
         {
-            return Disposable.Combine(
+            return Disposable.Compose(
                 This.CanExecute.ObserveOnMainThread().Subscribe(x => button.Enabled = x),
                 RxObservable.FromEventPattern(button, "TouchUpInside").InvokeCommand(This)
             );
