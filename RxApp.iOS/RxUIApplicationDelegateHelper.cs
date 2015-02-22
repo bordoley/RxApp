@@ -11,40 +11,37 @@ using UIKit;
 
 using RxObservable = System.Reactive.Linq.Observable;
 
-namespace RxApp
+namespace RxApp.iOS
 {
     public sealed class RxUIApplicationDelegateHelper
     {
         public static RxUIApplicationDelegateHelper Create(
-            Func<INavigationStack, IApplication> applicationProvider,
+            IApplication application,
             Func<object, UIViewController> provideView)
         {
-            return new RxUIApplicationDelegateHelper(applicationProvider, provideView);
+            return new RxUIApplicationDelegateHelper(application, provideView);
         }
 
-        private readonly INavigationStack navStack = NavigationStack.Create();
-        private readonly Func<INavigationStack, IApplication> applicationProvider;
+        private readonly INavigationStack navStack = NavigationStack.Create(Observable.MainThreadScheduler);
+        private readonly IApplication application;
         private readonly Func<object, UIViewController> provideView;
 
         private IDisposable subscription;
 
         private RxUIApplicationDelegateHelper(
-            Func<INavigationStack, IApplication> applicationProvider,
+            IApplication application,
             Func<object, UIViewController> provideView)
         {
-            this.applicationProvider = applicationProvider;
+            this.application = application;
             this.provideView = provideView;
         }
 
         public bool FinishedLaunching(UIApplication app, NSDictionary options)
         {
             var navController = new BufferedNavigationController(navStack);
-            var application = applicationProvider(navStack);
             var views = new Dictionary<object, UIViewController>();
 
-            var subscription = new CompositeDisposable();
-            subscription.Add(application);
-            subscription.Add(
+            subscription = Disposable.Combine(
                 RxObservable
                     .FromEventPattern<NotifyNavigationStackChangedEventArgs>(navStack, "NavigationStackChanged")
                     .Subscribe((EventPattern<NotifyNavigationStackChangedEventArgs> e) =>
@@ -72,17 +69,16 @@ namespace RxApp
                             views.Remove(model);
                             view.Dispose();
                         }
-                    }));
+                    }),
 
-            subscription.Add(navStack.BindController(model => application.Bind(model)));
-
-            this.subscription = subscription;
+                navStack.BindController(application.Bind),
+                application.ResetApplicationState.ObserveOnMainThread().Subscribe(navStack.SetRoot)
+            );
 
             var window = new UIWindow(UIScreen.MainScreen.Bounds);
             window.RootViewController = navController;
             window.MakeKeyAndVisible();
 
-            application.Init();
             return true;
         }
 
@@ -104,18 +100,23 @@ namespace RxApp
         {
             this.navStack = navStack;
             this.WeakDelegate = this;
-
         }
             
         public override UIViewController PopViewController (bool animated)
         {
-            this.actions.Enqueue(() => navStack.Pop());
+            this.actions.Enqueue(() => 
+                {
+                    this.navStack.Select(x => x.Back).First().Execute();
+                });
             return base.PopViewController(animated);
         }
 
         public override UIViewController[] PopToRootViewController(bool animated)
         {
-            this.actions.Enqueue(() => navStack.GotoRoot());
+            this.actions.Enqueue(() => 
+                {
+                    this.navStack.Select(x => x.Up).First().Execute();
+                });
             return base.PopToRootViewController(animated);
         }
 

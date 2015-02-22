@@ -30,12 +30,10 @@ namespace RxApp.Android
 
         public static IDisposable Bind(this IRxCommand This, Button button)
         {
-            var subscription = new CompositeDisposable();
-            subscription.Add(
-                This.CanExecute.ObserveOnMainThread().Subscribe(x => button.Enabled = x));
-            subscription.Add(
-                RxObservable.FromEventPattern(button, "Click").InvokeCommand(This));
-            return subscription;
+            return Disposable.Combine(
+                This.CanExecute.ObserveOnMainThread().Subscribe(x => button.Enabled = x),
+                RxObservable.FromEventPattern(button, "Click").InvokeCommand(This)
+            );
         }
 
         public static IDisposable Bind(this IRxCommand This, SwipeRefreshLayout refresher)
@@ -49,12 +47,11 @@ namespace RxApp.Android
 
         public static IDisposable Bind(this IRxProperty<bool> This, CompoundButton button)
         {
-            var subscription = new CompositeDisposable();
-            subscription.Add(
+            return Disposable.Combine(
                 RxObservable.FromEventPattern<CompoundButton.CheckedChangeEventArgs>(button, "CheckedChange")
-                          .Subscribe(x => { This.Value = x.EventArgs.IsChecked; }));
-            subscription.Add(This.ObserveOnMainThread().Subscribe(x => { if (button.Checked != x) { button.Checked = x; } }));
-            return subscription;
+                          .Subscribe(x => { This.Value = x.EventArgs.IsChecked; }),
+
+                This.ObserveOnMainThread().Subscribe(x => { if (button.Checked != x) { button.Checked = x; } }));
         }
 
         public static IDisposable BindTo<TViewModel,TView>(
