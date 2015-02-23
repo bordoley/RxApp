@@ -49,6 +49,16 @@ namespace RxApp.Android
                 This.ObserveOnMainThread().Subscribe(x => { if (button.Checked != x) { button.Checked = x; } }));
         }
 
+        public static IDisposable BindTo(this IObservable<Unit> This, Action action)
+        {
+            return This.ObserveOnMainThread().Subscribe(_ => action());
+        }
+
+        public static IDisposable BindTo<T>(this IObservable<T> This, Action<T> action)
+        {
+            return This.ObserveOnMainThread().Subscribe(x => action(x));
+        }
+
         public static IDisposable BindTo<TViewModel,TView>(
                 this IObservable<IEnumerable<TViewModel>> This, 
                 ListView listView, 
