@@ -5,7 +5,7 @@ using System.Reactive.Linq;
 
 namespace RxApp
 {
-    public class MobileModel : INavigationModel, IServiceControllerModel, IServiceViewModel 
+    public abstract class MobileModel : INavigationModel, IServiceControllerModel, IServiceViewModel 
     {
         private readonly IRxCommand back = RxCommand.Create();
         private readonly IRxCommand up = RxCommand.Create();
@@ -15,7 +15,7 @@ namespace RxApp
 
         private readonly IRxProperty<bool> canStart = RxProperty.Create<bool>(true);
 
-        public MobileModel()
+        protected MobileModel()
         {
             start = this.canStart.ToCommand();
             stop = this.canStart.Select(x => !x).ToCommand();
