@@ -18,7 +18,8 @@ namespace RxApp.Example
         {
             helper = 
                 RxUIApplicationDelegateHelper.Create(
-                    new RxAppExampleApplicationController(), 
+                    RxAppExampleApplicationController.RootState,
+                    RxAppExampleApplicationController.Bind,
                     model =>
                         {
                             // This is a lot prettier in F# using pattern matching

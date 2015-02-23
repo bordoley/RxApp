@@ -5,13 +5,6 @@ using System.Windows.Input;
 
 namespace RxApp
 {
-    public interface IApplication 
-    {
-        IObservable<INavigationModel> ResetApplicationState { get; }
-
-        IDisposable Bind(object controllerModel);
-    }
-
     public interface INavigationModel
     {
         IRxCommand Back { get; }

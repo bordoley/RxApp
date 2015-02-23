@@ -16,23 +16,27 @@ namespace RxApp.iOS
     public sealed class RxUIApplicationDelegateHelper
     {
         public static RxUIApplicationDelegateHelper Create(
-            IApplication application,
+            IObservable<INavigationModel> rootState,
+            Func<object, IDisposable> bindController,
             Func<object, UIViewController> provideView)
         {
-            return new RxUIApplicationDelegateHelper(application, provideView);
+            return new RxUIApplicationDelegateHelper(rootState, bindController, provideView);
         }
 
         private readonly INavigationStack navStack = NavigationStack.Create(Observable.MainThreadScheduler);
-        private readonly IApplication application;
+        private readonly IObservable<INavigationModel> rootState;
+        private readonly Func<object, IDisposable> bindController;
         private readonly Func<object, UIViewController> provideView;
 
         private IDisposable subscription;
 
         private RxUIApplicationDelegateHelper(
-            IApplication application,
+            IObservable<INavigationModel> rootState,
+            Func<object, IDisposable> bindController,
             Func<object, UIViewController> provideView)
         {
-            this.application = application;
+            this.rootState = rootState;
+            this.bindController = bindController;
             this.provideView = provideView;
         }
 
@@ -71,8 +75,8 @@ namespace RxApp.iOS
                         }
                     }),
 
-                navStack.BindTo(application.Bind),
-                application.ResetApplicationState.ObserveOnMainThread().Subscribe(navStack.SetRoot)
+                navStack.BindTo(this.bindController),
+                rootState.ObserveOnMainThread().Subscribe(navStack.SetRoot)
             );
 
             var window = new UIWindow(UIScreen.MainScreen.Bounds);

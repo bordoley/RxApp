@@ -19,6 +19,16 @@ namespace RxApp.Example
 
         }
 
+        public override IObservable<INavigationModel> RootState()
+        { 
+            return RxAppExampleApplicationController.RootState;
+        }
+
+        public override IDisposable BindController(object model)
+        {
+            return RxAppExampleApplicationController.Bind(model);
+        }
+
         public override Type GetActivityType(object model)
         {
             // This is a lot prettier in F# using pattern matching
@@ -28,11 +38,6 @@ namespace RxApp.Example
             } 
 
             throw new Exception("No view for view model");
-        }
-
-        public override IApplication ProvideApplication()
-        {
-            return new RxAppExampleApplicationController();
         }
 
         public override void OnCreate()

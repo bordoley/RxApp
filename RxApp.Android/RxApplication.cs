@@ -21,14 +21,16 @@ namespace RxApp.Android
     {
         public static RxApplicationHelper Create(
             Context context,
-            IApplication application,
+            Func<IObservable<INavigationModel>> rootState,
+            Func<object, IDisposable> bindController,
             Func<object,Type> getActivityType) 
         {
             Contract.Requires(context != null);
+            Contract.Requires(rootState != null);
+            Contract.Requires(bindController != null);
             Contract.Requires(getActivityType != null);
-            Contract.Requires(application != null);
 
-            return new RxApplicationHelper(context, application, getActivityType);
+            return new RxApplicationHelper(context, rootState, bindController, getActivityType);
         }
 
         private readonly IDictionary<object, IRxActivity> activities = new Dictionary<object, IRxActivity> ();
@@ -37,7 +39,9 @@ namespace RxApp.Android
 
         private readonly Context context;
 
-        private readonly IApplication application;
+        private readonly Func<IObservable<INavigationModel>> rootState;
+
+        private readonly Func<object, IDisposable> bindController;
 
         private readonly Func<object,Type> getActivityType;
 
@@ -47,11 +51,13 @@ namespace RxApp.Android
 
         private RxApplicationHelper(
             Context context,
-            IApplication application,
+            Func<IObservable<INavigationModel>> rootState,
+            Func<object, IDisposable> bindController,
             Func<object,Type> getActivityType)
         {
             this.context = context;
-            this.application = application;
+            this.rootState = rootState;
+            this.bindController = bindController;
             this.getActivityType = getActivityType;
         }
 
@@ -127,9 +133,9 @@ namespace RxApp.Android
                             activities[model] = activity;
                         }),
 
-                navStack.BindTo(application.Bind),
+                navStack.BindTo(bindController),
                     
-                application.ResetApplicationState.ObserveOnMainThread().Subscribe(navStack.SetRoot)
+                rootState().ObserveOnMainThread().Subscribe(navStack.SetRoot)
             );
         }
 
@@ -146,12 +152,14 @@ namespace RxApp.Android
 
         public RxApplication(IntPtr javaReference, JniHandleOwnership transfer) : base(javaReference, transfer)
         {
-            helper = RxApplicationHelper.Create(this.ApplicationContext, this.ProvideApplication(), this.GetActivityType);
+            helper = RxApplicationHelper.Create(this.ApplicationContext, this.RootState, this.BindController, this.GetActivityType);
         }
+
+        public abstract IObservable<INavigationModel> RootState();
 
         public abstract Type GetActivityType(object model);
 
-        public abstract IApplication ProvideApplication();
+        public abstract IDisposable BindController(object model);
 
         public override void OnTerminate()
         {

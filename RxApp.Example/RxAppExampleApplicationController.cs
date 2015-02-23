@@ -8,18 +8,14 @@ using RxObservable = System.Reactive.Linq.Observable;
 
 namespace RxApp.Example
 {
-    public class RxAppExampleApplicationController : IApplication
+    public static class RxAppExampleApplicationController 
     {
-        public RxAppExampleApplicationController()
-        {
-        }
-
-        public IObservable<INavigationModel> ResetApplicationState
+        public static IObservable<INavigationModel> RootState
         { 
             get { return RxObservable.Return(new MainModel()); }
         }
             
-        public IDisposable Bind(object model)
+        public static IDisposable Bind(object model)
         {
             // This is a lot prettier if you use F# pattern matching
             if (model is IMainControllerModel)
