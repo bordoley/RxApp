@@ -25,13 +25,6 @@ namespace RxApp
         IObservable<Unit> Start { get; }
         IObservable<Unit> Stop { get; }
     }
-     
-    // Probably just expose the NavigationStack itself    
-    public interface INavigationStack : IEnumerable<INavigationModel>
-    {
-        event EventHandler<NotifyNavigationStackChangedEventArgs> NavigationStackChanged;
-        void SetRoot(INavigationModel model);
-    }
 
     // Fixme: Not sure these should really be in core. They're sort of convenience
     // since on android and ios you can't do constructor injection sanely.

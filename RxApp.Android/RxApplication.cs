@@ -35,7 +35,7 @@ namespace RxApp.Android
 
         private readonly IDictionary<object, IRxActivity> activities = new Dictionary<object, IRxActivity> ();
 
-        private readonly INavigationStack navStack = NavigationStack.Create(Observable.MainThreadScheduler);
+        private readonly NavigationStack navStack = NavigationStack.Create(Observable.MainThreadScheduler);
 
         private readonly Context context;
 

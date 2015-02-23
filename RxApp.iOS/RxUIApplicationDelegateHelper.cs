@@ -23,7 +23,7 @@ namespace RxApp.iOS
             return new RxUIApplicationDelegateHelper(rootState, bindController, provideView);
         }
 
-        private readonly INavigationStack navStack = NavigationStack.Create(Observable.MainThreadScheduler);
+        private readonly NavigationStack navStack = NavigationStack.Create(Observable.MainThreadScheduler);
         private readonly IObservable<INavigationModel> rootState;
         private readonly Func<object, IDisposable> bindController;
         private readonly Func<object, UIViewController> provideView;
@@ -96,11 +96,11 @@ namespace RxApp.iOS
     internal class BufferedNavigationController : UINavigationController
     {
         private readonly Queue<Action> actions = new Queue<Action>();
-        private readonly INavigationStack navStack;
+        private readonly NavigationStack navStack;
 
         private bool transitioning = false;
 
-        public BufferedNavigationController(INavigationStack navStack): base()
+        public BufferedNavigationController(NavigationStack navStack): base()
         {
             this.navStack = navStack;
             this.WeakDelegate = this;
