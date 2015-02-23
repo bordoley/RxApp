@@ -45,7 +45,7 @@ namespace RxApp.iOS
         }
     }
 
-    public class RxUIViewController<TViewModel>: UIViewController, IViewFor<TViewModel> 
+    public abstract class RxUIViewController<TViewModel>: UIViewController, IViewFor<TViewModel> 
         where TViewModel: INavigationModel, IServiceViewModel
     {
         private readonly RxUIViewControllerHelper<TViewModel> helper = RxUIViewControllerHelper<TViewModel>.Create();
