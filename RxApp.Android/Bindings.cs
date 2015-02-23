@@ -50,20 +50,20 @@ namespace RxApp.Android
         }
 
         public static IDisposable BindTo<TViewModel,TView>(
-            this IObservable<IEnumerable<TViewModel>> This, 
-            ListView listView, 
-            Func<ViewGroup, TView> viewProvider, 
-            Action<TViewModel, TView> bind)
+                this IObservable<IEnumerable<TViewModel>> This, 
+                ListView listView, 
+                Func<ViewGroup, TView> viewProvider, 
+                Action<TViewModel, TView> bind)
             where TView:View
         {
             return This.Select(x => x.ToList()).BindTo(listView, viewProvider, bind);
         }
 
         public static IDisposable BindTo<TViewModel,TView>(
-            this IObservable<IReadOnlyList<TViewModel>> This, 
-            ListView listView, 
-            Func<ViewGroup, TView> viewProvider, 
-            Action<TViewModel, TView> bind)
+                this IObservable<IReadOnlyList<TViewModel>> This, 
+                ListView listView, 
+                Func<ViewGroup, TView> viewProvider, 
+                Action<TViewModel, TView> bind)
             where TView:View
         {
             var adapter = new RxReadOnlyListAdapter<TViewModel, TView>(This, viewProvider, bind);

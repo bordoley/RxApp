@@ -8,7 +8,7 @@ using UIKit;
 namespace RxApp.iOS
 {
     public sealed class RxUIViewControllerHelper<TViewModel>
-        where TViewModel: class, /*INavigableViewModel,*/ IServiceViewModel
+        where TViewModel: INavigationModel, IServiceViewModel
     {
         public static RxUIViewControllerHelper<TViewModel> Create()
         {
@@ -46,7 +46,7 @@ namespace RxApp.iOS
     }
 
     public class RxUIViewController<TViewModel>: UIViewController, IViewFor<TViewModel> 
-        where TViewModel: class, /*INavigableViewModel,*/ IServiceViewModel
+        where TViewModel: INavigationModel, IServiceViewModel
     {
         private readonly RxUIViewControllerHelper<TViewModel> helper = RxUIViewControllerHelper<TViewModel>.Create();
 

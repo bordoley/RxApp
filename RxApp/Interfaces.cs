@@ -34,7 +34,6 @@ namespace RxApp
     }
 
     public interface IViewFor<TViewModel> : IViewFor
-        where TViewModel: class
     {
         new TViewModel ViewModel { get; set; }
     }
