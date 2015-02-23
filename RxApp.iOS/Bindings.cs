@@ -11,12 +11,47 @@ namespace RxApp.iOS
 {
     public static class Bindings
     {
+        private static DateTime ToDateTime(this NSDate date)
+        {
+            DateTime reference = TimeZone.CurrentTimeZone.ToLocalTime(
+                new DateTime(2001, 1, 1, 0, 0, 0) );
+            return reference.AddSeconds(date.SecondsSinceReferenceDate);
+        }
+
+        private static NSDate ToNSDate(this DateTime date)
+        {
+            DateTime reference = TimeZone.CurrentTimeZone.ToLocalTime(
+                new DateTime(2001, 1, 1, 0, 0, 0) );
+            return NSDate.FromTimeIntervalSinceReferenceDate(
+                (date - reference).TotalSeconds);
+        }
+
         public static IDisposable Bind(this IRxProperty<bool> This, UISwitch uiSwitch)
-        {   return Disposable.Compose(
+        {   
+            return Disposable.Compose(
                 RxObservable.FromEventPattern(uiSwitch, "ValueChanged")
                             .Subscribe(x => { This.Value = uiSwitch.On; }),
                 This.ObserveOnMainThread()
                     .Subscribe(x => { if (uiSwitch.On != x) { uiSwitch.On = x; } })
+            );
+        }
+
+        public static IDisposable Bind(this IRxProperty<DateTime> This, UIDatePicker datePicker)
+        {
+            return Disposable.Compose(
+                RxObservable.FromEventPattern(datePicker, "ValueChanged")
+                            .Subscribe(x => { 
+                            This.Value = datePicker.Date.ToDateTime(); }),
+
+                This.ObserveOnMainThread()
+                    .Subscribe(x => 
+                        { 
+                            var datePickerDate = datePicker.Date.ToDateTime();
+                            if (datePickerDate != x) 
+                            { 
+                                datePicker.Date = x.ToNSDate(); 
+                            } 
+                        })
             );
         }
 
