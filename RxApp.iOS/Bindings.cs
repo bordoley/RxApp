@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Linq.Expressions;
 
+using System.Reactive;
+
 using Foundation;
 using UIKit;
 
@@ -57,6 +59,16 @@ namespace RxApp.iOS
         public static IDisposable BindTo<T, TView>(this IObservable<T> This, TView target, Expression<Func<TView, T>> property)
         {
             return This.BindTo(target, property, Observable.MainThreadScheduler);
+        }
+
+        public static IDisposable BindTo(this IObservable<Unit> This, Action action)
+        {
+            return This.ObserveOnMainThread().Subscribe(_ => action());
+        }
+
+        public static IDisposable BindTo<T>(this IObservable<T> This, Action<T> action)
+        {
+            return This.ObserveOnMainThread().Subscribe(x => action(x));
         }
 
         public static IDisposable Bind(this IRxCommand This, UIButton button)
