@@ -40,8 +40,7 @@ namespace RxApp.iOS
         {
             return Disposable.Compose(
                 RxObservable.FromEventPattern(datePicker, "ValueChanged")
-                            .Subscribe(x => { 
-                            This.Value = datePicker.Date.ToDateTime(); }),
+                            .Subscribe(x => { This.Value = datePicker.Date.ToDateTime(); }),
 
                 This.ObserveOnMainThread()
                     .Subscribe(x => 
