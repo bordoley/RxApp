@@ -11,13 +11,13 @@ namespace RxApp
         IRxCommand<INavigationModel> Open { get; }
     }
       
-    public interface IServiceViewModel 
+    public interface IActivationViewModel 
     {
         IRxCommand Start { get; }
         IRxCommand Stop { get; }
     }
 
-    public interface IServiceControllerModel
+    public interface IActivationControllerModel
     {
         IRxProperty<bool> CanStart { get; }
 

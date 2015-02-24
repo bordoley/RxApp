@@ -6,32 +6,32 @@ namespace RxApp
 {
     public static class Service
     {
-        public static IDisposable Bind(this IServiceControllerModel model, Func<IDisposable> start)
+        public static IDisposable Bind(this IActivationControllerModel model, Func<IDisposable> provideService)
         {
             Contract.Requires(model != null);
-            Contract.Requires(start != null);
+            Contract.Requires(provideService != null);
 
-            IDisposable serv = null;
+            IDisposable service = null;
 
             return Disposable.Compose(
                 model.Start.Subscribe(_ =>  
                     {
-                        if (serv == null)
+                        if (service == null)
                         {
                             model.CanStart.Value = false;
-                            serv = start ();
+                            service = provideService ();
                         }
                     }),
 
                 model.Stop.Subscribe(_ => 
                     {
-                        if (serv != null)
+                        if (service != null)
                         {
-                            serv.Dispose();
+                            service.Dispose();
                         }
 
                         model.CanStart.Value = true;
-                        serv = null;
+                        service = null;
                     })
             );
         }

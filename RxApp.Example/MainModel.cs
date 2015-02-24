@@ -5,7 +5,7 @@ using System.Windows.Input;
 
 namespace RxApp.Example
 {   
-    public interface IMainViewModel : INavigationModel, IServiceViewModel
+    public interface IMainViewModel : INavigationModel, IActivationViewModel
     {
         IRxCommand OpenPage { get; }
     }

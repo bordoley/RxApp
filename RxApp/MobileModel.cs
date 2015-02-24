@@ -4,7 +4,7 @@ using System.Reactive.Linq;
 
 namespace RxApp
 {
-    public abstract class MobileModel : INavigationModel, IServiceControllerModel, IServiceViewModel 
+    public abstract class MobileModel : INavigationModel, IActivationControllerModel, IActivationViewModel 
     {
         private readonly IRxCommand back = RxCommand.Create();
         private readonly IRxCommand up = RxCommand.Create();
@@ -49,7 +49,7 @@ namespace RxApp
             }
         }
 
-        IObservable<Unit> IServiceControllerModel.Stop
+        IObservable<Unit> IActivationControllerModel.Stop
         {
             get
             {
@@ -65,7 +65,7 @@ namespace RxApp
             }
         }
 
-        IObservable<Unit> IServiceControllerModel.Start
+        IObservable<Unit> IActivationControllerModel.Start
         {
             get
             {
