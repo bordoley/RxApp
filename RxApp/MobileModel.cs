@@ -9,20 +9,20 @@ namespace RxApp
         private readonly IRxCommand back = RxCommand.Create();
         private readonly IRxCommand up = RxCommand.Create();
         private readonly IRxCommand<INavigationModel> open = RxCommand.Create<INavigationModel>();
-        private readonly IRxCommand start;
-        private readonly IRxCommand stop;
+        private readonly IRxCommand activate;
+        private readonly IRxCommand deactivate;
 
-        private readonly IRxProperty<bool> canStart = RxProperty.Create<bool>(true);
+        private readonly IRxProperty<bool> canActivate = RxProperty.Create<bool>(true);
 
         protected MobileModel()
         {
-            start = this.canStart.ToCommand();
-            stop = this.canStart.Select(x => !x).ToCommand();
+            activate = this.canActivate.ToCommand();
+            deactivate = this.canActivate.Select(x => !x).ToCommand();
         }
 
-        public IRxProperty<bool> CanStart 
+        public IRxProperty<bool> CanActivate
         { 
-            get { return canStart; }
+            get { return canActivate; }
         }
 
         public IRxCommand Back
@@ -49,35 +49,35 @@ namespace RxApp
             }
         }
 
-        IObservable<Unit> IActivationControllerModel.Stop
+        IObservable<Unit> IActivationControllerModel.Deactivate
         {
             get
             {
-                return stop;
+                return deactivate;
             }
         }
 
-        public IRxCommand Stop
+        public IRxCommand Deactivate
         {
             get
             {
-                return stop;
+                return deactivate;
             }
         }
 
-        IObservable<Unit> IActivationControllerModel.Start
+        IObservable<Unit> IActivationControllerModel.Activate
         {
             get
             {
-                return start;
+                return activate;
             }
         }
 
-        public IRxCommand Start
+        public IRxCommand Activate
         {
             get
             {
-                return start;
+                return activate;
             }
         }  
     }

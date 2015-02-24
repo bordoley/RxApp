@@ -13,16 +13,16 @@ namespace RxApp
       
     public interface IActivationViewModel 
     {
-        IRxCommand Start { get; }
-        IRxCommand Stop { get; }
+        IRxCommand Activate { get; }
+        IRxCommand Deactivate { get; }
     }
 
     public interface IActivationControllerModel
     {
-        IRxProperty<bool> CanStart { get; }
+        IRxProperty<bool> CanActivate { get; }
 
-        IObservable<Unit> Start { get; }
-        IObservable<Unit> Stop { get; }
+        IObservable<Unit> Activate { get; }
+        IObservable<Unit> Deactivate { get; }
     }
 
     // Fixme: Not sure these should really be in core. They're sort of convenience

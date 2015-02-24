@@ -54,12 +54,12 @@ namespace RxApp.Android
 
         public void OnResume()
         {
-            this.ViewModel.Start.Execute();
+            this.ViewModel.Activate.Execute();
         }
 
         public void OnPause()
         {
-            this.ViewModel.Stop.Execute();
+            this.ViewModel.Deactivate.Execute();
         }
 
         public void OnBackPressed()

@@ -4,34 +4,34 @@ using System.Reactive.Disposables;
 
 namespace RxApp
 {
-    public static class Service
+    public static class Activation
     {
-        public static IDisposable Bind(this IActivationControllerModel model, Func<IDisposable> provideService)
+        public static IDisposable Bind(this IActivationControllerModel model, Func<IDisposable> provideController)
         {
             Contract.Requires(model != null);
-            Contract.Requires(provideService != null);
+            Contract.Requires(provideController != null);
 
-            IDisposable service = null;
+            IDisposable controller = null;
 
             return Disposable.Compose(
-                model.Start.Subscribe(_ =>  
+                model.Activate.Subscribe(_ =>  
                     {
-                        if (service == null)
+                        if (controller == null)
                         {
-                            model.CanStart.Value = false;
-                            service = provideService ();
+                            model.CanActivate.Value = false;
+                            controller = provideController ();
                         }
                     }),
 
-                model.Stop.Subscribe(_ => 
+                model.Deactivate.Subscribe(_ => 
                     {
-                        if (service != null)
+                        if (controller != null)
                         {
-                            service.Dispose();
+                            controller.Dispose();
                         }
 
-                        model.CanStart.Value = true;
-                        service = null;
+                        model.CanActivate.Value = true;
+                        controller = null;
                     })
             );
         }
