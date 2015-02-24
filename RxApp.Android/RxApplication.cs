@@ -21,9 +21,9 @@ namespace RxApp.Android
     {
         public static RxApplicationHelper Create(
             Context context,
-            Func<IObservable<IMobileModel>> rootState,
-            Func<IMobileControllerModel,IDisposable> bindController,
-            Func<IMobileViewModel,Type> getActivityType) 
+            Func<IObservable<INavigationModel>> rootState,
+            Func<INavigationControllerModel,IDisposable> bindController,
+            Func<INavigationViewModel,Type> getActivityType) 
         {
             Contract.Requires(context != null);
             Contract.Requires(rootState != null);
@@ -35,11 +35,11 @@ namespace RxApp.Android
 
         private readonly Context context;
 
-        private readonly Func<IObservable<IMobileModel>> rootState;
+        private readonly Func<IObservable<INavigationModel>> rootState;
 
-        private readonly Func<IMobileControllerModel, IDisposable> bindController;
+        private readonly Func<INavigationControllerModel, IDisposable> bindController;
 
-        private readonly Func<IMobileViewModel,Type> getActivityType;
+        private readonly Func<INavigationViewModel,Type> getActivityType;
 
         private readonly Subject<IRxActivity> activityCreated = new Subject<IRxActivity>();
 
@@ -47,9 +47,9 @@ namespace RxApp.Android
 
         private RxApplicationHelper(
             Context context,
-            Func<IObservable<IMobileModel>> rootState,
-            Func<IMobileControllerModel, IDisposable> bindController,
-            Func<IMobileViewModel,Type> getActivityType)
+            Func<IObservable<INavigationModel>> rootState,
+            Func<INavigationControllerModel, IDisposable> bindController,
+            Func<INavigationViewModel,Type> getActivityType)
         {
             this.context = context;
             this.rootState = rootState;
@@ -86,7 +86,7 @@ namespace RxApp.Android
         {
             Log.Debug("RxApp", "Starting application: " + this.context.ApplicationInfo.ClassName);
 
-            var navStack = NavigationStack<IMobileModel>.Create(Observable.MainThreadScheduler);
+            var navStack = NavigationStack<INavigationModel>.Create(Observable.MainThreadScheduler);
 
             var activities = new Dictionary<object, IRxActivity> ();
 
@@ -102,9 +102,9 @@ namespace RxApp.Android
 
             // This is essentially an async lock. This code is single threaded so using a bool is ok.
             var canCreateActivity = RxProperty.Create(true);
-            IMobileViewModel currentModel = null;
+            INavigationViewModel currentModel = null;
 
-            Action<IMobileViewModel> createActivity = model =>
+            Action<INavigationViewModel> createActivity = model =>
                 {
                     var viewType = getActivityType(model);
                     var intent = new Intent(context, viewType).SetFlags(ActivityFlags.NewTask);
@@ -116,7 +116,7 @@ namespace RxApp.Android
                     
             subscription = Disposable.Compose(
                 RxObservable
-                    .FromEventPattern<NotifyNavigationStackChangedEventArgs<IMobileModel>>(navStack, "NavigationStackChanged")
+                    .FromEventPattern<NotifyNavigationStackChangedEventArgs<INavigationModel>>(navStack, "NavigationStackChanged")
                     .Delay(e => canCreateActivity.Where(x => x))
                     .Subscribe(e =>
                         {
@@ -198,11 +198,11 @@ namespace RxApp.Android
             helper = RxApplicationHelper.Create(this.ApplicationContext, this.RootState, this.BindController, this.GetActivityType);
         }
 
-        public abstract IObservable<IMobileModel> RootState();
+        public abstract IObservable<INavigationModel> RootState();
 
-        public abstract Type GetActivityType(IMobileViewModel model);
+        public abstract Type GetActivityType(INavigationViewModel model);
 
-        public abstract IDisposable BindController(object model);
+        public abstract IDisposable BindController(INavigationControllerModel model);
 
         public override void OnTerminate()
         {

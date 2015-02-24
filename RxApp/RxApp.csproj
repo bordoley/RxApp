@@ -33,13 +33,13 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Stack.cs" />
     <Compile Include="NavigationStack.cs" />
-    <Compile Include="MobileModel.cs" />
     <Compile Include="RxCommand.cs" />
     <Compile Include="RxProperty.cs" />
     <Compile Include="Interfaces.cs" />
     <Compile Include="Reflection.cs" />
     <Compile Include="RxExtensions.cs" />
     <Compile Include="Activation.cs" />
+    <Compile Include="NavigationModel.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
   <ItemGroup>

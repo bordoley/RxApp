@@ -15,7 +15,7 @@ namespace RxApp.Android
     }
 
     public interface IRxActivity<TViewModel> : IRxActivity, IViewFor<TViewModel>
-        where TViewModel: IMobileViewModel
+        where TViewModel: INavigationViewModel
     {
     }
 }

@@ -16,24 +16,24 @@ namespace RxApp.iOS
     public sealed class RxUIApplicationDelegateHelper
     {
         public static RxUIApplicationDelegateHelper Create(
-            IObservable<IMobileModel> rootState,
-            Func<IMobileControllerModel, IDisposable> bindController,
-            Func<IMobileViewModel, UIViewController> provideView)
+            IObservable<INavigationModel> rootState,
+            Func<INavigationControllerModel, IDisposable> bindController,
+            Func<INavigationViewModel, UIViewController> provideView)
         {
             return new RxUIApplicationDelegateHelper(rootState, bindController, provideView);
         }
 
-        private readonly NavigationStack<IMobileModel> navStack = NavigationStack<IMobileModel>.Create(Observable.MainThreadScheduler);
-        private readonly IObservable<IMobileModel> rootState;
-        private readonly Func<IMobileControllerModel, IDisposable> bindController;
-        private readonly Func<IMobileViewModel, UIViewController> provideView;
+        private readonly NavigationStack<INavigationModel> navStack = NavigationStack<INavigationModel>.Create(Observable.MainThreadScheduler);
+        private readonly IObservable<INavigationModel> rootState;
+        private readonly Func<INavigationControllerModel, IDisposable> bindController;
+        private readonly Func<INavigationViewModel, UIViewController> provideView;
 
         private IDisposable subscription;
 
         private RxUIApplicationDelegateHelper(
-            IObservable<IMobileModel> rootState,
-            Func<IMobileControllerModel, IDisposable> bindController,
-            Func<IMobileViewModel, UIViewController> provideView)
+            IObservable<INavigationModel> rootState,
+            Func<INavigationControllerModel, IDisposable> bindController,
+            Func<INavigationViewModel, UIViewController> provideView)
         {
             this.rootState = rootState;
             this.bindController = bindController;
@@ -47,8 +47,8 @@ namespace RxApp.iOS
 
             subscription = Disposable.Compose(
                 RxObservable
-                    .FromEventPattern<NotifyNavigationStackChangedEventArgs<IMobileModel>>(navStack, "NavigationStackChanged")
-                    .Subscribe((EventPattern<NotifyNavigationStackChangedEventArgs<IMobileModel>> e) =>
+                    .FromEventPattern<NotifyNavigationStackChangedEventArgs<INavigationModel>>(navStack, "NavigationStackChanged")
+                    .Subscribe((EventPattern<NotifyNavigationStackChangedEventArgs<INavigationModel>> e) =>
                     {
                         var newHead = e.EventArgs.NewHead;
                         var removed = e.EventArgs.Removed;
@@ -91,11 +91,11 @@ namespace RxApp.iOS
     internal class BufferedNavigationController : UINavigationController
     {
         private readonly Queue<Action> actions = new Queue<Action>();
-        private readonly NavigationStack<IMobileModel> navStack;
+        private readonly NavigationStack<INavigationModel> navStack;
 
         private bool transitioning = false;
 
-        public BufferedNavigationController(NavigationStack<IMobileModel> navStack): base()
+        public BufferedNavigationController(NavigationStack<INavigationModel> navStack): base()
         {
             this.navStack = navStack;
             this.WeakDelegate = this;

@@ -13,7 +13,7 @@ using RxObservable = System.Reactive.Linq.Observable;
 namespace RxApp
 {
     internal sealed class NotifyNavigationStackChangedEventArgs<T> : EventArgs
-        where T: INavigableModel<T>
+        where T: INavigationStackControllerModel<T>
     {
         public static NotifyNavigationStackChangedEventArgs<T> Create(T newHead, T oldHead, IEnumerable<T> removed)
         {
@@ -58,7 +58,7 @@ namespace RxApp
     }
       
     internal sealed class NavigationStack<T> : IEnumerable<T>
-        where T: class, INavigableModel<T>
+        where T: class, INavigationStackControllerModel<T>
     {
         public static NavigationStack<T> Create (IScheduler mainThreadScheduler)
         {
@@ -173,7 +173,7 @@ namespace RxApp
         public static IDisposable BindTo<T>(
                 this NavigationStack<T> This,  
                 Func<T, IDisposable> createBinding)
-            where T : class, INavigableModel<T>
+            where T : class, INavigationStackControllerModel<T>
         {
             Contract.Requires(This != null);
             Contract.Requires(createBinding != null);
@@ -184,7 +184,7 @@ namespace RxApp
         }
 
         private sealed class NavigationStackBinding<T> : IDisposable
-            where T : class, INavigableModel<T>
+            where T : class, INavigationStackControllerModel<T>
         {
             private readonly NavigationStack<T> navStack;
             private readonly Func<T, IDisposable> createBinding;

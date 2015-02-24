@@ -5,17 +5,17 @@ using System.Windows.Input;
 
 namespace RxApp.Example
 {   
-    public interface IMainViewModel : IMobileViewModel
+    public interface IMainViewModel : INavigationViewModel
     {
         IRxCommand OpenPage { get; }
     }
 
-    public interface IMainControllerModel : IMobileControllerModel
+    public interface IMainControllerModel : INavigationControllerModel
     {
         IObservable<Unit> OpenPage { get; }
     }
 
-    public class MainModel : MobileModel, IMainViewModel, IMainControllerModel
+    public class MainModel : NavigationModel, IMainViewModel, IMainControllerModel
     {
         private readonly IRxCommand openPage = RxCommand.Create();
 
