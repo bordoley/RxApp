@@ -16,24 +16,24 @@ namespace RxApp.iOS
     public sealed class RxUIApplicationDelegateHelper
     {
         public static RxUIApplicationDelegateHelper Create(
-            IObservable<INavigationModel> rootState,
-            Func<object, IDisposable> bindController,
-            Func<object, UIViewController> provideView)
+            IObservable<IMobileModel> rootState,
+            Func<IMobileControllerModel, IDisposable> bindController,
+            Func<IMobileViewModel, UIViewController> provideView)
         {
             return new RxUIApplicationDelegateHelper(rootState, bindController, provideView);
         }
 
-        private readonly NavigationStack navStack = NavigationStack.Create(Observable.MainThreadScheduler);
-        private readonly IObservable<INavigationModel> rootState;
-        private readonly Func<object, IDisposable> bindController;
-        private readonly Func<object, UIViewController> provideView;
+        private readonly NavigationStack<IMobileModel> navStack = NavigationStack<IMobileModel>.Create(Observable.MainThreadScheduler);
+        private readonly IObservable<IMobileModel> rootState;
+        private readonly Func<IMobileControllerModel, IDisposable> bindController;
+        private readonly Func<IMobileViewModel, UIViewController> provideView;
 
         private IDisposable subscription;
 
         private RxUIApplicationDelegateHelper(
-            IObservable<INavigationModel> rootState,
-            Func<object, IDisposable> bindController,
-            Func<object, UIViewController> provideView)
+            IObservable<IMobileModel> rootState,
+            Func<IMobileControllerModel, IDisposable> bindController,
+            Func<IMobileViewModel, UIViewController> provideView)
         {
             this.rootState = rootState;
             this.bindController = bindController;
@@ -47,8 +47,8 @@ namespace RxApp.iOS
 
             subscription = Disposable.Compose(
                 RxObservable
-                    .FromEventPattern<NotifyNavigationStackChangedEventArgs>(navStack, "NavigationStackChanged")
-                    .Subscribe((EventPattern<NotifyNavigationStackChangedEventArgs> e) =>
+                    .FromEventPattern<NotifyNavigationStackChangedEventArgs<IMobileModel>>(navStack, "NavigationStackChanged")
+                    .Subscribe((EventPattern<NotifyNavigationStackChangedEventArgs<IMobileModel>> e) =>
                     {
                         var newHead = e.EventArgs.NewHead;
                         var oldHead = e.EventArgs.OldHead;
@@ -75,7 +75,7 @@ namespace RxApp.iOS
                         }
                     }),
 
-                navStack.BindTo(this.bindController),
+                navStack.BindTo(x => this.bindController(x)),
                 rootState.ObserveOnMainThread().Subscribe(navStack.SetRoot)
             );
 
@@ -96,11 +96,11 @@ namespace RxApp.iOS
     internal class BufferedNavigationController : UINavigationController
     {
         private readonly Queue<Action> actions = new Queue<Action>();
-        private readonly NavigationStack navStack;
+        private readonly NavigationStack<IMobileModel> navStack;
 
         private bool transitioning = false;
 
-        public BufferedNavigationController(NavigationStack navStack): base()
+        public BufferedNavigationController(NavigationStack<IMobileModel> navStack): base()
         {
             this.navStack = navStack;
             this.WeakDelegate = this;
@@ -110,7 +110,8 @@ namespace RxApp.iOS
         {
             this.actions.Enqueue(() => 
                 {
-                    this.navStack.Select(x => x.Back).First().Execute();
+                    // FIXME: This cast is pretty ugly. Works in practice, but fragile.
+                    this.navStack.Select(x => ((INavigationViewModel) x).Back).First().Execute();
                 });
             return base.PopViewController(animated);
         }
@@ -119,7 +120,8 @@ namespace RxApp.iOS
         {
             this.actions.Enqueue(() => 
                 {
-                    this.navStack.Select(x => x.Up).First().Execute();
+                    // FIXME: This cast is pretty ugly. Works in practice, but fragile.
+                    this.navStack.Select(x => ((INavigationViewModel) x).Up).First().Execute();
                 });
             return base.PopToRootViewController(animated);
         }

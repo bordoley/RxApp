@@ -10,7 +10,7 @@ namespace RxApp.Example
 {
     public static class RxAppExampleApplicationController 
     {
-        public static IObservable<INavigationModel> RootState
+        public static IObservable<IMobileModel> RootState
         { 
             get { return RxObservable.Return(new MainModel()); }
         }

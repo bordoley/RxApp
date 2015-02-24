@@ -19,7 +19,7 @@ namespace RxApp.Example
 
         }
 
-        public override IObservable<INavigationModel> RootState()
+        public override IObservable<IMobileModel> RootState()
         { 
             return RxAppExampleApplicationController.RootState;
         }
@@ -29,7 +29,7 @@ namespace RxApp.Example
             return RxAppExampleApplicationController.Bind(model);
         }
 
-        public override Type GetActivityType(object model)
+        public override Type GetActivityType(IMobileViewModel model)
         {
             // This is a lot prettier in F# using pattern matching
             if (model is IMainViewModel)

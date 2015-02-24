@@ -21,9 +21,9 @@ namespace RxApp.Android
     {
         public static RxApplicationHelper Create(
             Context context,
-            Func<IObservable<INavigationModel>> rootState,
-            Func<object,IDisposable> bindController,
-            Func<object,Type> getActivityType) 
+            Func<IObservable<IMobileModel>> rootState,
+            Func<IMobileControllerModel,IDisposable> bindController,
+            Func<IMobileViewModel,Type> getActivityType) 
         {
             Contract.Requires(context != null);
             Contract.Requires(rootState != null);
@@ -35,11 +35,11 @@ namespace RxApp.Android
 
         private readonly Context context;
 
-        private readonly Func<IObservable<INavigationModel>> rootState;
+        private readonly Func<IObservable<IMobileModel>> rootState;
 
-        private readonly Func<object,IDisposable> bindController;
+        private readonly Func<IMobileControllerModel, IDisposable> bindController;
 
-        private readonly Func<object,Type> getActivityType;
+        private readonly Func<IMobileViewModel,Type> getActivityType;
 
         private readonly Subject<IRxActivity> activityCreated = new Subject<IRxActivity>();
 
@@ -47,9 +47,9 @@ namespace RxApp.Android
 
         private RxApplicationHelper(
             Context context,
-            Func<IObservable<INavigationModel>> rootState,
-            Func<object, IDisposable> bindController,
-            Func<object,Type> getActivityType)
+            Func<IObservable<IMobileModel>> rootState,
+            Func<IMobileControllerModel, IDisposable> bindController,
+            Func<IMobileViewModel,Type> getActivityType)
         {
             this.context = context;
             this.rootState = rootState;
@@ -86,7 +86,7 @@ namespace RxApp.Android
         {
             Log.Debug("RxApp", "Starting application: " + this.context.ApplicationInfo.ClassName);
 
-            var navStack = NavigationStack.Create(Observable.MainThreadScheduler);
+            var navStack = NavigationStack<IMobileModel>.Create(Observable.MainThreadScheduler);
 
             var activities = new Dictionary<object, IRxActivity> ();
 
@@ -102,9 +102,9 @@ namespace RxApp.Android
 
             // This is essentially an async lock. This code is single threaded so using a bool is ok.
             var canCreateActivity = RxProperty.Create(true);
-            object currentModel = null;
+            IMobileViewModel currentModel = null;
 
-            Action<object> createActivity = model =>
+            Action<IMobileViewModel> createActivity = model =>
                 {
                     var viewType = getActivityType(model);
                     var intent = new Intent(context, viewType).SetFlags(ActivityFlags.NewTask);
@@ -116,7 +116,7 @@ namespace RxApp.Android
                     
             subscription = Disposable.Compose(
                 RxObservable
-                    .FromEventPattern<NotifyNavigationStackChangedEventArgs>(navStack, "NavigationStackChanged")
+                    .FromEventPattern<NotifyNavigationStackChangedEventArgs<IMobileModel>>(navStack, "NavigationStackChanged")
                     .Delay(e => canCreateActivity.Where(x => x))
                     .Subscribe(e =>
                         {
@@ -176,7 +176,7 @@ namespace RxApp.Android
                             canCreateActivity.Value = true;
                         }),
 
-                navStack.BindTo(bindController),
+                navStack.BindTo(x => bindController(x)),
                     
                 rootState().BindTo(navStack.SetRoot)
             );
@@ -198,9 +198,9 @@ namespace RxApp.Android
             helper = RxApplicationHelper.Create(this.ApplicationContext, this.RootState, this.BindController, this.GetActivityType);
         }
 
-        public abstract IObservable<INavigationModel> RootState();
+        public abstract IObservable<IMobileModel> RootState();
 
-        public abstract Type GetActivityType(object model);
+        public abstract Type GetActivityType(IMobileViewModel model);
 
         public abstract IDisposable BindController(object model);
 

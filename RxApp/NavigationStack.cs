@@ -12,26 +12,27 @@ using RxObservable = System.Reactive.Linq.Observable;
 
 namespace RxApp
 {
-    internal sealed class NotifyNavigationStackChangedEventArgs : EventArgs
+    internal sealed class NotifyNavigationStackChangedEventArgs<T> : EventArgs
+        where T: INavigableModel<T>
     {
-        public static NotifyNavigationStackChangedEventArgs Create(INavigationModel newHead, INavigationModel oldHead, IEnumerable<INavigationModel> removed)
+        public static NotifyNavigationStackChangedEventArgs<T> Create(T newHead, T oldHead, IEnumerable<T> removed)
         {
             Contract.Requires(removed != null);
-            return new NotifyNavigationStackChangedEventArgs(newHead, oldHead, removed);
+            return new NotifyNavigationStackChangedEventArgs<T>(newHead, oldHead, removed);
         }
 
-        private readonly INavigationModel newHead;
-        private readonly INavigationModel oldHead;
-        private readonly IEnumerable<INavigationModel> removed;
+        private readonly T newHead;
+        private readonly T oldHead;
+        private readonly IEnumerable<T> removed;
 
-        private  NotifyNavigationStackChangedEventArgs(INavigationModel newHead, INavigationModel oldHead, IEnumerable<INavigationModel> removed)
+        private  NotifyNavigationStackChangedEventArgs(T newHead, T oldHead, IEnumerable<T> removed)
         {
             this.newHead = newHead;
             this.oldHead = oldHead;
             this.removed = removed;
         }
 
-        public INavigationModel NewHead
+        public T NewHead
         {
             get
             {
@@ -39,7 +40,7 @@ namespace RxApp
             }
         }
 
-        public INavigationModel OldHead
+        public T OldHead
         {
             get
             {
@@ -47,7 +48,7 @@ namespace RxApp
             }
         }
 
-        public IEnumerable<INavigationModel> Removed
+        public IEnumerable<T> Removed
         {
             get
             {
@@ -56,18 +57,19 @@ namespace RxApp
         }
     }
       
-    internal sealed class NavigationStack : IEnumerable<INavigationModel>
+    internal sealed class NavigationStack<T> : IEnumerable<T>
+        where T: class, INavigableModel<T>
     {
-        public static NavigationStack Create (IScheduler mainThreadScheduler)
+        public static NavigationStack<T> Create (IScheduler mainThreadScheduler)
         {
             Contract.Requires(mainThreadScheduler != null);
 
-            return new NavigationStack(mainThreadScheduler);
+            return new NavigationStack<T>(mainThreadScheduler);
         }
 
         private readonly IScheduler mainThreadScheduler;
 
-        private IStack<INavigationModel> navStack = Stack<INavigationModel>.Empty;
+        private IStack<T> navStack = Stack<T>.Empty;
         private IDisposable subscription = null;
 
         private NavigationStack(IScheduler mainThreadScheduler)
@@ -75,9 +77,9 @@ namespace RxApp
             this.mainThreadScheduler = mainThreadScheduler;
         }
 
-        public event EventHandler<NotifyNavigationStackChangedEventArgs> NavigationStackChanged = (o,e) => {};
+        public event EventHandler<NotifyNavigationStackChangedEventArgs<T>> NavigationStackChanged = (o,e) => {};
 
-        public IEnumerator<INavigationModel> GetEnumerator()
+        public IEnumerator<T> GetEnumerator()
         {
             return this.navStack.GetEnumerator();
         }
@@ -98,15 +100,15 @@ namespace RxApp
 
                 if (newHead != oldHead)
                 { 
-                    Update(Stack<INavigationModel>.Empty.Push(reversed.Head));
+                    Update(Stack<T>.Empty.Push(reversed.Head));
                     NavigationStackChanged(
                         this, 
-                        NotifyNavigationStackChangedEventArgs.Create(newHead, oldHead, removed));
+                        NotifyNavigationStackChangedEventArgs<T>.Create(newHead, oldHead, removed));
                 }
             }              
         }
 
-        private void Push(INavigationModel model)
+        private void Push(T model)
         {
             Contract.Requires(model != null);
 
@@ -114,7 +116,7 @@ namespace RxApp
             Update(navStack.Push(model));
             NavigationStackChanged(
                 this, 
-                NotifyNavigationStackChangedEventArgs.Create(model, oldHead, Stack<INavigationModel>.Empty));
+                NotifyNavigationStackChangedEventArgs<T>.Create(model, oldHead, Stack<T>.Empty));
         }
 
         private void Pop()
@@ -124,23 +126,23 @@ namespace RxApp
             var newHead = navStack.Head;
             NavigationStackChanged(
                 this, 
-                NotifyNavigationStackChangedEventArgs.Create(newHead, oldHead, Stack<INavigationModel>.Empty.Push(oldHead)));
+                NotifyNavigationStackChangedEventArgs<T>.Create(newHead, oldHead, Stack<T>.Empty.Push(oldHead)));
         }
 
-        public void SetRoot(INavigationModel model)
+        public void SetRoot(T model)
         {
             Contract.Requires(model != null);
 
             var oldHead = navStack.Head;
             var removed = navStack;
 
-            Update(Stack<INavigationModel>.Empty.Push(model));
+            Update(Stack<T>.Empty.Push(model));
             NavigationStackChanged(
                 this, 
-                NotifyNavigationStackChangedEventArgs.Create(model, oldHead, removed));
+                NotifyNavigationStackChangedEventArgs<T>.Create(model, oldHead, removed));
         }
 
-        private void Update(IStack<INavigationModel> newStack)
+        private void Update(IStack<T> newStack)
         {
             navStack = newStack;
 
@@ -153,12 +155,12 @@ namespace RxApp
 
             if (!navStack.IsEmpty())
             {   
-                INavigationModel view = navStack.First();
+                T model = navStack.First();
 
                 newSubscription = Disposable.Compose(
-                    view.Back.FirstAsync().ObserveOn(mainThreadScheduler).Subscribe(_ => this.Pop()),
-                    view.Up.FirstAsync().ObserveOn(mainThreadScheduler).Subscribe(_ => this.GotoRoot()),
-                    view.Open.FirstAsync().ObserveOn(mainThreadScheduler).Subscribe(x => this.Push(x))
+                    model.Back.FirstAsync().ObserveOn(mainThreadScheduler).Subscribe(_ => this.Pop()),
+                    model.Up.FirstAsync().ObserveOn(mainThreadScheduler).Subscribe(_ => this.GotoRoot()),
+                    model.Open.FirstAsync().ObserveOn(mainThreadScheduler).Subscribe(x => this.Push(x))
                 );
             }
 
@@ -168,29 +170,31 @@ namespace RxApp
 
     internal static class NavigationStackExtensions 
     {
-        public static IDisposable BindTo(
-            this NavigationStack This,  
-            Func<object, IDisposable> createBinding)
+        public static IDisposable BindTo<T>(
+                this NavigationStack<T> This,  
+                Func<T, IDisposable> createBinding)
+            where T : class, INavigableModel<T>
         {
             Contract.Requires(This != null);
             Contract.Requires(createBinding != null);
 
-            var retval = new NavigationStackBinding(This, createBinding);
+            var retval = new NavigationStackBinding<T>(This, createBinding);
             retval.Initialize();
             return retval;
         }
 
-        private sealed class NavigationStackBinding : IDisposable
+        private sealed class NavigationStackBinding<T> : IDisposable
+            where T : class, INavigableModel<T>
         {
-            private readonly NavigationStack navStack;
-            private readonly Func<object, IDisposable> createBinding;
+            private readonly NavigationStack<T> navStack;
+            private readonly Func<T, IDisposable> createBinding;
             private readonly IDictionary<object, IDisposable> bindings = new Dictionary<object, IDisposable>();
 
             private IDisposable navStateChangedSubscription = null;
 
             internal NavigationStackBinding(
-                NavigationStack navStack,  
-                Func<object, IDisposable> provideController)
+                NavigationStack<T> navStack,  
+                Func<T, IDisposable> provideController)
             {
                 this.navStack = navStack;
                 this.createBinding = provideController;
@@ -203,7 +207,7 @@ namespace RxApp
                     throw new NotSupportedException("Initialize can only be called once");
                 }
 
-                navStateChangedSubscription = RxObservable.FromEventPattern<NotifyNavigationStackChangedEventArgs>(navStack, "NavigationStackChanged").Subscribe(e =>
+                navStateChangedSubscription = RxObservable.FromEventPattern<NotifyNavigationStackChangedEventArgs<T>>(navStack, "NavigationStackChanged").Subscribe(e =>
                     {
                         var head = e.EventArgs.NewHead;
                         var removed = e.EventArgs.Removed;

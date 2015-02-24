@@ -3,12 +3,28 @@ using System.Collections.Generic;
 using System.Reactive;
 
 namespace RxApp
-{
-    public interface INavigationModel
+{    
+    public interface INavigationViewModel
     {
         IRxCommand Back { get; }
         IRxCommand Up { get; }
-        IRxCommand<INavigationModel> Open { get; }
+    }
+
+    public interface INavigationControllerModel<T>
+        where T : INavigableModel<T>
+    {
+        IRxCommand Back { get; }
+        IRxCommand Up { get; }
+        IRxCommand<T> Open { get; }
+    }
+
+    // Observed by the navigation stack
+    public interface INavigableModel<T>
+        where T : INavigableModel<T>
+    {
+        IObservable<Unit> Back { get; }
+        IObservable<Unit> Up { get; }
+        IObservable<T> Open { get; }
     }
       
     public interface IActivationViewModel 

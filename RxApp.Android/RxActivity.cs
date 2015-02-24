@@ -17,7 +17,7 @@ using AndroidResource = Android.Resource;
 namespace RxApp.Android
 {   
     public sealed class RxActivityHelper<TViewModel>
-        where TViewModel: INavigationModel, IActivationViewModel
+        where TViewModel: IMobileViewModel
     {
         public static RxActivityHelper<TViewModel> Create(IRxActivity activity)
         {
@@ -86,7 +86,7 @@ namespace RxApp.Android
     }
         
     public abstract class RxActivity<TViewModel> : Activity, IRxActivity<TViewModel>
-        where TViewModel : INavigationModel, IActivationViewModel
+        where TViewModel : IMobileViewModel
     {
         private readonly RxActivityHelper<TViewModel> helper;
 
@@ -141,7 +141,7 @@ namespace RxApp.Android
     }
 
     public abstract class RxFragmentActivity<TViewModel> : FragmentActivity, IRxActivity<TViewModel>
-        where TViewModel : INavigationModel, IActivationViewModel
+        where TViewModel : IMobileViewModel
     {
         private readonly RxActivityHelper<TViewModel> helper;
 
@@ -196,7 +196,7 @@ namespace RxApp.Android
     }
 
     public abstract class RxActionBarActivity<TViewModel> : ActionBarActivity, IRxActivity<TViewModel>
-        where TViewModel : INavigationModel, IActivationViewModel
+        where TViewModel : IMobileViewModel
     {
         private readonly RxActivityHelper<TViewModel> helper;
 
