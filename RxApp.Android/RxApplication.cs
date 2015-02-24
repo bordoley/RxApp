@@ -22,7 +22,7 @@ namespace RxApp.Android
         public static RxApplicationHelper Create(
             Context context,
             Func<IObservable<INavigationModel>> rootState,
-            Func<object, IDisposable> bindController,
+            Func<object,IDisposable> bindController,
             Func<object,Type> getActivityType) 
         {
             Contract.Requires(context != null);
@@ -33,15 +33,11 @@ namespace RxApp.Android
             return new RxApplicationHelper(context, rootState, bindController, getActivityType);
         }
 
-        private readonly IDictionary<object, IRxActivity> activities = new Dictionary<object, IRxActivity> ();
-
-        private readonly NavigationStack navStack = NavigationStack.Create(Observable.MainThreadScheduler);
-
         private readonly Context context;
 
         private readonly Func<IObservable<INavigationModel>> rootState;
 
-        private readonly Func<object, IDisposable> bindController;
+        private readonly Func<object,IDisposable> bindController;
 
         private readonly Func<object,Type> getActivityType;
 
@@ -88,54 +84,101 @@ namespace RxApp.Android
 
         private void Start()
         {
-            var navStackChanged = 
-                RxObservable.FromEventPattern<NotifyNavigationStackChangedEventArgs>(navStack, "NavigationStackChanged");
+            Log.Debug("RxApp", "Starting application: " + this.context.ApplicationInfo.ClassName);
 
+            var navStack = NavigationStack.Create(Observable.MainThreadScheduler);
+
+            var activities = new Dictionary<object, IRxActivity> ();
+
+            Action<IEnumerable<object>> finishRemovedActivities = removed =>
+                {
+                    foreach (var model in removed)
+                    {
+                        IRxActivity activity = activities[model];  
+                        activities.Remove(model);
+                        activity.Finish();
+                    }   
+                };
+
+            // This is essentially an async lock. This code is single threaded so using a bool is ok.
+            var canCreateActivity = RxProperty.Create(true);
+            object currentModel = null;
+
+            Action<object> createActivity = model =>
+                {
+                    var viewType = getActivityType(model);
+                    var intent = new Intent(context, viewType).SetFlags(ActivityFlags.NewTask);
+
+                    canCreateActivity.Value = false;
+                    currentModel = model;
+                    context.StartActivity(intent);
+                };
+                    
             subscription = Disposable.Compose(
-                navStackChanged
-                    .Do(e =>
+                RxObservable
+                    .FromEventPattern<NotifyNavigationStackChangedEventArgs>(navStack, "NavigationStackChanged")
+                    .Delay(e => canCreateActivity.Where(x => x))
+                    .Subscribe(e =>
                         {
                             var newHead = e.EventArgs.NewHead;
                             var oldHead = e.EventArgs.OldHead;
                             var removed = e.EventArgs.Removed;
 
-                            if (oldHead != null && newHead == null)
+                            if (newHead == null)
                             {
-                                // Post the call to stop on the event loop to avoid deadlocking.
+                                // Back button clicked clearing the model stack
+                                currentModel = null;
+                                finishRemovedActivities(removed);
+
+                                // Can't dispose the outer subscription from within its own callback, 
+                                // so post the call onto the sync context
                                 SynchronizationContext.Current.Post(_ => this.Stop(), null);
                             } 
-                            else if (newHead != null && !activities.ContainsKey(newHead))
+                            else if (activities.ContainsKey(newHead))
                             {
-                                var viewType = getActivityType(newHead);
-                                var intent = new Intent(context, viewType).SetFlags(ActivityFlags.NewTask);
-                                context.StartActivity(intent);
+                                // Back button clicked to a previous model in the stack.
+                                // Android still maintains the visual stack and will display
+                                // the correct view once we close all the other activities 
+                                // that have been popped from the model stack.
+                                currentModel = newHead;
+                                finishRemovedActivities(removed); 
                             }
-
-                            foreach (var model in removed)
+                            else if (oldHead == null)
                             {
-                                IRxActivity activity = activities[model];
-                                activities.Remove(model);
-                                activity.Finish();
-                            }     
-                        })
-                    .Select(x => x.EventArgs.NewHead)
-                    .Where(x => x != null)
-                    .SelectMany(x => 
-                        this.activityCreated
-                            .Select(y => Tuple.Create(x, y))
-                            .TakeUntil(navStackChanged))
-                    .Subscribe(x => 
-                        {
-                            var activity = x.Item2;
-                            var model = x.Item1;
+                                // Special case application start up since, we want to start the first application
+                                // activity immediately to avoid any weird visual glitches when transitioning from
+                                // the splash screen to the first activity of the app (which is sometimes an empty activity).
+                                Log.Debug("RxApp", "Starting activity with model: " + newHead.GetType());
 
-                            activity.ViewModel = model;
-                            activities[model] = activity;
+                                createActivity(newHead);
+                            }
+                            else
+                            {
+                                // Force the action to be placed on the event loop in order to ensure that each started activity
+                                // resumes with the correct model as current model.
+                                SynchronizationContext.Current.Post(_ =>
+                                    {
+                                        Log.Debug("RxApp", "Starting activity with model: " + newHead.GetType());
+
+                                        createActivity(newHead);
+                                        finishRemovedActivities(removed);   
+                                    }, null);
+                            }
+                        }),
+
+                this.activityCreated
+                    .Subscribe(activity => 
+                        {
+                            Log.Debug("RxApp", "Activity created of type: " + activity.GetType() + ", with model of type: " + currentModel.GetType());
+
+                            activity.ViewModel = currentModel;
+                            activities[ currentModel] = activity;
+                            canCreateActivity.Value = true;
                         }),
 
                 navStack.BindTo(bindController),
                     
-                rootState().ObserveOnMainThread().Subscribe(navStack.SetRoot)
+                rootState().BindTo(navStack.SetRoot)
             );
         }
 

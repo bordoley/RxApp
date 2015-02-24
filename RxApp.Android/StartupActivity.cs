@@ -4,6 +4,7 @@ using System;
 using System.Threading.Tasks;
 
 using Android.Util;
+using Android.Views;
 
 namespace RxApp.Android
 {
@@ -38,6 +39,21 @@ namespace RxApp.Android
         { 
             var app = (IRxApplication) this.Application;
             app.OnActivityCreated(this);
+        }
+
+        public override void OnBackPressed()
+        {
+            // Swallow back button clicks.
+
+            // Prevent corner cases such as the user slamming
+            // the back button on start which could lead to this activity being finished prior
+            // to the application state being stabilized.
+        }
+
+        public override bool OnOptionsItemSelected(IMenuItem item)
+        {
+            // Swallow up button clicks
+            return true;
         }
     }
 }
