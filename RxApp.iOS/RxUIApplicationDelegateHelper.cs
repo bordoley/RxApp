@@ -51,14 +51,9 @@ namespace RxApp.iOS
                     .Subscribe((EventPattern<NotifyNavigationStackChangedEventArgs<IMobileModel>> e) =>
                     {
                         var newHead = e.EventArgs.NewHead;
-                        var oldHead = e.EventArgs.OldHead;
                         var removed = e.EventArgs.Removed;
 
-                        if (oldHead != null && newHead == null)
-                        {
-                            // On iOS this case can't really happen
-                        }
-                        else if (newHead != null && !views.ContainsKey(newHead))
+                        if (!views.ContainsKey(newHead))
                         {
                             var view = provideView(newHead);
                             views[newHead] = view;
