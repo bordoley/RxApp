@@ -4,6 +4,7 @@ using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 
+using RxDisposable = System.Reactive.Disposables.Disposable;
 using RxObservable = System.Reactive.Linq.Observable;
 
 namespace RxApp
@@ -89,24 +90,21 @@ namespace RxApp
     {
         public static IDisposable Compose(IDisposable first, IDisposable second)
         {
-            var result = new CompositeDisposable();
-            result.Add(first);
-            result.Add(second);
-            return result;
+            return RxDisposable.Create(() => 
+                {
+                    first.Dispose();
+                    second.Dispose();
+                });
         }
 
         public static IDisposable Compose(IDisposable first, IDisposable second, params IDisposable[] disposables)
         {
-            var result = new CompositeDisposable();
-            result.Add(first);
-            result.Add(second);
-
-            foreach (var disposable in disposables)
-            {
-                result.Add(disposable);
-            }
-
-            return result;
+            return RxDisposable.Create(() => 
+                {
+                    first.Dispose();
+                    second.Dispose();
+                    foreach (var disposable in disposables) { disposable.Dispose(); }
+                });
         }
     }
 }
