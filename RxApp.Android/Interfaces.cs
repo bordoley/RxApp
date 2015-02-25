@@ -5,7 +5,7 @@ using Android.Views;
 
 namespace RxApp.Android
 {
-    public interface IRxApplication : IAndroidApplication
+    public interface IRxApplication : IApplication
     {
         void OnActivityCreated(IRxActivity activity);
     }

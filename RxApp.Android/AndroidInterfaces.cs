@@ -4,7 +4,7 @@ using Android.Views;
 
 namespace RxApp.Android
 {  
-    public interface IAndroidApplication 
+    public interface IApplication 
     {
         Context ApplicationContext { get; }
 
