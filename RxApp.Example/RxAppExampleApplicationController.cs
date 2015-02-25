@@ -21,14 +21,9 @@ namespace RxApp.Example
             if (model is IMainControllerModel)
             {
 
-                Func<IDisposable> service = () =>
-                {
-                    var ret = new MainControllerService((IMainControllerModel)model);
-                    ret.Init();
-                    return ret;
-                };
+                Func<IDisposable> service = () => MainControllerService.Create((IMainControllerModel) model);
 
-                return (model as IActivationControllerModel).BindTo(service);
+                return model.BindTo(service);
             }
             else
             {
