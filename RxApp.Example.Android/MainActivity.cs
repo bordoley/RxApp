@@ -35,9 +35,9 @@ namespace RxApp.Example
             SupportActionBar.SetHomeButtonEnabled (true);
         }
 
-        protected override void OnResume()
+        protected override void OnStart()
         {
-            base.OnResume();
+            base.OnStart();
 
             var subscription = new CompositeDisposable();
             subscription.Add(this.ViewModel.OpenPage.Bind(button));
@@ -45,10 +45,10 @@ namespace RxApp.Example
             this.subscription = subscription;
         }
 
-        protected override void OnPause()
+        protected override void OnStop()
         {
             subscription.Dispose();
-            base.OnPause();
+            base.OnStop();
         }
     }
 }
