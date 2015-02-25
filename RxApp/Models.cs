@@ -41,16 +41,16 @@ namespace RxApp
 
         public IRxCommand Back { get { return back; } }
 
-        IObservable<Unit> INavigationStackControllerModel<INavigationModel>.Back { get { return back; } }
+        IObservable<Unit> INavigationStackModel<INavigationModel>.Back { get { return back; } }
 
 
         public IRxCommand Up { get { return up; } }
 
-        IObservable<Unit> INavigationStackControllerModel<INavigationModel>.Up { get { return up; } }
+        IObservable<Unit> INavigationStackModel<INavigationModel>.Up { get { return up; } }
 
 
         public IRxCommand<INavigationModel> Open { get { return open; } }
 
-        IObservable<INavigationModel> INavigationStackControllerModel<INavigationModel>.Open { get { return open; } }
+        IObservable<INavigationModel> INavigationStackModel<INavigationModel>.Open { get { return open; } }
     }
 }

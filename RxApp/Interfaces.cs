@@ -16,17 +16,16 @@ namespace RxApp
         IRxCommand Up { get; }
         IRxCommand<INavigationModel> Open { get; }
     }
-        
-    // FIMXe: Maybe just INavigationStackModel?
-    public interface INavigationStackControllerModel<T>
-        where T : INavigationStackControllerModel<T>
+
+    public interface INavigationStackModel<T>
+        where T : INavigationStackModel<T>
     {
         IObservable<Unit> Back { get; }
         IObservable<Unit> Up { get; }
         IObservable<T> Open { get; }
     }
 
-    public interface INavigationModel : INavigationViewModel, INavigationControllerModel, INavigationStackControllerModel<INavigationModel>
+    public interface INavigationModel : INavigationViewModel, INavigationControllerModel, INavigationStackModel<INavigationModel>
     {
     }
 
