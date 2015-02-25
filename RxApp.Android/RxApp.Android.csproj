@@ -64,6 +64,7 @@
     <Compile Include="RxApplication.cs" />
     <Compile Include="Bindings.cs" />
     <Compile Include="Observable.cs" />
+    <Compile Include="RxFragment.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\RxApp\RxApp.csproj">
