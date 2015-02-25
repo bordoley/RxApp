@@ -4,22 +4,14 @@ using System.Collections.Generic;
 // A trivial cons list implementation
 namespace RxApp
 {
-    internal interface IStack<T> : IEnumerable<T> 
-    {
-        T Head { get; }
-        IStack<T> Tail { get; }
-
-        IStack<T> Push(T element);
-    }
-
     internal static class Stack
     {
-        public static bool IsEmpty<T>(this IStack<T> stack)
+        public static bool IsEmpty<T>(this Stack<T> stack)
         {
             return (stack.Head == null) && (stack.Tail == null);
         }
 
-        public static IStack<T> Reverse<T>(this IStack<T> stack)
+        public static Stack<T> Reverse<T>(this Stack<T> stack)
             where T:class
         {
             var retval = Stack<T>.Empty;
@@ -31,19 +23,13 @@ namespace RxApp
         }
     }
 
-    internal static class Stack<T> where T: class
+    internal sealed class Stack<T> : IEnumerable<T>
     {
-        private static readonly IStack<T> empty = new Node(null, null);
+        private static readonly Stack<T> empty = new Stack<T>(default(T), null);
 
-        public static IStack<T> Empty
-        {
-            get
-            {
-                return empty;
-            }
-        }
-            
-        private static IEnumerator<T> Enumerate(IStack<T> stack)
+        public static Stack<T> Empty { get { return empty; } }
+
+        private static IEnumerator<T> Enumerate(Stack<T> stack)
         {
             for (;stack.Head != null; stack = stack.Tail)
             {
@@ -51,47 +37,44 @@ namespace RxApp
             }
         }
 
-        private sealed class Node : IStack<T> 
+        private readonly Stack<T> tail;
+        private readonly T head;
+
+        internal Stack(T head, Stack<T> tail)
         {
-            private readonly IStack<T> tail;
-            private readonly T head;
+            this.head = head;
+            this.tail = tail;
+        }
 
-            internal Node(T head, IStack<T> tail)
+        public T Head
+        {
+            get
             {
-                this.head = head;
-                this.tail = tail;
+                return head;
             }
+        }
 
-            public T Head
+        public Stack<T> Tail 
+        { 
+            get
             {
-                get
-                {
-                    return head;
-                }
+                return tail;
             }
+        }
 
-            public IStack<T> Tail 
-            { 
-                get
-                {
-                    return tail;
-                }
-            }
+        public Stack<T> Push(T element)
+        {
+            return new Stack<T>(element, this);
+        }
 
-            public IStack<T> Push(T element)
-            {
-                return new Node(element, this);
-            }
+        public IEnumerator<T> GetEnumerator()
+        {
+            return Enumerate(this);
+        }
 
-            public IEnumerator<T> GetEnumerator()
-            {
-                return Enumerate(this);
-            }
-
-            IEnumerator IEnumerable.GetEnumerator()
-            {
-                return this.GetEnumerator();
-            }
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return this.GetEnumerator();
         }
     }
 }

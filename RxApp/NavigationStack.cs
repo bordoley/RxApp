@@ -69,7 +69,7 @@ namespace RxApp
 
         private readonly IScheduler mainThreadScheduler;
 
-        private IStack<T> navStack = Stack<T>.Empty;
+        private Stack<T> navStack = Stack<T>.Empty;
         private IDisposable subscription = null;
 
         private NavigationStack(IScheduler mainThreadScheduler)
@@ -142,7 +142,7 @@ namespace RxApp
                 NotifyNavigationStackChangedEventArgs<T>.Create(model, oldHead, removed));
         }
 
-        private void Update(IStack<T> newStack)
+        private void Update(Stack<T> newStack)
         {
             navStack = newStack;
 
