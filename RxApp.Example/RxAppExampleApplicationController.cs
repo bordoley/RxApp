@@ -28,7 +28,7 @@ namespace RxApp.Example
                     return ret;
                 };
 
-                return (model as IActivationControllerModel).Bind(service);
+                return (model as IActivationControllerModel).BindTo(service);
             }
             else
             {

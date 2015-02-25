@@ -26,7 +26,7 @@ namespace RxApp
                 );
          
             return newExpression.Compile();
-}
+        }
     }
 }
 

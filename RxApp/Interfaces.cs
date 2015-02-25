@@ -17,6 +17,7 @@ namespace RxApp
         IRxCommand<INavigationModel> Open { get; }
     }
         
+    // FIMXe: Maybe just INavigationStackModel?
     public interface INavigationStackControllerModel<T>
         where T : INavigationStackControllerModel<T>
     {
@@ -47,6 +48,7 @@ namespace RxApp
 
     // Fixme: Not sure these should really be in core. They're sort of convenience
     // since on android and ios you can't do constructor injection sanely.
+    // FIXME: Or name make ViewModel a RxProperty?
     public interface IViewFor
     {
         object ViewModel { get; set; }

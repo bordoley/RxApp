@@ -178,36 +178,10 @@ namespace RxApp
             Contract.Requires(This != null);
             Contract.Requires(createBinding != null);
 
-            var retval = new NavigationStackBinding<T>(This, createBinding);
-            retval.Initialize();
-            return retval;
-        }
+            var bindings = new Dictionary<object, IDisposable>();
 
-        private sealed class NavigationStackBinding<T> : IDisposable
-            where T : class, INavigationStackControllerModel<T>
-        {
-            private readonly NavigationStack<T> navStack;
-            private readonly Func<T, IDisposable> createBinding;
-            private readonly IDictionary<object, IDisposable> bindings = new Dictionary<object, IDisposable>();
-
-            private IDisposable navStateChangedSubscription = null;
-
-            internal NavigationStackBinding(
-                NavigationStack<T> navStack,  
-                Func<T, IDisposable> provideController)
-            {
-                this.navStack = navStack;
-                this.createBinding = provideController;
-            }
-
-            public void Initialize()
-            {
-                if (navStateChangedSubscription != null)
-                {
-                    throw new NotSupportedException("Initialize can only be called once");
-                }
-
-                navStateChangedSubscription = RxObservable.FromEventPattern<NotifyNavigationStackChangedEventArgs<T>>(navStack, "NavigationStackChanged").Subscribe(e =>
+            var navStateChangedSubscription = 
+                RxObservable.FromEventPattern<NotifyNavigationStackChangedEventArgs<T>>(This, "NavigationStackChanged").Subscribe(e =>
                     {
                         var head = e.EventArgs.NewHead;
                         var removed = e.EventArgs.Removed;
@@ -225,19 +199,18 @@ namespace RxApp
                             bindings.Remove(model);
                         }
                     });
-            }
 
-            public void Dispose()
-            {
-                navStateChangedSubscription.Dispose();
-
-                foreach (var model in bindings.Keys)
+            return RxDisposable.Create(() =>
                 {
-                    var binding = bindings[model];
-                    binding.Dispose();
-                    bindings.Remove(model);
-                }
-            }
+                    navStateChangedSubscription.Dispose();
+
+                    foreach (var model in bindings.Keys)
+                    {
+                        var binding = bindings[model];
+                        binding.Dispose();
+                        bindings.Remove(model);
+                    }
+                });
         }
     }
 }
