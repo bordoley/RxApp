@@ -21,9 +21,7 @@ namespace RxApp.XamarinForms
         }
 
         private readonly NavigationPage navigationPage = new NavigationPage();
-        private readonly NavigationStack<INavigationModel> navStack = 
-            NavigationStack<INavigationModel>.Create(Scheduler.MainThreadScheduler);
-
+  
         private readonly IObservable<INavigationModel> rootState;
         private readonly Func<INavigationControllerModel, IDisposable> bindController;
         private readonly Func<INavigationViewModel, Page> provideView;
