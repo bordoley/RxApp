@@ -9,9 +9,9 @@ namespace RxApp
     {
         /// http://blog.abodit.com/2011/09/convert-a-property-getter-to-a-setter/
         /// Convert a lambda expression for a getter into a setter
-        public static Action<T, U> GetSetter<T,U>(Expression<Func<T, U>> expression)
+        internal static Action<T, U> GetSetter<T,U>(this Expression<Func<T, U>> This)
         {
-            var memberExpression = (MemberExpression)expression.Body;
+            var memberExpression = (MemberExpression)This.Body;
             var property = (PropertyInfo)memberExpression.Member;
             var setMethod = property.SetMethod;
          

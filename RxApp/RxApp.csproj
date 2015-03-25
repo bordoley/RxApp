@@ -37,9 +37,11 @@
     <Compile Include="RxProperty.cs" />
     <Compile Include="Interfaces.cs" />
     <Compile Include="Reflection.cs" />
-    <Compile Include="RxExtensions.cs" />
     <Compile Include="Activation.cs" />
     <Compile Include="Models.cs" />
+    <Compile Include="Bindings.cs" />
+    <Compile Include="Observable.cs" />
+    <Compile Include="Disposable.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
   <ItemGroup>

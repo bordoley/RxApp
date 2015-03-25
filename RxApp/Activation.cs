@@ -7,31 +7,31 @@ namespace RxApp
     public static class Activation
     {
         // FIXME: I think we're abusing the naming convention BindTo here
-        public static IDisposable BindTo(this IActivationControllerModel model, Func<IDisposable> provideController)
+        public static IDisposable BindTo(this IActivationControllerModel This, Func<IDisposable> provideController)
         {
-            Contract.Requires(model != null);
+            Contract.Requires(This != null);
             Contract.Requires(provideController != null);
 
             IDisposable controller = null;
 
             return Disposable.Compose(
-                model.Activate.Subscribe(_ =>  
+                This.Activate.Subscribe(_ =>  
                     {
                         if (controller == null)
                         {
-                            model.CanActivate.Value = false;
-                            controller = provideController ();
+                            This.CanActivate.Value = false;
+                            controller = provideController();
                         }
                     }),
 
-                model.Deactivate.Subscribe(_ => 
+                This.Deactivate.Subscribe(_ => 
                     {
                         if (controller != null)
                         {
                             controller.Dispose();
                         }
 
-                        model.CanActivate.Value = true;
+                        This.CanActivate.Value = true;
                         controller = null;
                     })
             );
