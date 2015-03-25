@@ -5,11 +5,9 @@ namespace RxApp.Android
 {
     public static partial class Observable
     {
-        public static IObservable<T> ObserveOnMainThread<T>(this IObservable<T> observable)
+        public static IObservable<T> ObserveOnMainThread<T>(this IObservable<T> This)
         {
-            return observable.ObserveOn(Scheduler.MainThreadScheduler);
+            return This.ObserveOn(Scheduler.MainThreadScheduler);
         }
     }
 }
-
-

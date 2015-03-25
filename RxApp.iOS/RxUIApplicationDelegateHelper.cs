@@ -41,7 +41,7 @@ namespace RxApp.iOS
 
         public bool FinishedLaunching(UIApplication app, NSDictionary options)
         {
-            var navStack = NavigationStack<INavigationModel>.Create(Observable.MainThreadScheduler);
+            var navStack = NavigationStack<INavigationModel>.Create(Scheduler.MainThreadScheduler);
             var navController = new BufferedNavigationController(navStack);
             var views = new Dictionary<INavigationViewModel, UIViewController>();
 

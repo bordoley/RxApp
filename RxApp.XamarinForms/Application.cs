@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reactive;
 using System.Reactive.Linq;
 
@@ -19,8 +20,9 @@ namespace RxApp.XamarinForms
             return new RxApplicationHelper(rootState, bindController, provideView);
         }
 
-        private readonly Page mainPage = new NavigationPage();
-        private readonly NavigationStack<INavigationModel> navStack = NavigationStack<INavigationModel>.Create(Observable.MainThreadScheduler);
+        private readonly NavigationPage navigationPage = new NavigationPage();
+        private readonly NavigationStack<INavigationModel> navStack = 
+            NavigationStack<INavigationModel>.Create(Scheduler.MainThreadScheduler);
 
         private readonly IObservable<INavigationModel> rootState;
         private readonly Func<INavigationControllerModel, IDisposable> bindController;
@@ -33,37 +35,37 @@ namespace RxApp.XamarinForms
             Func<INavigationControllerModel, IDisposable> bindController,
             Func<INavigationViewModel, Page> provideView)
         {
+            this.rootState = rootState;
+            this.bindController = bindController;
+            this.provideView = provideView;
         }
 
-        public Page MainPage { get { return mainPage; } }
+        public Page MainPage { get { return navigationPage; } }
 
         public void OnStart()
         {
-            var navStack = NavigationStack<INavigationModel>.Create(Observable.MainThreadScheduler);
-            var views = new Dictionary<INavigationViewModel, Page>();
+            var navStack = NavigationStack<INavigationModel>.Create(Scheduler.MainThreadScheduler);
 
             subscription = Disposable.Compose(
                 RxObservable
                     .FromEventPattern<NotifyNavigationStackChangedEventArgs<INavigationModel>>(navStack, "NavigationStackChanged")
-                    .Subscribe((EventPattern<NotifyNavigationStackChangedEventArgs<INavigationModel>> e) =>
+                    .Subscribe(async (EventPattern<NotifyNavigationStackChangedEventArgs<INavigationModel>> e) =>
                     {
                         var newHead = e.EventArgs.NewHead;
-                        var removed = e.EventArgs.Removed;
+                        var removed = e.EventArgs.Removed.Count();
 
-                        if (!views.ContainsKey(newHead))
+                        if (removed == 0)
                         {
                             var view = provideView(newHead);
-                            views[newHead] = view;
-                        }
-
-                        var viewControllers = navStack.Reverse().Select(x => views[x]).ToArray();
-                        navController.SetViewControllers(viewControllers, true);
-
-                        foreach (var model in removed)
+                            await this.navigationPage.PushAsync(view, true);
+                        } 
+                        else if (removed == 1)
                         {
-                            IDisposable view = views[model];
-                            views.Remove(model);
-                            view.Dispose();
+                            await this.navigationPage.PopAsync(true);
+                        }
+                        else
+                        {
+                            await this.navigationPage.PopToRootAsync(true);
                         }
                     }),
 

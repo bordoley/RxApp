@@ -60,6 +60,7 @@
     <Compile Include="RxFragment.cs" />
     <Compile Include="Scheduler.cs" />
     <Compile Include="Observable.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\RxApp\RxApp.csproj">
