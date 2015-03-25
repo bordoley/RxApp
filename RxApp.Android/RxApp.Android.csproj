@@ -57,8 +57,9 @@
     <Compile Include="RxActivity.cs" />
     <Compile Include="RxApplication.cs" />
     <Compile Include="Bindings.cs" />
-    <Compile Include="Observable.cs" />
     <Compile Include="RxFragment.cs" />
+    <Compile Include="Scheduler.cs" />
+    <Compile Include="Observable.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\RxApp\RxApp.csproj">

@@ -86,7 +86,7 @@ namespace RxApp.Android
         {
             Log.Debug("RxApp", "Starting application: " + this.context.ApplicationInfo.ClassName);
 
-            var navStack = NavigationStack<INavigationModel>.Create(Observable.MainThreadScheduler);
+            var navStack = NavigationStack<INavigationModel>.Create(Scheduler.MainThreadScheduler);
 
             var activities = new Dictionary<INavigationViewModel, IRxActivity> ();
 
