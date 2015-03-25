@@ -23,7 +23,6 @@ namespace RxApp.iOS
             return new RxUIApplicationDelegateHelper(rootState, bindController, provideView);
         }
 
-        private readonly NavigationStack<INavigationModel> navStack = NavigationStack<INavigationModel>.Create(Observable.MainThreadScheduler);
         private readonly IObservable<INavigationModel> rootState;
         private readonly Func<INavigationControllerModel, IDisposable> bindController;
         private readonly Func<INavigationViewModel, UIViewController> provideView;
@@ -42,8 +41,9 @@ namespace RxApp.iOS
 
         public bool FinishedLaunching(UIApplication app, NSDictionary options)
         {
+            var navStack = NavigationStack<INavigationModel>.Create(Observable.MainThreadScheduler);
             var navController = new BufferedNavigationController(navStack);
-            var views = new Dictionary<object, UIViewController>();
+            var views = new Dictionary<INavigationViewModel, UIViewController>();
 
             subscription = Disposable.Compose(
                 RxObservable

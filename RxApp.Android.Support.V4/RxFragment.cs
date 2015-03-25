@@ -1,9 +1,10 @@
-﻿using Android.App;
-using RxApp;
+﻿using System;
+
+using Android.Support.V4.App;
 
 namespace RxApp.Android
 {
-    public abstract class RxFragment<TViewModel> : Fragment, IViewFor<TViewModel>
+    public abstract class RxSupportFragment<TViewModel> : Fragment, IViewFor<TViewModel>
         where TViewModel : IActivationViewModel
     {
         private TViewModel viewModel;
@@ -33,3 +34,4 @@ namespace RxApp.Android
         }
     } 
 }
+

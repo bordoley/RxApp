@@ -8,7 +8,6 @@ using System.Reactive.Linq;
 using Android.Text;
 using Android.Views;
 using Android.Widget;
-using Android.Support.V4.Widget;
 using System.Linq.Expressions;
 
 using RxObservable = System.Reactive.Linq.Observable;
@@ -28,15 +27,6 @@ namespace RxApp.Android
             return Disposable.Compose(
                 This.CanExecute.ObserveOnMainThread().Subscribe(x => button.Enabled = x),
                 RxObservable.FromEventPattern(button, "Click").InvokeCommand(This)
-            );
-        }
-
-        public static IDisposable Bind(this IRxCommand This, SwipeRefreshLayout refresher)
-        {   
-            return Disposable.Compose(
-                RxObservable.FromEventPattern(refresher, "Refresh").Select(_ => Unit.Default)
-                            .Subscribe(x => This.Execute()),
-                This.CanExecute.ObserveOnMainThread().Subscribe(x => refresher.Enabled = x)
             );
         }
 

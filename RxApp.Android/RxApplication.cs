@@ -88,9 +88,9 @@ namespace RxApp.Android
 
             var navStack = NavigationStack<INavigationModel>.Create(Observable.MainThreadScheduler);
 
-            var activities = new Dictionary<object, IRxActivity> ();
+            var activities = new Dictionary<INavigationViewModel, IRxActivity> ();
 
-            Action<IEnumerable<object>> finishRemovedActivities = removed =>
+            Action<IEnumerable<INavigationViewModel>> finishRemovedActivities = removed =>
                 {
                     foreach (var model in removed)
                     {
