@@ -10,9 +10,9 @@ namespace RxApp.Example
 {
     public static class RxAppExampleApplicationController
     {
-        public static INavigationController Create()
+        public static INavigationApp Create()
         {
-            var builder = new NavigationControllerBuilder();
+            var builder = new NavigationAppBuilder();
             builder.RootState = RxObservable.Return(new MainModel());
             builder.RegisterControllerProvider<IMainControllerModel>(model =>
                 MainControllerService.Create(model));

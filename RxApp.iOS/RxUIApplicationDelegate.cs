@@ -17,22 +17,22 @@ namespace RxApp.iOS
     public sealed class RxUIApplicationDelegateHelper
     {
         public static RxUIApplicationDelegateHelper Create(
-            Func<INavigationController> getNavigationController,
+            Func<INavigationApp> getNavigationApp,
             Func<INavigationViewModel, UIViewController> provideView)
         {
-            return new RxUIApplicationDelegateHelper(getNavigationController, provideView);
+            return new RxUIApplicationDelegateHelper(getNavigationApp, provideView);
         }
 
-        private readonly Func<INavigationController> getNavigationController;
+        private readonly Func<INavigationApp> getNavigationApp;
         private readonly Func<INavigationViewModel, UIViewController> provideView;
 
         private IDisposable subscription;
 
         private RxUIApplicationDelegateHelper(
-            Func<INavigationController> getNavigationController,
+            Func<INavigationApp> getNavigationApp,
             Func<INavigationViewModel, UIViewController> provideView)
         {
-            this.getNavigationController = getNavigationController;
+            this.getNavigationApp = getNavigationApp;
             this.provideView = provideView;
         }
 
@@ -40,7 +40,7 @@ namespace RxApp.iOS
         {
             var navStack = NavigationStack<INavigationModel>.Create(Scheduler.MainThreadScheduler);
             var navViewController = new BufferedNavigationController(navStack);
-            var navigationController = getNavigationController();
+            var navigationController = getNavigationApp();
             var views = new Dictionary<INavigationViewModel, UIViewController>();
 
             subscription = Disposable.Compose(
@@ -186,7 +186,7 @@ namespace RxApp.iOS
         {
             helper = 
                 RxUIApplicationDelegateHelper.Create(
-                    this.GetNavigationController,
+                    this.GetNavigationApp,
                     this.GetUIViewController);
         }
 
@@ -199,7 +199,7 @@ namespace RxApp.iOS
                 model => viewCreator((TModel) model));
         }
 
-        protected abstract INavigationController GetNavigationController();
+        protected abstract INavigationApp GetNavigationApp();
 
         private UIViewController GetUIViewController(INavigationViewModel model)
         {

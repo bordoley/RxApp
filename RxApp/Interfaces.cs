@@ -29,7 +29,7 @@ namespace RxApp
     {
     }
 
-    public interface INavigationController
+    public interface INavigationApp
     {
         IObservable<INavigationModel> RootState { get; }
 

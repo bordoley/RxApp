@@ -24,7 +24,7 @@ namespace RxApp.Example
                 });
         }
 
-        protected override INavigationController GetNavigationController()
+        protected override INavigationApp GetNavigationApp()
         { 
             return RxAppExampleApplicationController.Create();
         }

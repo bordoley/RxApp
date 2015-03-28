@@ -5,12 +5,12 @@ using System.Reflection;
 
 namespace RxApp
 {
-    public sealed class NavigationControllerBuilder
+    public sealed class NavigationAppBuilder
     {
         private readonly Dictionary<Type, Func<INavigationControllerModel,IDisposable>> typeToControllerProvider = 
             new Dictionary<Type, Func<INavigationControllerModel,IDisposable>>();
 
-        public NavigationControllerBuilder()
+        public NavigationAppBuilder()
         {
         }
 
@@ -23,7 +23,7 @@ namespace RxApp
                 controllerProvider((TModel) model));
         }
 
-        public INavigationController Build()
+        public INavigationApp Build()
         {
             return new NavigationController(
                 this.RootState, 
@@ -32,7 +32,7 @@ namespace RxApp
                     entry => entry.Value));
         }
 
-        private sealed class NavigationController : INavigationController
+        private sealed class NavigationController : INavigationApp
         {
             private readonly IObservable<INavigationModel> rootState;
             private readonly IReadOnlyDictionary<Type, Func<INavigationControllerModel,IDisposable>> typeToControllerProvider = 

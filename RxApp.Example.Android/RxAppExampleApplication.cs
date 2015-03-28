@@ -19,7 +19,7 @@ namespace RxApp.Example
             this.RegisterActivity<IMainViewModel, MainActivity>();
         }
 
-        protected override INavigationController GetNavigationController()
+        protected override INavigationApp GetNavigationApp()
         { 
             return RxAppExampleApplicationController.Create();
         }

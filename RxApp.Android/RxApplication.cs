@@ -22,19 +22,19 @@ namespace RxApp.Android
     {
         public static RxApplicationHelper Create(
             Context context,
-            Func<INavigationController> getNavigationController,
+            Func<INavigationApp> getNavigationApp,
             Func<INavigationViewModel,Type> getActivityType) 
         {
             Contract.Requires(context != null);
-            Contract.Requires(getNavigationController != null);
+            Contract.Requires(getNavigationApp != null);
             Contract.Requires(getActivityType != null);
 
-            return new RxApplicationHelper(context, getNavigationController, getActivityType);
+            return new RxApplicationHelper(context, getNavigationApp, getActivityType);
         }
 
         private readonly Context context;
 
-        private readonly Func<INavigationController> getNavigationController;
+        private readonly Func<INavigationApp> getNavigationApp;
 
         private readonly Func<INavigationViewModel,Type> getActivityType;
 
@@ -44,11 +44,11 @@ namespace RxApp.Android
 
         private RxApplicationHelper(
             Context context,
-            Func<INavigationController> getNavigationController,
+            Func<INavigationApp> getNavigationApp,
             Func<INavigationViewModel,Type> getActivityType)
         {
             this.context = context;
-            this.getNavigationController = getNavigationController;
+            this.getNavigationApp = getNavigationApp;
             this.getActivityType = getActivityType;
         }
 
@@ -83,7 +83,7 @@ namespace RxApp.Android
 
             var navStack = NavigationStack<INavigationModel>.Create(Scheduler.MainThreadScheduler);
 
-            var navigationController = getNavigationController();
+            var navigationApp = getNavigationApp();
 
             var activities = new Dictionary<INavigationViewModel, IRxActivity> ();
 
@@ -173,9 +173,9 @@ namespace RxApp.Android
                             canCreateActivity.Value = true;
                         }),
 
-                navStack.BindTo(x => navigationController.Bind(x)),
+                navStack.BindTo(x => navigationApp.Bind(x)),
                     
-                navigationController.RootState.BindTo(navStack.SetRoot)
+                navigationApp.RootState.BindTo(navStack.SetRoot)
             );
         }
 
@@ -193,10 +193,10 @@ namespace RxApp.Android
 
         public RxApplication(IntPtr javaReference, JniHandleOwnership transfer) : base(javaReference, transfer)
         {
-            helper = RxApplicationHelper.Create(this.ApplicationContext, this.GetNavigationController, this.GetActivityType);
+            helper = RxApplicationHelper.Create(this.ApplicationContext, this.GetNavigationApp, this.GetActivityType);
         }
 
-        protected abstract INavigationController GetNavigationController();
+        protected abstract INavigationApp GetNavigationApp();
 
         private Type GetActivityType(INavigationViewModel model)
         {
