@@ -29,6 +29,13 @@ namespace RxApp
     {
     }
 
+    public interface INavigationController
+    {
+        IObservable<INavigationModel> RootState { get; }
+
+        IDisposable Bind(INavigationControllerModel model);
+    }
+
     public interface IActivationViewModel 
     {
         IRxCommand Activate { get; }

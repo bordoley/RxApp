@@ -22,23 +22,19 @@ namespace RxApp.Android
     {
         public static RxApplicationHelper Create(
             Context context,
-            Func<IObservable<INavigationModel>> rootState,
-            Func<INavigationControllerModel,IDisposable> bindController,
+            Func<INavigationController> getNavigationController,
             Func<INavigationViewModel,Type> getActivityType) 
         {
             Contract.Requires(context != null);
-            Contract.Requires(rootState != null);
-            Contract.Requires(bindController != null);
+            Contract.Requires(getNavigationController != null);
             Contract.Requires(getActivityType != null);
 
-            return new RxApplicationHelper(context, rootState, bindController, getActivityType);
+            return new RxApplicationHelper(context, getNavigationController, getActivityType);
         }
 
         private readonly Context context;
 
-        private readonly Func<IObservable<INavigationModel>> rootState;
-
-        private readonly Func<INavigationControllerModel, IDisposable> bindController;
+        private readonly Func<INavigationController> getNavigationController;
 
         private readonly Func<INavigationViewModel,Type> getActivityType;
 
@@ -48,13 +44,11 @@ namespace RxApp.Android
 
         private RxApplicationHelper(
             Context context,
-            Func<IObservable<INavigationModel>> rootState,
-            Func<INavigationControllerModel, IDisposable> bindController,
+            Func<INavigationController> getNavigationController,
             Func<INavigationViewModel,Type> getActivityType)
         {
             this.context = context;
-            this.rootState = rootState;
-            this.bindController = bindController;
+            this.getNavigationController = getNavigationController;
             this.getActivityType = getActivityType;
         }
 
@@ -88,6 +82,8 @@ namespace RxApp.Android
             Log.Debug("RxApp", "Starting application: " + this.context.ApplicationInfo.ClassName);
 
             var navStack = NavigationStack<INavigationModel>.Create(Scheduler.MainThreadScheduler);
+
+            var navigationController = getNavigationController();
 
             var activities = new Dictionary<INavigationViewModel, IRxActivity> ();
 
@@ -177,9 +173,9 @@ namespace RxApp.Android
                             canCreateActivity.Value = true;
                         }),
 
-                navStack.BindTo(x => bindController(x)),
+                navStack.BindTo(x => navigationController.Bind(x)),
                     
-                rootState().BindTo(navStack.SetRoot)
+                navigationController.RootState.BindTo(navStack.SetRoot)
             );
         }
 
@@ -197,10 +193,10 @@ namespace RxApp.Android
 
         public RxApplication(IntPtr javaReference, JniHandleOwnership transfer) : base(javaReference, transfer)
         {
-            helper = RxApplicationHelper.Create(this.ApplicationContext, this.RootState, this.BindController, this.GetActivityType);
+            helper = RxApplicationHelper.Create(this.ApplicationContext, this.GetNavigationController, this.GetActivityType);
         }
 
-        protected abstract IObservable<INavigationModel> RootState();
+        protected abstract INavigationController GetNavigationController();
 
         private Type GetActivityType(INavigationViewModel model)
         {
@@ -224,8 +220,6 @@ namespace RxApp.Android
         {
             this.modelToActivityMapping.Add(typeof(TModel), typeof(TActivity));
         }
-
-        protected abstract IDisposable BindController(INavigationControllerModel model);
 
         public override void OnTerminate()
         {

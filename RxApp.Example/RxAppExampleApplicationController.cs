@@ -8,24 +8,15 @@ using RxObservable = System.Reactive.Linq.Observable;
 
 namespace RxApp.Example
 {
-    public static class RxAppExampleApplicationController 
+    public static class RxAppExampleApplicationController
     {
-        public static IObservable<INavigationModel> RootState
-        { 
-            get { return RxObservable.Return(new MainModel()); }
-        }
-            
-        public static IDisposable Bind(INavigationControllerModel model)
+        public static INavigationController Create()
         {
-            // This is a lot prettier if you use F# pattern matching
-            if (model is IMainControllerModel)
-            {
-                return MainControllerService.Create((IMainControllerModel) model);
-            }
-            else
-            {
-                return RxDisposable.Empty;
-            }
+            var builder = new NavigationControllerBuilder();
+            builder.RootState = RxObservable.Return(new MainModel());
+            builder.RegisterControllerProvider<IMainControllerModel>(model =>
+                MainControllerService.Create(model));
+            return builder.Build();
         }
     }
 }

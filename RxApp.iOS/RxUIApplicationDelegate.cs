@@ -17,33 +17,30 @@ namespace RxApp.iOS
     public sealed class RxUIApplicationDelegateHelper
     {
         public static RxUIApplicationDelegateHelper Create(
-            IObservable<INavigationModel> rootState,
-            Func<INavigationControllerModel, IDisposable> bindController,
+            Func<INavigationController> getNavigationController,
             Func<INavigationViewModel, UIViewController> provideView)
         {
-            return new RxUIApplicationDelegateHelper(rootState, bindController, provideView);
+            return new RxUIApplicationDelegateHelper(getNavigationController, provideView);
         }
 
-        private readonly IObservable<INavigationModel> rootState;
-        private readonly Func<INavigationControllerModel, IDisposable> bindController;
+        private readonly Func<INavigationController> getNavigationController;
         private readonly Func<INavigationViewModel, UIViewController> provideView;
 
         private IDisposable subscription;
 
         private RxUIApplicationDelegateHelper(
-            IObservable<INavigationModel> rootState,
-            Func<INavigationControllerModel, IDisposable> bindController,
+            Func<INavigationController> getNavigationController,
             Func<INavigationViewModel, UIViewController> provideView)
         {
-            this.rootState = rootState;
-            this.bindController = bindController;
+            this.getNavigationController = getNavigationController;
             this.provideView = provideView;
         }
 
         public bool FinishedLaunching(UIApplication app, NSDictionary options)
         {
             var navStack = NavigationStack<INavigationModel>.Create(Scheduler.MainThreadScheduler);
-            var navController = new BufferedNavigationController(navStack);
+            var navViewController = new BufferedNavigationController(navStack);
+            var navigationController = getNavigationController();
             var views = new Dictionary<INavigationViewModel, UIViewController>();
 
             subscription = Disposable.Compose(
@@ -61,7 +58,7 @@ namespace RxApp.iOS
                         }
 
                         var viewControllers = navStack.Reverse().Select(x => views[x]).ToArray();
-                        navController.SetViewControllers(viewControllers, true);
+                        navViewController.SetViewControllers(viewControllers, true);
 
                         foreach (var model in removed)
                         {
@@ -71,12 +68,12 @@ namespace RxApp.iOS
                         }
                     }),
 
-                navStack.BindTo(x => this.bindController(x)),
-                rootState.ObserveOnMainThread().Subscribe(navStack.SetRoot)
+                navStack.BindTo(x => navigationController.Bind(x)),
+                navigationController.RootState.BindTo(navStack.SetRoot)
             );
 
             var window = new UIWindow(UIScreen.MainScreen.Bounds);
-            window.RootViewController = navController;
+            window.RootViewController = navViewController;
             window.MakeKeyAndVisible();
 
             return true;
@@ -182,28 +179,27 @@ namespace RxApp.iOS
     public abstract class RxUIApplicationDelegate : UIApplicationDelegate
     {
         private readonly RxUIApplicationDelegateHelper helper;
-        private readonly Dictionary<Type, Func<UIViewController>> modelToViewController =
-            new Dictionary<Type, Func<UIViewController>>();
+        private readonly Dictionary<Type, Func<INavigationViewModel,UIViewController>> modelToViewController =
+            new Dictionary<Type, Func<INavigationViewModel,UIViewController>>();
 
         public RxUIApplicationDelegate()
         {
             helper = 
                 RxUIApplicationDelegateHelper.Create(
-                    this.RootState(),
-                    this.BindController,
+                    this.GetNavigationController,
                     this.GetUIViewController);
         }
 
-        protected abstract IObservable<INavigationModel> RootState();
-
-        protected abstract IDisposable BindController(INavigationControllerModel model);
-
-        protected void RegisterViewCreator<TModel, TView>(Func<TView> viewCreator)
+        protected void RegisterViewCreator<TModel, TView>(Func<TModel,TView> viewCreator)
             where TModel : INavigationViewModel
-            where TView : UIViewController, IViewFor
+            where TView : UIViewController
         {
-            this.modelToViewController.Add(typeof(TModel), viewCreator);
+            this.modelToViewController.Add(
+                typeof(TModel), 
+                model => viewCreator((TModel) model));
         }
+
+        protected abstract INavigationController GetNavigationController();
 
         private UIViewController GetUIViewController(INavigationViewModel model)
         {
@@ -211,12 +207,10 @@ namespace RxApp.iOS
 
             foreach (var iface in Enumerable.Concat(new Type[] { modelType }, modelType.GetTypeInfo().ImplementedInterfaces))
             {
-                Func<UIViewController> viewCreator;
+                Func<INavigationViewModel,UIViewController> viewCreator;
                 if (this.modelToViewController.TryGetValue(iface, out viewCreator))
                 {
-                    var view = viewCreator();
-                    (view as IViewFor).ViewModel = model;
-                    return view;
+                    return viewCreator(model);
                 }
             }
 

@@ -19,14 +19,9 @@ namespace RxApp.Example
             this.RegisterActivity<IMainViewModel, MainActivity>();
         }
 
-        protected override IObservable<INavigationModel> RootState()
+        protected override INavigationController GetNavigationController()
         { 
-            return RxAppExampleApplicationController.RootState;
-        }
-
-        protected override IDisposable BindController(INavigationControllerModel model)
-        {
-            return RxAppExampleApplicationController.Bind(model);
+            return RxAppExampleApplicationController.Create();
         }
 
         public override void OnCreate()

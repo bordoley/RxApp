@@ -5,6 +5,7 @@ using System.Linq;
 using Foundation;
 using UIKit;
 
+using RxApp;
 using RxApp.iOS;
 
 namespace RxApp.Example
@@ -15,18 +16,17 @@ namespace RxApp.Example
         public AppDelegate()
         {
             var storyBoard = UIStoryboard.FromName("Views", null);
-            this.RegisterViewCreator<IMainViewModel,ExampleViewController>(() =>
-                (ExampleViewController) storyBoard.InstantiateViewController("ExampleViewController"));
+            this.RegisterViewCreator<IMainViewModel,ExampleViewController>(model =>
+                {
+                    var view = (ExampleViewController) storyBoard.InstantiateViewController("ExampleViewController");
+                    (view as IViewFor).ViewModel = model;
+                    return view;
+                });
         }
 
-        protected override IObservable<INavigationModel> RootState()
+        protected override INavigationController GetNavigationController()
         { 
-            return RxAppExampleApplicationController.RootState;
-        }
-
-        protected override IDisposable BindController(INavigationControllerModel model)
-        {
-            return RxAppExampleApplicationController.Bind(model);
+            return RxAppExampleApplicationController.Create();
         }
     }
 }
