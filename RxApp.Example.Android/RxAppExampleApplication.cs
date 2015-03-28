@@ -16,28 +16,17 @@ namespace RxApp.Example
     {
         public RxAppExampleApplication(IntPtr javaReference, JniHandleOwnership transfer) : base(javaReference, transfer)
         {
-
+            this.RegisterActivity<IMainViewModel, MainActivity>();
         }
 
-        public override IObservable<INavigationModel> RootState()
+        protected override IObservable<INavigationModel> RootState()
         { 
             return RxAppExampleApplicationController.RootState;
         }
 
-        public override IDisposable BindController(INavigationControllerModel model)
+        protected override IDisposable BindController(INavigationControllerModel model)
         {
             return RxAppExampleApplicationController.Bind(model);
-        }
-
-        public override Type GetActivityType(INavigationViewModel model)
-        {
-            // This is a lot prettier in F# using pattern matching
-            if (model is IMainViewModel)
-            {
-                return typeof(MainActivity);
-            } 
-
-            throw new Exception("No view for view model");
         }
 
         public override void OnCreate()

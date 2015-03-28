@@ -14,6 +14,7 @@ using Android.Content.PM;
 using Android.Runtime;
 
 using RxObservable = System.Reactive.Linq.Observable;
+using System.Reflection;
 
 namespace RxApp.Android
 {
@@ -191,6 +192,7 @@ namespace RxApp.Android
 
     public abstract class RxApplication : Application, IRxApplication
     {
+        private readonly Dictionary<Type, Type> modelToActivityMapping = new Dictionary<Type, Type>();
         private readonly RxApplicationHelper helper;
 
         public RxApplication(IntPtr javaReference, JniHandleOwnership transfer) : base(javaReference, transfer)
@@ -198,11 +200,37 @@ namespace RxApp.Android
             helper = RxApplicationHelper.Create(this.ApplicationContext, this.RootState, this.BindController, this.GetActivityType);
         }
 
-        public abstract IObservable<INavigationModel> RootState();
+        protected abstract IObservable<INavigationModel> RootState();
 
-        public abstract Type GetActivityType(INavigationViewModel model);
+        private Type GetActivityType(INavigationViewModel model)
+        {
+            var modelType = model.GetType();
 
-        public abstract IDisposable BindController(INavigationControllerModel model);
+            Type activityType;
+            if (this.modelToActivityMapping.TryGetValue(modelType, out activityType))
+            {
+                return activityType;
+            }
+
+            foreach (var iface in modelType.GetTypeInfo().ImplementedInterfaces)
+            {
+                if (this.modelToActivityMapping.TryGetValue(iface, out activityType))
+                {
+                    return activityType;
+                }
+            }
+
+            throw new NotSupportedException("No activity found for the given model type: " + modelType);
+        }
+
+        protected void RegisterActivity<TModel, TActivity>()
+            where TModel : INavigationViewModel
+            where TActivity : Activity, IRxActivity
+        {
+            this.modelToActivityMapping.Add(typeof(TModel), typeof(TActivity));
+        }
+
+        protected abstract IDisposable BindController(INavigationControllerModel model);
 
         public override void OnTerminate()
         {
