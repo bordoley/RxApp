@@ -206,14 +206,9 @@ namespace RxApp.Android
         {
             var modelType = model.GetType();
 
-            Type activityType;
-            if (this.modelToActivityMapping.TryGetValue(modelType, out activityType))
+            foreach (var iface in Enumerable.Concat(new Type[] { modelType }, modelType.GetTypeInfo().ImplementedInterfaces))
             {
-                return activityType;
-            }
-
-            foreach (var iface in modelType.GetTypeInfo().ImplementedInterfaces)
-            {
+                Type activityType;
                 if (this.modelToActivityMapping.TryGetValue(iface, out activityType))
                 {
                     return activityType;

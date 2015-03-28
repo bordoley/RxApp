@@ -209,10 +209,9 @@ namespace RxApp.iOS
         {
             var modelType = model.GetType();
 
-            Func<UIViewController> viewCreator;
-
             foreach (var iface in Enumerable.Concat(new Type[] { modelType }, modelType.GetTypeInfo().ImplementedInterfaces))
             {
+                Func<UIViewController> viewCreator;
                 if (this.modelToViewController.TryGetValue(iface, out viewCreator))
                 {
                     var view = viewCreator();
@@ -234,6 +233,5 @@ namespace RxApp.iOS
             helper.WillTerminate(app);
         }
     }
-
 }
 
