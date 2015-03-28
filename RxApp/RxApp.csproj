@@ -37,7 +37,6 @@
     <Compile Include="RxProperty.cs" />
     <Compile Include="Interfaces.cs" />
     <Compile Include="Reflection.cs" />
-    <Compile Include="Activation.cs" />
     <Compile Include="Models.cs" />
     <Compile Include="Bindings.cs" />
     <Compile Include="Observable.cs" />

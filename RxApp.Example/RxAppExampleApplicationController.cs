@@ -20,10 +20,7 @@ namespace RxApp.Example
             // This is a lot prettier if you use F# pattern matching
             if (model is IMainControllerModel)
             {
-
-                Func<IDisposable> service = () => MainControllerService.Create((IMainControllerModel) model);
-
-                return model.BindTo(service);
+                return MainControllerService.Create((IMainControllerModel) model);
             }
             else
             {

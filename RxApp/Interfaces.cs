@@ -43,9 +43,6 @@ namespace RxApp
         IObservable<Unit> Deactivate { get; }
     }
 
-    // Fixme: Not sure these should really be in core. They're sort of convenience
-    // since on android and ios you can't do constructor injection sanely.
-    // FIXME: Or name make ViewModel a RxProperty?
     public interface IViewFor
     {
         object ViewModel { get; set; }
