@@ -10,6 +10,7 @@ using Foundation;
 using UIKit;
 
 using RxObservable = System.Reactive.Linq.Observable;
+using System.Reflection;
 
 namespace RxApp.iOS
 {
@@ -177,5 +178,62 @@ namespace RxApp.iOS
             }
         }
     }
+
+    public abstract class RxUIApplicationDelegate : UIApplicationDelegate
+    {
+        private readonly RxUIApplicationDelegateHelper helper;
+        private readonly Dictionary<Type, Func<UIViewController>> modelToViewController =
+            new Dictionary<Type, Func<UIViewController>>();
+
+        public RxUIApplicationDelegate()
+        {
+            helper = 
+                RxUIApplicationDelegateHelper.Create(
+                    this.RootState(),
+                    this.BindController,
+                    this.GetUIViewController);
+        }
+
+        protected abstract IObservable<INavigationModel> RootState();
+
+        protected abstract IDisposable BindController(INavigationControllerModel model);
+
+        protected void RegisterViewCreator<TModel, TView>(Func<TView> viewCreator)
+            where TModel : INavigationViewModel
+            where TView : UIViewController, IViewFor
+        {
+            this.modelToViewController.Add(typeof(TModel), viewCreator);
+        }
+
+        private UIViewController GetUIViewController(INavigationViewModel model)
+        {
+            var modelType = model.GetType();
+
+            Func<UIViewController> viewCreator;
+
+            foreach (var iface in Enumerable.Concat(new Type[] { modelType }, modelType.GetTypeInfo().ImplementedInterfaces))
+            {
+                if (this.modelToViewController.TryGetValue(iface, out viewCreator))
+                {
+                    var view = viewCreator();
+                    (view as IViewFor).ViewModel = model;
+                    return view;
+                }
+            }
+
+            throw new NotSupportedException("No UIViewController found for the given model type: " + modelType);
+        }
+
+        public override bool FinishedLaunching(UIApplication app, NSDictionary options)
+        {
+            return helper.FinishedLaunching(app, options);
+        }
+
+        public override void WillTerminate(UIApplication app)
+        {
+            helper.WillTerminate(app);
+        }
+    }
+
 }
 

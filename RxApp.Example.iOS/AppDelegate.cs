@@ -10,38 +10,23 @@ using RxApp.iOS;
 namespace RxApp.Example
 {
     [Register("AppDelegate")]
-    public partial class AppDelegate : UIApplicationDelegate
+    public partial class AppDelegate : RxUIApplicationDelegate
     {
-        private readonly RxUIApplicationDelegateHelper helper;
-
         public AppDelegate()
         {
-            helper = 
-                RxUIApplicationDelegateHelper.Create(
-                    RxAppExampleApplicationController.RootState,
-                    RxAppExampleApplicationController.Bind,
-                    model =>
-                        {
-                            // This is a lot prettier in F# using pattern matching
-                            if (model is IMainViewModel)
-                            {
-                                var view = UIStoryboard.FromName("Views", null).InstantiateViewController("ExampleViewController");
-                                (view as IViewFor).ViewModel = model;
-                                return view as UIViewController;
-                            } 
-
-                            throw new Exception("No view for view model");
-                        });
+            var storyBoard = UIStoryboard.FromName("Views", null);
+            this.RegisterViewCreator<IMainViewModel,ExampleViewController>(() =>
+                (ExampleViewController) storyBoard.InstantiateViewController("ExampleViewController"));
         }
 
-        public override bool FinishedLaunching(UIApplication app, NSDictionary options)
-        {
-            return helper.FinishedLaunching(app, options);
+        protected override IObservable<INavigationModel> RootState()
+        { 
+            return RxAppExampleApplicationController.RootState;
         }
 
-        public override void WillTerminate(UIApplication app)
+        protected override IDisposable BindController(INavigationControllerModel model)
         {
-            helper.WillTerminate(app);
+            return RxAppExampleApplicationController.Bind(model);
         }
     }
 }
