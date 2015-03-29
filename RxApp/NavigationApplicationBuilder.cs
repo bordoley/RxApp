@@ -16,11 +16,11 @@ namespace RxApp
 {
     public sealed class NavigationApplicationBuilder
     {
-        private readonly Dictionary<Type, Func<INavigationControllerModel,IDisposable>> typeToControllerProvider = 
+        private readonly Dictionary<Type, Func<INavigationControllerModel,IDisposable>> typeToBindFunc = 
             new Dictionary<Type, Func<INavigationControllerModel,IDisposable>>();
 
         private Func<IDisposable> onConnect = () => RxDisposable.Empty;
-        private IObservable<INavigationModel> rootState = RxObservable.Empty<INavigationModel>();
+        private IObservable<INavigationModel> rootState = null;
 
         public IObservable<INavigationModel> RootState
         { 
@@ -40,28 +40,30 @@ namespace RxApp
             } 
         }
 
-        public void RegisterControllerProvider<TModel>(Func<TModel, IDisposable> controllerProvider)
+        public void RegisterBinding<TModel>(Func<TModel, IDisposable> bind)
             where TModel : INavigationControllerModel
         {
-            this.typeToControllerProvider.Add(typeof(TModel), model => 
-                controllerProvider((TModel) model));
+            this.typeToBindFunc.Add(typeof(TModel), model => 
+                bind((TModel) model));
         }
 
         public IConnectableObservable<IEnumerable<INavigationModel>> Build()
         {
-            var typeToControllerProvider = this.typeToControllerProvider.ToDictionary(entry => entry.Key, entry => entry.Value);
+            var typeToBindFunc = this.typeToBindFunc.ToDictionary(entry => entry.Key, entry => entry.Value);
             var rootState = this.rootState;
             var onConnect = this.onConnect;
+
+            if (rootState == null) { throw new NotSupportedException("RootState must be set before calling build."); }
 
             Func<INavigationControllerModel,IDisposable> bind = (INavigationControllerModel model) =>
                 {
                     var modelType = model.GetType();
                     foreach (var iface in Enumerable.Concat(new Type[] { modelType }, modelType.GetTypeInfo().ImplementedInterfaces))
                     {
-                        Func<INavigationControllerModel,IDisposable> controllerProvider;
-                        if (typeToControllerProvider.TryGetValue(iface, out controllerProvider))
+                        Func<INavigationControllerModel,IDisposable> doBind;
+                        if (typeToBindFunc.TryGetValue(iface, out doBind))
                         {
-                            return controllerProvider(model);
+                            return doBind(model);
                         }
                     }
 

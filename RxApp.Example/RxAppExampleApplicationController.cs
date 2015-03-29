@@ -15,7 +15,7 @@ namespace RxApp.Example
         {
             var builder = new NavigationApplicationBuilder();
             builder.RootState = RxObservable.Return(new MainModel());
-            builder.RegisterControllerProvider<IMainControllerModel>(model =>
+            builder.RegisterBinding<IMainControllerModel>(model =>
                 MainControllerService.Create(model));
             return builder.Build();
         }
