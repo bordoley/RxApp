@@ -11,7 +11,7 @@ namespace RxApp
     public static partial class Observable
     {
         public static IObservable<Tuple<T1,T2>> CombineLatest<T1,T2>(
-            this IObservable<T1> source1, 
+            IObservable<T1> source1, 
             IObservable<T2> source2)
         {
             return RxObservable.CombineLatest(
@@ -20,7 +20,7 @@ namespace RxApp
         }
 
         public static IObservable<Tuple<T1,T2,T3>> CombineLatest<T1,T2,T3>(
-            this IObservable<T1> source1, 
+            IObservable<T1> source1, 
             IObservable<T2> source2,
             IObservable<T3> source3)
         {
@@ -31,7 +31,7 @@ namespace RxApp
         }
 
         public static IObservable<Tuple<T1,T2,T3,T4>> CombineLatest<T1,T2,T3,T4>(
-            this IObservable<T1> source1, 
+            IObservable<T1> source1, 
             IObservable<T2> source2,
             IObservable<T3> source3,
             IObservable<T4> source4)
@@ -43,7 +43,7 @@ namespace RxApp
         }
 
         public static IObservable<Tuple<T1,T2,T3,T4,T5>> CombineLatest<T1,T2,T3,T4,T5>(
-            this IObservable<T1> source1, 
+            IObservable<T1> source1, 
             IObservable<T2> source2,
             IObservable<T3> source3,
             IObservable<T4> source4,
@@ -56,7 +56,7 @@ namespace RxApp
         }
 
         public static IObservable<Tuple<T1,T2,T3,T4,T5,T6>> CombineLatest<T1,T2,T3,T4,T5,T6>(
-            this IObservable<T1> source1, 
+            IObservable<T1> source1, 
             IObservable<T2> source2,
             IObservable<T3> source3,
             IObservable<T4> source4,
@@ -70,7 +70,7 @@ namespace RxApp
         }
 
         public static IObservable<Tuple<T1,T2,T3,T4,T5,T6,T7>> CombineLatest<T1,T2,T3,T4,T5,T6,T7>(
-            this IObservable<T1> source1, 
+            IObservable<T1> source1, 
             IObservable<T2> source2,
             IObservable<T3> source3,
             IObservable<T4> source4,
