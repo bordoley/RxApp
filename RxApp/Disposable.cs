@@ -1,25 +1,16 @@
 ﻿using System;
+
 using RxDisposable = System.Reactive.Disposables.Disposable;
 
 namespace RxApp
 {
     public static class Disposable
     {
-        public static IDisposable Compose(IDisposable first, IDisposable second)
+        public static IDisposable Compose(params IDisposable[] disposables)
         {
+            disposables = disposables ?? new IDisposable[]{};
             return RxDisposable.Create(() => 
                 {
-                    first.Dispose();
-                    second.Dispose();
-                });
-        }
-
-        public static IDisposable Compose(IDisposable first, IDisposable second, params IDisposable[] disposables)
-        {
-            return RxDisposable.Create(() => 
-                {
-                    first.Dispose();
-                    second.Dispose();
                     foreach (var disposable in disposables) { disposable.Dispose(); }
                 });
         }
