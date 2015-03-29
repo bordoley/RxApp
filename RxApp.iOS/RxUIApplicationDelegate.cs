@@ -11,25 +11,26 @@ using UIKit;
 
 using RxObservable = System.Reactive.Linq.Observable;
 using System.Reflection;
+using System.Reactive.Subjects;
 
 namespace RxApp.iOS
 {
     public sealed class RxUIApplicationDelegateHelper
     {
         public static RxUIApplicationDelegateHelper Create(
-            Func<IObservable<IEnumerable<INavigationModel>>> getApplication,
+            Func<IConnectableObservable<IEnumerable<INavigationModel>>> getApplication,
             Func<INavigationViewModel, UIViewController> provideView)
         {
             return new RxUIApplicationDelegateHelper(getApplication, provideView);
         }
 
-        private readonly Func<IObservable<IEnumerable<INavigationModel>>> getApplication;
+        private readonly Func<IConnectableObservable<IEnumerable<INavigationModel>>> getApplication;
         private readonly Func<INavigationViewModel, UIViewController> provideView;
 
         private IDisposable subscription;
 
         private RxUIApplicationDelegateHelper(
-            Func<IObservable<IEnumerable<INavigationModel>>> getApplication,
+            Func<IConnectableObservable<IEnumerable<INavigationModel>>> getApplication,
             Func<INavigationViewModel, UIViewController> provideView)
         {
             this.getApplication = getApplication;
@@ -40,38 +41,39 @@ namespace RxApp.iOS
         {
             var navViewController = new BufferedNavigationController();
             var application = getApplication();
-            var views = new Dictionary<INavigationViewModel, UIViewController>();
 
-            subscription = application
-                .Scan(Tuple.Create<IEnumerable<INavigationModel>, IEnumerable<INavigationModel>>(Enumerable.Empty<INavigationModel>(), Enumerable.Empty<INavigationModel>()), (acc, next) =>
-                    {
-                        return Tuple.Create(acc.Item2, next);
-                    })
-                .Subscribe(x =>
-                    {
-                        var newHead = x.Item2.LastOrDefault();
-    
-                        var newHeadSet = new HashSet<INavigationModel>(x.Item2);
-                        var removed = x.Item1.Where(y => !newHeadSet.Contains(y));
-
-                        if (!views.ContainsKey(newHead))
+            subscription = Disposable.Compose(
+                application
+                    .ObserveOnMainThread()
+                    .Scan(new Dictionary<INavigationViewModel, UIViewController>(), (acc, src) =>
                         {
-                            var view = provideView(newHead);
-                            views[newHead] = view;
-                        }
+                            var head = src.FirstOrDefault();
+                            var newHeadSet = new HashSet<INavigationModel>(src);
+                            var removed = acc.Keys.Where(y => !newHeadSet.Contains(y)).ToList();
 
-                        navViewController.ViewModel = newHead;
-                        var viewControllers = x.Item2.Reverse().Select(model => 
-                            views[model]).ToArray();
-                        navViewController.SetViewControllers(viewControllers, true);
+                            if (!acc.ContainsKey(head))
+                            {
+                                var view = provideView(head);
+                                acc[head] = view;
+                            }
 
-                        foreach (var model in removed)
-                        {
-                            IDisposable view = views[model];
-                            views.Remove(model);
-                            view.Dispose();
-                        }
-                    });
+                            if (head != null)
+                            {
+                                navViewController.ViewModel = head;
+                                var viewControllers = src.Reverse().Select(model => acc[model]).ToArray();
+                                navViewController.SetViewControllers(viewControllers, true);
+                            }
+
+                            foreach (var model in removed)
+                            {
+                                IDisposable view = acc[model];
+                                acc.Remove(model);
+                                view.Dispose();
+                            }
+
+                            return acc;
+                        }).Subscribe(),
+                application.Connect());
 
             var window = new UIWindow(UIScreen.MainScreen.Bounds);
             window.RootViewController = navViewController;
@@ -198,7 +200,7 @@ namespace RxApp.iOS
         {
             helper = 
                 RxUIApplicationDelegateHelper.Create(
-                    this.GetApplication,
+                    this.BuildNavigationApplication,
                     this.GetUIViewController);
         }
 
@@ -211,7 +213,7 @@ namespace RxApp.iOS
                 model => viewCreator((TModel) model));
         }
 
-        protected abstract IObservable<IEnumerable<INavigationModel>> GetApplication();
+        protected abstract IConnectableObservable<IEnumerable<INavigationModel>> BuildNavigationApplication();
 
         private UIViewController GetUIViewController(INavigationViewModel model)
         {

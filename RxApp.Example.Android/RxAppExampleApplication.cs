@@ -8,20 +8,24 @@ using RxApp.Android;
 using Android.App;
 using Android.Runtime;
 using Xamarin;
+using System.Reactive.Subjects;
 
 namespace RxApp.Example
 {
     [Application]
     public sealed class RxAppExampleApplication : RxApplication
     {
+        private readonly IConnectableObservable<IEnumerable<INavigationModel>> application;
+
         public RxAppExampleApplication(IntPtr javaReference, JniHandleOwnership transfer) : base(javaReference, transfer)
         {
             this.RegisterActivity<IMainViewModel, MainActivity>();
+            this.application = RxAppExampleApplicationController.Create();
         }
 
-        protected override IObservable<IEnumerable<INavigationModel>> GetApplication()
+        protected override IConnectableObservable<IEnumerable<INavigationModel>> NavigationApplicaction
         { 
-            return RxAppExampleApplicationController.Create();
+            get { return application; }
         }
 
         public override void OnCreate()

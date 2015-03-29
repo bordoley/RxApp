@@ -7,6 +7,7 @@ using UIKit;
 
 using RxApp;
 using RxApp.iOS;
+using System.Reactive.Subjects;
 
 namespace RxApp.Example
 {
@@ -19,12 +20,12 @@ namespace RxApp.Example
             this.RegisterViewCreator<IMainViewModel,ExampleViewController>(model =>
                 {
                     var view = (ExampleViewController) storyBoard.InstantiateViewController("ExampleViewController");
-                    (view as IViewFor).ViewModel = model;
+                    view.ViewModel = model;
                     return view;
                 });
         }
 
-        protected override IObservable<IEnumerable<INavigationModel>> GetApplication()
+        protected override IConnectableObservable<IEnumerable<INavigationModel>> BuildNavigationApplication()
         { 
             return RxAppExampleApplicationController.Create();
         }

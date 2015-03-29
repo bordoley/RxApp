@@ -22,19 +22,19 @@ namespace RxApp.Android
     {
         public static RxApplicationHelper Create(
             Context context,
-            Func<IObservable<IEnumerable<INavigationModel>>> getApplication,
+            IConnectableObservable<IEnumerable<INavigationModel>> navigationApplicaction,
             Func<INavigationViewModel,Type> getActivityType) 
         {
             Contract.Requires(context != null);
-            Contract.Requires(getApplication != null);
+            Contract.Requires(navigationApplicaction != null);
             Contract.Requires(getActivityType != null);
 
-            return new RxApplicationHelper(context, getApplication, getActivityType);
+            return new RxApplicationHelper(context, navigationApplicaction, getActivityType);
         }
 
         private readonly Context context;
 
-        private readonly Func<IObservable<IEnumerable<INavigationModel>>> getApplication;
+        private readonly IConnectableObservable<IEnumerable<INavigationModel>> navigationApplicaction;
 
         private readonly Func<INavigationViewModel,Type> getActivityType;
 
@@ -44,11 +44,11 @@ namespace RxApp.Android
 
         private RxApplicationHelper(
             Context context,
-            Func<IObservable<IEnumerable<INavigationModel>>> getApplication,
+            IConnectableObservable<IEnumerable<INavigationModel>> navigationApplicaction,
             Func<INavigationViewModel,Type> getActivityType)
         {
             this.context = context;
-            this.getApplication = getApplication;
+            this.navigationApplicaction = navigationApplicaction;
             this.getActivityType = getActivityType;
         }
 
@@ -81,8 +81,6 @@ namespace RxApp.Android
         {
             Log.Debug("RxApp", "Starting application: " + this.context.ApplicationInfo.ClassName);
 
-            var application = getApplication();
-
             var activities = new Dictionary<INavigationViewModel, IRxActivity> ();
 
             Action<IEnumerable<INavigationViewModel>> finishRemovedActivities = removed =>
@@ -99,10 +97,12 @@ namespace RxApp.Android
             var canCreateActivity = RxProperty.Create(true);
             INavigationViewModel currentModel = null;
 
+
+            // FIXME: Need to support activity transitions.
             Action<INavigationViewModel> createActivity = model =>
                 {
                     var viewType = getActivityType(model);
-                    var intent = new Intent(context, viewType).SetFlags(ActivityFlags.NewTask);
+                    var intent = new Intent(context, viewType).AddFlags(ActivityFlags.NewTask);
 
                     canCreateActivity.Value = false;
                     currentModel = model;
@@ -110,12 +110,10 @@ namespace RxApp.Android
                 };
                     
             subscription = Disposable.Compose(
-                application
+                this.navigationApplicaction
                     .ObserveOnMainThread()
-                    .Scan(Tuple.Create<IEnumerable<INavigationModel>, IEnumerable<INavigationModel>>(Enumerable.Empty<INavigationModel>(), Enumerable.Empty<INavigationModel>()), (acc, next) =>
-                        {
-                            return Tuple.Create(acc.Item2, next);
-                        })
+                    .Scan(Tuple.Create(Enumerable.Empty<INavigationModel>(), Enumerable.Empty<INavigationModel>()), (acc, next) =>
+                        Tuple.Create(acc.Item2, next))
                     .Delay(x => canCreateActivity.Where(b => b))
                     .Subscribe(x =>
                         {
@@ -173,9 +171,11 @@ namespace RxApp.Android
                             Log.Debug("RxApp", "Activity created of type: " + activity.GetType() + ", with model of type: " + currentModel.GetType());
 
                             activity.ViewModel = currentModel;
-                            activities[ currentModel] = activity;
+                            activities[currentModel] = activity;
                             canCreateActivity.Value = true;
-                        })
+                        }),
+
+                this.navigationApplicaction.Connect()   
             );
         }
 
@@ -189,14 +189,13 @@ namespace RxApp.Android
     public abstract class RxApplication : Application, IRxApplication
     {
         private readonly Dictionary<Type, Type> modelToActivityMapping = new Dictionary<Type, Type>();
-        private readonly RxApplicationHelper helper;
+        private RxApplicationHelper helper;
 
         public RxApplication(IntPtr javaReference, JniHandleOwnership transfer) : base(javaReference, transfer)
         {
-            helper = RxApplicationHelper.Create(this.ApplicationContext, this.GetApplication, this.GetActivityType);
         }
 
-        protected abstract IObservable<IEnumerable<INavigationModel>> GetApplication();
+        protected abstract IConnectableObservable<IEnumerable<INavigationModel>> NavigationApplicaction { get; }
 
         private Type GetActivityType(INavigationViewModel model)
         {
@@ -219,6 +218,12 @@ namespace RxApp.Android
             where TActivity : Activity, IRxActivity
         {
             this.modelToActivityMapping.Add(typeof(TModel), typeof(TActivity));
+        }
+
+        public override void OnCreate()
+        {   
+            base.OnCreate();
+            helper = RxApplicationHelper.Create(this.ApplicationContext, this.NavigationApplicaction, this.GetActivityType);
         }
 
         public override void OnTerminate()

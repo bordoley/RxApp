@@ -27,7 +27,7 @@ namespace RxApp
                 controllerProvider((TModel) model));
         }
 
-        public IObservable<IEnumerable<INavigationModel>> Build()
+        public IConnectableObservable<IEnumerable<INavigationModel>> Build()
         {
             var typeToControllerProvider = this.typeToControllerProvider.ToDictionary(entry => entry.Key, entry => entry.Value);
             var rootState = this.RootState;
@@ -49,67 +49,64 @@ namespace RxApp
 
             return RxObservable.Create<IEnumerable<INavigationModel>>(observer => 
                 {
-                    var navigationStack = new Subject<Stack<INavigationModel>>();
+                    var navigationStackSubject = new Subject<Stack<INavigationModel>>();
+                    var navigationStack = navigationStackSubject.DistinctUntilChanged().Publish();
 
                     return Disposable.Compose(
-                        navigationStack.DistinctUntilChanged().Subscribe(observer),
+                        navigationStack.Connect(),
+
+                        navigationStack.Subscribe(observer),
 
                         navigationStack
-                            .DistinctUntilChanged()
+                            // Since we use a mutable dictionary as the accumulator, be extra paranoid
+                            // and synchronize the observable.
+                            .Synchronize()
                             .Scan(new Dictionary<INavigationModel,IDisposable>(), (acc, stack) =>
                                 {
                                     var head = stack.Head;
                                     var stackSet = new HashSet<INavigationModel>(stack);
 
-                                    foreach (var key in acc.Keys.Where(x => !stackSet.Contains(x)))
+                                    // Need to copy the keys to an array to avoid a concurrent modification exception
+                                    foreach (var key in acc.Keys.Where(x => !stackSet.Contains(x)).ToArray())
                                     {
                                         acc[key].Dispose();
+                                        acc.Remove(key);
                                     }
 
-                                    // FIXME: An immutablish dictionary would be preferable,
-                                    // This method can get called from multiple threads,
-                                    // so thread safety is needed.
-                                    var newAcc = acc.ToDictionary(x => x.Key, x => x.Value);
-
-                                    if (head != null && !newAcc.ContainsKey(head))
+                                    if (head != null && !acc.ContainsKey(head))
                                     {
-                                        newAcc.Add(head, bind(head));
+                                        acc.Add(head, bind(head));
                                     }
 
-                                    return newAcc;
+                                    return acc;
                                 })
                             .Subscribe(),
                         
                         navigationStack
-                            .DistinctUntilChanged()
                             .Scan(RxDisposable.Empty, (acc, stack) =>
                             {
                                 acc.Dispose();
 
-                                if (stack.IsEmpty)
-                                {
-                                    return RxDisposable.Empty;
-                                }
-                                else 
-                                {
-                                    return RxObservable
+                                return stack.IsEmpty ?
+                                    RxDisposable.Empty :
+                                    RxObservable
                                         .Merge(
                                             stack.Head.Back.Select(x => stack.Tail),
                                             stack.Head.Up.Select(x => stack.Up()),
                                             stack.Head.Open.Select(x => stack.Push(x)))
                                         .Where(x => x != stack)
                                         .FirstAsync()
-                                        .Subscribe(x => navigationStack.OnNext(x));
-                                }
+                                        .Subscribe(x => navigationStackSubject.OnNext(x));
                             }).Subscribe(),
 
                         rootState
                             .Select(x => Stack<INavigationModel>.Empty.Push(x))
-                            .Subscribe(x => navigationStack.OnNext(x)));
-                });
+                            .Subscribe(x => navigationStackSubject.OnNext(x)));
+                }).Replay(1);
         }
 
         // A trivial cons list implementation
+        // FIXME: Might need to implement equality
         private sealed class Stack<T> : IEnumerable<T>
         {
             private static readonly Stack<T> empty = new Stack<T>(default(T), null);
