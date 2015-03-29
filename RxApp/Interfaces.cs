@@ -17,23 +17,11 @@ namespace RxApp
         IRxCommand<INavigationModel> Open { get; }
     }
 
-    public interface INavigationStackModel<T>
-        where T : INavigationStackModel<T>
+    public interface INavigationModel : INavigationViewModel, INavigationControllerModel
     {
-        IObservable<Unit> Back { get; }
-        IObservable<Unit> Up { get; }
-        IObservable<T> Open { get; }
-    }
-
-    public interface INavigationModel : INavigationViewModel, INavigationControllerModel, INavigationStackModel<INavigationModel>
-    {
-    }
-
-    public interface INavigationApp
-    {
-        IObservable<INavigationModel> RootState { get; }
-
-        IDisposable Bind(INavigationControllerModel model);
+        new IObservable<Unit> Back { get; }
+        new IObservable<Unit> Up { get; }
+        new IObservable<INavigationModel> Open { get; }
     }
 
     public interface IActivationViewModel 

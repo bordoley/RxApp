@@ -22,19 +22,19 @@ namespace RxApp.Android
     {
         public static RxApplicationHelper Create(
             Context context,
-            Func<INavigationApp> getNavigationApp,
+            Func<IObservable<IEnumerable<INavigationModel>>> getApplication,
             Func<INavigationViewModel,Type> getActivityType) 
         {
             Contract.Requires(context != null);
-            Contract.Requires(getNavigationApp != null);
+            Contract.Requires(getApplication != null);
             Contract.Requires(getActivityType != null);
 
-            return new RxApplicationHelper(context, getNavigationApp, getActivityType);
+            return new RxApplicationHelper(context, getApplication, getActivityType);
         }
 
         private readonly Context context;
 
-        private readonly Func<INavigationApp> getNavigationApp;
+        private readonly Func<IObservable<IEnumerable<INavigationModel>>> getApplication;
 
         private readonly Func<INavigationViewModel,Type> getActivityType;
 
@@ -44,11 +44,11 @@ namespace RxApp.Android
 
         private RxApplicationHelper(
             Context context,
-            Func<INavigationApp> getNavigationApp,
+            Func<IObservable<IEnumerable<INavigationModel>>> getApplication,
             Func<INavigationViewModel,Type> getActivityType)
         {
             this.context = context;
-            this.getNavigationApp = getNavigationApp;
+            this.getApplication = getApplication;
             this.getActivityType = getActivityType;
         }
 
@@ -81,9 +81,7 @@ namespace RxApp.Android
         {
             Log.Debug("RxApp", "Starting application: " + this.context.ApplicationInfo.ClassName);
 
-            var navStack = NavigationStack<INavigationModel>.Create(Scheduler.MainThreadScheduler);
-
-            var navigationApp = getNavigationApp();
+            var application = getApplication();
 
             var activities = new Dictionary<INavigationViewModel, IRxActivity> ();
 
@@ -112,14 +110,20 @@ namespace RxApp.Android
                 };
                     
             subscription = Disposable.Compose(
-                RxObservable
-                    .FromEventPattern<NotifyNavigationStackChangedEventArgs<INavigationModel>>(navStack, "NavigationStackChanged")
-                    .Delay(e => canCreateActivity.Where(x => x))
-                    .Subscribe(e =>
+                application
+                    .ObserveOnMainThread()
+                    .Scan(Tuple.Create<IEnumerable<INavigationModel>, IEnumerable<INavigationModel>>(Enumerable.Empty<INavigationModel>(), Enumerable.Empty<INavigationModel>()), (acc, next) =>
                         {
-                            var newHead = e.EventArgs.NewHead;
-                            var oldHead = e.EventArgs.OldHead;
-                            var removed = e.EventArgs.Removed;
+                            return Tuple.Create(acc.Item2, next);
+                        })
+                    .Delay(x => canCreateActivity.Where(b => b))
+                    .Subscribe(x =>
+                        {
+                            var newHead = x.Item2.FirstOrDefault();
+                            var oldHead = x.Item1.FirstOrDefault();
+
+                            var newHeadSet = new HashSet<INavigationModel>(x.Item2);
+                            var removed = x.Item1.Where(y => !newHeadSet.Contains(y));
 
                             if (newHead == null)
                             {
@@ -171,11 +175,7 @@ namespace RxApp.Android
                             activity.ViewModel = currentModel;
                             activities[ currentModel] = activity;
                             canCreateActivity.Value = true;
-                        }),
-
-                navStack.BindTo(x => navigationApp.Bind(x)),
-                    
-                navigationApp.RootState.BindTo(navStack.SetRoot)
+                        })
             );
         }
 
@@ -193,10 +193,10 @@ namespace RxApp.Android
 
         public RxApplication(IntPtr javaReference, JniHandleOwnership transfer) : base(javaReference, transfer)
         {
-            helper = RxApplicationHelper.Create(this.ApplicationContext, this.GetNavigationApp, this.GetActivityType);
+            helper = RxApplicationHelper.Create(this.ApplicationContext, this.GetApplication, this.GetActivityType);
         }
 
-        protected abstract INavigationApp GetNavigationApp();
+        protected abstract IObservable<IEnumerable<INavigationModel>> GetApplication();
 
         private Type GetActivityType(INavigationViewModel model)
         {

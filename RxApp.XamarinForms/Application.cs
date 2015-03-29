@@ -41,7 +41,7 @@ namespace RxApp.XamarinForms
         public Page MainPage { get { return navigationPage; } }
 
         public void OnStart()
-        {
+        { /*
             var navStack = NavigationStack<INavigationModel>.Create(Scheduler.MainThreadScheduler);
 
             subscription = Disposable.Compose(
@@ -69,7 +69,7 @@ namespace RxApp.XamarinForms
 
                 navStack.BindTo(x => this.bindController(x)),
                 rootState.ObserveOnMainThread().Subscribe(navStack.SetRoot)
-            );
+            );*/
         }
 
     }

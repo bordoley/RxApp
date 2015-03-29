@@ -8,7 +8,8 @@ namespace RxApp.Example
     {
         public static IDisposable Create(IMainControllerModel model)
         {
-            return model.OpenPage.Select(_ => new MainModel()).InvokeCommand(model.Open);
+            return model.OpenPage.Select(_ => 
+                new MainModel()).InvokeCommand(model.Open);
         }
     }
 }

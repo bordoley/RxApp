@@ -17,39 +17,42 @@ namespace RxApp.iOS
     public sealed class RxUIApplicationDelegateHelper
     {
         public static RxUIApplicationDelegateHelper Create(
-            Func<INavigationApp> getNavigationApp,
+            Func<IObservable<IEnumerable<INavigationModel>>> getApplication,
             Func<INavigationViewModel, UIViewController> provideView)
         {
-            return new RxUIApplicationDelegateHelper(getNavigationApp, provideView);
+            return new RxUIApplicationDelegateHelper(getApplication, provideView);
         }
 
-        private readonly Func<INavigationApp> getNavigationApp;
+        private readonly Func<IObservable<IEnumerable<INavigationModel>>> getApplication;
         private readonly Func<INavigationViewModel, UIViewController> provideView;
 
         private IDisposable subscription;
 
         private RxUIApplicationDelegateHelper(
-            Func<INavigationApp> getNavigationApp,
+            Func<IObservable<IEnumerable<INavigationModel>>> getApplication,
             Func<INavigationViewModel, UIViewController> provideView)
         {
-            this.getNavigationApp = getNavigationApp;
+            this.getApplication = getApplication;
             this.provideView = provideView;
         }
 
         public bool FinishedLaunching(UIApplication app, NSDictionary options)
         {
-            var navStack = NavigationStack<INavigationModel>.Create(Scheduler.MainThreadScheduler);
-            var navViewController = new BufferedNavigationController(navStack);
-            var navigationController = getNavigationApp();
+            var navViewController = new BufferedNavigationController();
+            var application = getApplication();
             var views = new Dictionary<INavigationViewModel, UIViewController>();
 
-            subscription = Disposable.Compose(
-                RxObservable
-                    .FromEventPattern<NotifyNavigationStackChangedEventArgs<INavigationModel>>(navStack, "NavigationStackChanged")
-                    .Subscribe((EventPattern<NotifyNavigationStackChangedEventArgs<INavigationModel>> e) =>
+            subscription = application
+                .Scan(Tuple.Create<IEnumerable<INavigationModel>, IEnumerable<INavigationModel>>(Enumerable.Empty<INavigationModel>(), Enumerable.Empty<INavigationModel>()), (acc, next) =>
                     {
-                        var newHead = e.EventArgs.NewHead;
-                        var removed = e.EventArgs.Removed;
+                        return Tuple.Create(acc.Item2, next);
+                    })
+                .Subscribe(x =>
+                    {
+                        var newHead = x.Item2.LastOrDefault();
+    
+                        var newHeadSet = new HashSet<INavigationModel>(x.Item2);
+                        var removed = x.Item1.Where(y => !newHeadSet.Contains(y));
 
                         if (!views.ContainsKey(newHead))
                         {
@@ -57,7 +60,9 @@ namespace RxApp.iOS
                             views[newHead] = view;
                         }
 
-                        var viewControllers = navStack.Reverse().Select(x => views[x]).ToArray();
+                        navViewController.ViewModel = newHead;
+                        var viewControllers = x.Item2.Reverse().Select(model => 
+                            views[model]).ToArray();
                         navViewController.SetViewControllers(viewControllers, true);
 
                         foreach (var model in removed)
@@ -66,11 +71,7 @@ namespace RxApp.iOS
                             views.Remove(model);
                             view.Dispose();
                         }
-                    }),
-
-                navStack.BindTo(x => navigationController.Bind(x)),
-                navigationController.RootState.BindTo(navStack.SetRoot)
-            );
+                    });
 
             var window = new UIWindow(UIScreen.MainScreen.Bounds);
             window.RootViewController = navViewController;
@@ -86,25 +87,37 @@ namespace RxApp.iOS
     }
 
     // See: https://github.com/Plasma/BufferedNavigationController/blob/master/BufferedNavigationController.m
-    internal class BufferedNavigationController : UINavigationController
+    internal class BufferedNavigationController : UINavigationController, IViewFor<INavigationViewModel>
     {
         private readonly Queue<Action> actions = new Queue<Action>();
-        private readonly NavigationStack<INavigationModel> navStack;
 
         private bool transitioning = false;
 
-        public BufferedNavigationController(NavigationStack<INavigationModel> navStack): base()
+        public BufferedNavigationController(): base()
         {
-            this.navStack = navStack;
             this.WeakDelegate = this;
         }
-            
+
+        public INavigationViewModel ViewModel { get; set; }
+
+
+        object IViewFor.ViewModel
+        {
+            get
+            {
+                return this.ViewModel;
+            }
+            set
+            {
+                this.ViewModel = (INavigationViewModel) value;
+            }
+        }
+      
         public override UIViewController PopViewController (bool animated)
         {
             this.actions.Enqueue(() => 
                 {
-                    // FIXME: This cast is pretty ugly. Works in practice, but fragile.
-                    this.navStack.Select(x => ((INavigationViewModel) x).Back).First().Execute();
+                    this.ViewModel.Back.Execute();
                 });
             return base.PopViewController(animated);
         }
@@ -113,8 +126,7 @@ namespace RxApp.iOS
         {
             this.actions.Enqueue(() => 
                 {
-                    // FIXME: This cast is pretty ugly. Works in practice, but fragile.
-                    this.navStack.Select(x => ((INavigationViewModel) x).Up).First().Execute();
+                    this.ViewModel.Up.Execute();
                 });
             return base.PopToRootViewController(animated);
         }
@@ -186,7 +198,7 @@ namespace RxApp.iOS
         {
             helper = 
                 RxUIApplicationDelegateHelper.Create(
-                    this.GetNavigationApp,
+                    this.GetApplication,
                     this.GetUIViewController);
         }
 
@@ -199,7 +211,7 @@ namespace RxApp.iOS
                 model => viewCreator((TModel) model));
         }
 
-        protected abstract INavigationApp GetNavigationApp();
+        protected abstract IObservable<IEnumerable<INavigationModel>> GetApplication();
 
         private UIViewController GetUIViewController(INavigationViewModel model)
         {

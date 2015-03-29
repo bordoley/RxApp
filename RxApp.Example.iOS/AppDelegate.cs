@@ -24,7 +24,7 @@ namespace RxApp.Example
                 });
         }
 
-        protected override INavigationApp GetNavigationApp()
+        protected override IObservable<IEnumerable<INavigationModel>> GetApplication()
         { 
             return RxAppExampleApplicationController.Create();
         }
