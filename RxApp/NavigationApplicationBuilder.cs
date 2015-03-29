@@ -1,15 +1,16 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Reflection;
+using System.Threading;
 
 using RxDisposable = System.Reactive.Disposables.Disposable;
 using RxObservable = System.Reactive.Linq.Observable;
-using System.Threading;
 
 namespace RxApp
 {
@@ -18,9 +19,28 @@ namespace RxApp
         private readonly Dictionary<Type, Func<INavigationControllerModel,IDisposable>> typeToControllerProvider = 
             new Dictionary<Type, Func<INavigationControllerModel,IDisposable>>();
 
-        public IObservable<INavigationModel> RootState { get; set; }
+        private Func<IDisposable> onConnect = () => RxDisposable.Empty;
+        private IObservable<INavigationModel> rootState = RxObservable.Empty<INavigationModel>();
 
-        public void RegisterControllerProvider<TModel> (Func<TModel, IDisposable> controllerProvider)
+        public IObservable<INavigationModel> RootState
+        { 
+            set
+            { 
+                Contract.Requires(value != null);
+                this.rootState = value; 
+            }
+        }
+
+        public Func<IDisposable> OnConnect 
+        { 
+            set 
+            { 
+                Contract.Requires(value != null);
+                this.onConnect = value; 
+            } 
+        }
+
+        public void RegisterControllerProvider<TModel>(Func<TModel, IDisposable> controllerProvider)
             where TModel : INavigationControllerModel
         {
             this.typeToControllerProvider.Add(typeof(TModel), model => 
@@ -30,7 +50,8 @@ namespace RxApp
         public IConnectableObservable<IEnumerable<INavigationModel>> Build()
         {
             var typeToControllerProvider = this.typeToControllerProvider.ToDictionary(entry => entry.Key, entry => entry.Value);
-            var rootState = this.RootState;
+            var rootState = this.rootState;
+            var onConnect = this.onConnect;
 
             Func<INavigationControllerModel,IDisposable> bind = (INavigationControllerModel model) =>
                 {
@@ -56,6 +77,8 @@ namespace RxApp
                         navigationStack.Connect(),
 
                         navigationStack.Subscribe(observer),
+
+                        onConnect(),
 
                         navigationStack
                             // Since we use a mutable dictionary as the accumulator, be extra paranoid

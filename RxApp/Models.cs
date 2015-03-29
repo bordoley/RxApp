@@ -14,6 +14,10 @@ namespace RxApp
         {
             activate = this.canActivate.ToCommand();
             deactivate = this.canActivate.Select(x => !x).ToCommand();
+
+            // Leaking these subscriptions is ok since they will only exist for the lifetime of the object.
+            activate.Subscribe(_ => canActivate.Value = false);
+            deactivate.Subscribe(_ => canActivate.Value = true);
         }
 
         IObservable<Unit> IActivationControllerModel.Deactivate { get { return deactivate; } }
@@ -24,19 +28,22 @@ namespace RxApp
         IObservable<Unit> IActivationControllerModel.Activate { get { return activate; } }
 
         IRxCommand IActivationViewModel.Activate { get { return activate; } }  
-
-
-        IRxProperty<bool> IActivationControllerModel.CanActivate { get { return canActivate; } }
     }
 
     public abstract class NavigationModel : ActivationModel, INavigationModel
     {
-        private readonly IRxCommand back = RxCommand.Create();
-        private readonly IRxCommand up = RxCommand.Create();
-        private readonly IRxCommand<INavigationModel> open = RxCommand.Create<INavigationModel>();
+        private readonly IRxCommand back;
+        private readonly IRxCommand up;
+        private readonly IRxCommand<INavigationModel> open;
 
         protected NavigationModel()
         {
+            // Prevent calling back/up/open if the model is not activated
+            var activated = (this as IActivationViewModel).Deactivate.CanExecute;
+
+            this.back = activated.ToCommand();
+            this.up = activated.ToCommand();
+            this.open = activated.ToCommand<INavigationModel>();
         }
 
         IRxCommand INavigationViewModel.Back { get { return back; } }

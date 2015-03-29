@@ -32,8 +32,6 @@ namespace RxApp
 
     public interface IActivationControllerModel
     {
-        IRxProperty<bool> CanActivate { get; }
-
         IObservable<Unit> Activate { get; }
         IObservable<Unit> Deactivate { get; }
     }
