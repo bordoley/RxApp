@@ -30,6 +30,32 @@ namespace RxApp.Android
             );
         }
 
+        public static IDisposable Bind(this IRxCommand This, IMenuItem menuItem)
+        {
+            var clickListener = new RxCommandOnMenuItemClickListener(This);
+            menuItem.SetOnMenuItemClickListener(clickListener);
+            return Disposable.Compose(
+                This.CanExecute.ObserveOnMainThread().Subscribe(x => menuItem.SetEnabled(x)),
+                RxDisposable.Create(() => menuItem.SetOnMenuItemClickListener(null))
+            );
+        }
+
+        internal sealed class RxCommandOnMenuItemClickListener : Java.Lang.Object, IMenuItemOnMenuItemClickListener
+        {
+            private readonly IRxCommand command;
+
+            internal RxCommandOnMenuItemClickListener(IRxCommand command)
+            {
+                this.command = command;
+            }
+
+            public bool OnMenuItemClick(IMenuItem item)
+            {
+                command.Execute();
+                return true;
+            }            
+        }
+
         public static IDisposable Bind(this IRxProperty<bool> This, CompoundButton button)
         {
             return Disposable.Compose(
