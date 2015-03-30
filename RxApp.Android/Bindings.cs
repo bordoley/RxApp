@@ -12,6 +12,7 @@ using System.Linq.Expressions;
 
 using RxObservable = System.Reactive.Linq.Observable;
 using RxDisposable = System.Reactive.Disposables.Disposable;
+using System.Reactive.Subjects;
 
 namespace RxApp.Android
 {
@@ -30,30 +31,47 @@ namespace RxApp.Android
             );
         }
 
+        public static IDisposable Bind(this IRxProperty<bool> This, IMenuItem menuItem)
+        {
+            if (!menuItem.IsCheckable) { throw new ArgumentException("menuItem must be checkable"); }
+
+            var clickListener = new ObservableOnMenuItemClickListener();
+            menuItem.SetOnMenuItemClickListener(clickListener);
+
+            return Disposable.Compose(
+                This.BindTo(x => menuItem.SetChecked(x)),
+                clickListener.Do(_ => menuItem.SetChecked(!menuItem.IsChecked)).Select(_ => menuItem.IsChecked).BindTo(This),
+                RxDisposable.Create(() => menuItem.SetOnMenuItemClickListener(null)));
+        }
+
         public static IDisposable Bind(this IRxCommand This, IMenuItem menuItem)
         {
-            var clickListener = new RxCommandOnMenuItemClickListener(This);
+            if (menuItem.IsCheckable) { throw new ArgumentException("menuItem must not be checkable"); }
+
+            var clickListener = new ObservableOnMenuItemClickListener();
             menuItem.SetOnMenuItemClickListener(clickListener);
+
             return Disposable.Compose(
                 This.CanExecute.ObserveOnMainThread().Subscribe(x => menuItem.SetEnabled(x)),
+                clickListener.InvokeCommand(This),
                 RxDisposable.Create(() => menuItem.SetOnMenuItemClickListener(null))
             );
         }
 
-        internal sealed class RxCommandOnMenuItemClickListener : Java.Lang.Object, IMenuItemOnMenuItemClickListener
+        private sealed class ObservableOnMenuItemClickListener : Java.Lang.Object, IMenuItemOnMenuItemClickListener, IObservable<Unit>
         {
-            private readonly IRxCommand command;
-
-            internal RxCommandOnMenuItemClickListener(IRxCommand command)
-            {
-                this.command = command;
-            }
+            private readonly Subject<Unit> subject = new Subject<Unit>();
 
             public bool OnMenuItemClick(IMenuItem item)
             {
-                command.Execute();
+                subject.OnNext(Unit.Default);
                 return true;
             }            
+
+            public IDisposable Subscribe(IObserver<Unit> observer)
+            {
+                return subject.Subscribe(observer);
+            }
         }
 
         public static IDisposable Bind(this IRxProperty<bool> This, CompoundButton button)
