@@ -20,9 +20,9 @@ namespace RxApp
             new Dictionary<Type, Func<INavigationControllerModel,IDisposable>>();
 
         private Func<IDisposable> onConnect = () => RxDisposable.Empty;
-        private IObservable<INavigationModel> rootState = null;
+        private IObservable<IEnumerable<INavigationModel>> rootState = null;
 
-        public IObservable<INavigationModel> RootState
+        public IObservable<IEnumerable<INavigationModel>> RootState
         { 
             set
             { 
@@ -88,19 +88,18 @@ namespace RxApp
                             .Synchronize()
                             .Scan(new Dictionary<INavigationModel,IDisposable>(), (acc, stack) =>
                                 {
-                                    var head = stack.Head;
                                     var stackSet = new HashSet<INavigationModel>(stack);
 
                                     // Need to copy the keys to an array to avoid a concurrent modification exception
-                                    foreach (var key in acc.Keys.Where(x => !stackSet.Contains(x)).ToArray())
+                                    foreach (var model in acc.Keys.Where(x => !stackSet.Contains(x)).ToArray())
                                     {
-                                        acc[key].Dispose();
-                                        acc.Remove(key);
+                                        acc[model].Dispose();
+                                        acc.Remove(model);
                                     }
 
-                                    if (head != null && !acc.ContainsKey(head))
+                                    foreach (var model in stack.Where(x => !acc.ContainsKey(x)).ToArray())
                                     {
-                                        acc.Add(head, bind(head));
+                                        acc.Add(model, bind(model));
                                     }
 
                                     return acc;
@@ -125,7 +124,8 @@ namespace RxApp
                             }).Subscribe(),
 
                         rootState
-                            .Select(x => Stack<INavigationModel>.Empty.Push(x))
+                            .Select(x => x.Reverse().Aggregate(Stack<INavigationModel>.Empty, (acc, source) =>
+                                acc.Push(source)))
                             .Subscribe(x => navigationStackSubject.OnNext(x)));
                 }).Replay(1);
         }

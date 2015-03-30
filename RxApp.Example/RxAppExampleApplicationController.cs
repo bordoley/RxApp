@@ -6,6 +6,7 @@ using System.Reactive.Subjects;
 
 using RxDisposable = System.Reactive.Disposables.Disposable;
 using RxObservable = System.Reactive.Linq.Observable;
+using System.Linq;
 
 namespace RxApp.Example
 {
@@ -14,7 +15,7 @@ namespace RxApp.Example
         public static IConnectableObservable<IEnumerable<INavigationModel>> Create()
         {
             var builder = new NavigationApplicationBuilder();
-            builder.RootState = RxObservable.Return(new MainModel());
+            builder.RootState = RxObservable.Return(Enumerable.Repeat(new MainModel(), 1));
             builder.RegisterBinding<IMainControllerModel>(model =>
                 MainControllerService.Create(model));
             return builder.Build();
