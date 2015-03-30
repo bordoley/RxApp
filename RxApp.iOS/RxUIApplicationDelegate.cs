@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 
 using System.Reactive;
@@ -18,19 +19,19 @@ namespace RxApp.iOS
     public sealed class RxUIApplicationDelegateHelper
     {
         public static RxUIApplicationDelegateHelper Create(
-            Func<IConnectableObservable<IEnumerable<INavigationModel>>> getApplication,
+            Func<IConnectableObservable<ImmutableStack<INavigationModel>>> getApplication,
             Func<INavigationViewModel, UIViewController> provideView)
         {
             return new RxUIApplicationDelegateHelper(getApplication, provideView);
         }
 
-        private readonly Func<IConnectableObservable<IEnumerable<INavigationModel>>> getApplication;
+        private readonly Func<IConnectableObservable<ImmutableStack<INavigationModel>>> getApplication;
         private readonly Func<INavigationViewModel, UIViewController> provideView;
 
         private IDisposable subscription;
 
         private RxUIApplicationDelegateHelper(
-            Func<IConnectableObservable<IEnumerable<INavigationModel>>> getApplication,
+            Func<IConnectableObservable<ImmutableStack<INavigationModel>>> getApplication,
             Func<INavigationViewModel, UIViewController> provideView)
         {
             this.getApplication = getApplication;
@@ -213,7 +214,7 @@ namespace RxApp.iOS
                 model => viewCreator((TModel) model));
         }
 
-        protected abstract IConnectableObservable<IEnumerable<INavigationModel>> BuildNavigationApplication();
+        protected abstract IConnectableObservable<ImmutableStack<INavigationModel>> BuildNavigationApplication();
 
         private UIViewController GetUIViewController(INavigationViewModel model)
         {

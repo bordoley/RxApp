@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 
 using Foundation;
@@ -25,7 +26,7 @@ namespace RxApp.Example
                 });
         }
 
-        protected override IConnectableObservable<IEnumerable<INavigationModel>> BuildNavigationApplication()
+        protected override IConnectableObservable<ImmutableStack<INavigationModel>> BuildNavigationApplication()
         { 
             return RxAppExampleApplicationController.Create();
         }
