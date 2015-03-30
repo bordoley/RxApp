@@ -7,7 +7,7 @@
     <ProjectGuid>{C25BB5A4-5A21-4837-8F8F-B46673937F6D}</ProjectGuid>
     <OutputType>Library</OutputType>
     <RootNamespace>RxApp</RootNamespace>
-    <AndroidUseLatestPlatformSdk>True</AndroidUseLatestPlatformSdk>
+    <AndroidUseLatestPlatformSdk>False</AndroidUseLatestPlatformSdk>
     <AssemblyName>RxApp.Android</AssemblyName>
     <TargetFrameworkVersion>v5.0</TargetFrameworkVersion>
   </PropertyGroup>

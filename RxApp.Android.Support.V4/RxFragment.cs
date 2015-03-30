@@ -25,12 +25,14 @@ namespace RxApp.Android
 
         public override void OnResume()
         {
+            base.OnResume();
             viewModel.Activate.Execute();
         }
 
         public override void OnPause()
         {
             viewModel.Deactivate.Execute();
+            base.OnPause();
         }
     } 
 }
