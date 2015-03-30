@@ -14,9 +14,7 @@ namespace RxApp.Android
         {
             helper = RxActivityHelper<TViewModel>.Create(this);
         }
-
-        public IObservable<IMenuItem> OptionsItemSelected { get { return helper.OptionsItemSelected; } }
-            
+  
         public TViewModel ViewModel
         {
             get { return helper.ViewModel; }
