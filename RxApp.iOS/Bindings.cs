@@ -44,15 +44,14 @@ namespace RxApp.iOS
                 RxObservable.FromEventPattern(datePicker, "ValueChanged")
                             .Subscribe(x => { This.Value = datePicker.Date.ToDateTime(); }),
 
-                This.ObserveOnMainThread()
-                    .Subscribe(x => 
+                This.BindTo(x => 
+                    { 
+                        var datePickerDate = datePicker.Date.ToDateTime();
+                        if (datePickerDate != x) 
                         { 
-                            var datePickerDate = datePicker.Date.ToDateTime();
-                            if (datePickerDate != x) 
-                            { 
-                                datePicker.Date = x.ToNSDate(); 
-                            } 
-                        })
+                            datePicker.Date = x.ToNSDate(); 
+                        } 
+                    })
             );
         }
 
@@ -68,7 +67,7 @@ namespace RxApp.iOS
 
         public static IDisposable BindTo<T>(this IObservable<T> This, Action<T> action)
         {
-            return This.ObserveOnMainThread().Subscribe(x => action(x));
+            return This.ObserveOnMainThread().Subscribe(action);
         }
 
         public static IDisposable Bind(this IRxCommand This, UIButton button)

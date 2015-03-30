@@ -90,7 +90,7 @@ namespace RxApp.Android
 
         public static IDisposable BindTo<T>(this IObservable<T> This, Action<T> action)
         {
-            return This.ObserveOnMainThread().Subscribe(x => action(x));
+            return This.ObserveOnMainThread().Subscribe(action);
         }
 
         public static IDisposable BindTo<TViewModel,TView>(
