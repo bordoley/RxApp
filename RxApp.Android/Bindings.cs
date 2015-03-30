@@ -39,7 +39,7 @@ namespace RxApp.Android
             menuItem.SetOnMenuItemClickListener(clickListener);
 
             return Disposable.Compose(
-                This.ObserveOnMainThread().BindTo(x => menuItem.SetChecked(x)),
+                This.BindTo(x => menuItem.SetChecked(x)),
                 clickListener.Do(_ => menuItem.SetChecked(!menuItem.IsChecked)).Select(_ => menuItem.IsChecked).BindTo(This),
                 RxDisposable.Create(() => menuItem.SetOnMenuItemClickListener(null)));
         }
@@ -52,7 +52,7 @@ namespace RxApp.Android
             menuItem.SetOnMenuItemClickListener(clickListener);
 
             return Disposable.Compose(
-                This.CanExecute.ObserveOnMainThread().Subscribe(x => menuItem.SetEnabled(x)),
+                This.CanExecute.BindTo(x => menuItem.SetEnabled(x)),
                 clickListener.InvokeCommand(This),
                 RxDisposable.Create(() => menuItem.SetOnMenuItemClickListener(null))
             );
