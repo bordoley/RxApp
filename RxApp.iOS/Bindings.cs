@@ -33,8 +33,7 @@ namespace RxApp.iOS
             return Disposable.Compose(
                 RxObservable.FromEventPattern(uiSwitch, "ValueChanged")
                             .Subscribe(x => { This.Value = uiSwitch.On; }),
-                This.ObserveOnMainThread()
-                    .Subscribe(x => { if (uiSwitch.On != x) { uiSwitch.On = x; } })
+                This.BindTo(x => { if (uiSwitch.On != x) { uiSwitch.On = x; } })
             );
         }
 
