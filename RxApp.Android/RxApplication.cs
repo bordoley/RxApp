@@ -3,6 +3,7 @@ using Android.Content;
 using Android.Util;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Reactive;
@@ -22,7 +23,7 @@ namespace RxApp.Android
     {
         public static RxApplicationHelper Create(
             Context context,
-            IConnectableObservable<IEnumerable<INavigationModel>> navigationApplicaction,
+            IConnectableObservable<ImmutableStack<INavigationModel>> navigationApplicaction,
             Func<INavigationViewModel,Type> getActivityType) 
         {
             Contract.Requires(context != null);
@@ -34,7 +35,7 @@ namespace RxApp.Android
 
         private readonly Context context;
 
-        private readonly IConnectableObservable<IEnumerable<INavigationModel>> navigationApplicaction;
+        private readonly IConnectableObservable<ImmutableStack<INavigationModel>> navigationApplicaction;
 
         private readonly Func<INavigationViewModel,Type> getActivityType;
 
@@ -44,7 +45,7 @@ namespace RxApp.Android
 
         private RxApplicationHelper(
             Context context,
-            IConnectableObservable<IEnumerable<INavigationModel>> navigationApplicaction,
+            IConnectableObservable<ImmutableStack<INavigationModel>> navigationApplicaction,
             Func<INavigationViewModel,Type> getActivityType)
         {
             this.context = context;
@@ -112,15 +113,15 @@ namespace RxApp.Android
             subscription = Disposable.Compose(
                 this.navigationApplicaction
                     .ObserveOnMainThread()
-                    .Scan(Tuple.Create(Enumerable.Empty<INavigationModel>(), Enumerable.Empty<INavigationModel>()), (acc, next) =>
+                    .Scan(Tuple.Create(ImmutableStack<INavigationModel>.Empty, ImmutableStack<INavigationModel>.Empty), (acc, next) =>
                         Tuple.Create(acc.Item2, next))
                     .Delay(x => canCreateActivity.Where(b => b))
-                    .Subscribe(x =>
+                    .Do(x =>
                         {
-                            var newHead = x.Item2.FirstOrDefault();
-                            var oldHead = x.Item1.FirstOrDefault();
+                            var newHead = x.Item2.IsEmpty ? null :x.Item2.Peek();
+                            var oldHead = x.Item1.IsEmpty ? null : x.Item1.Peek();
 
-                            var newHeadSet = new HashSet<INavigationModel>(x.Item2);
+                            var newHeadSet = x.Item2.ToImmutableHashSet();
                             var removed = x.Item1.Where(y => !newHeadSet.Contains(y));
 
                             if (newHead == null)
@@ -163,7 +164,7 @@ namespace RxApp.Android
                                         finishRemovedActivities(removed);   
                                     }, null);
                             }
-                        }),
+                        }).Subscribe(),
 
                 this.activityCreated
                     .Subscribe(activity => 
@@ -195,7 +196,7 @@ namespace RxApp.Android
         {
         }
 
-        protected abstract IConnectableObservable<IEnumerable<INavigationModel>> NavigationApplicaction { get; }
+        protected abstract IConnectableObservable<ImmutableStack<INavigationModel>> NavigationApplicaction { get; }
 
         private Type GetActivityType(INavigationViewModel model)
         {

@@ -1,6 +1,7 @@
 ﻿using RxApp;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 
@@ -12,12 +13,11 @@ namespace RxApp.Example
 {
     public static class RxAppExampleApplicationController
     {
-        public static IConnectableObservable<IEnumerable<INavigationModel>> Create()
+        public static IConnectableObservable<ImmutableStack<INavigationModel>> Create()
         {
             var builder = new NavigationApplicationBuilder();
-            builder.RootState = RxObservable.Return(Enumerable.Repeat(new MainModel(), 1));
-            builder.RegisterBinding<IMainControllerModel>(model =>
-                MainControllerService.Create(model));
+            builder.RootState = RxObservable.Return(ImmutableStack.Create<INavigationModel>(new MainModel()));
+            builder.RegisterBinding<IMainControllerModel>(model => MainControllerService.Create(model));
             return builder.Build();
         }
     }

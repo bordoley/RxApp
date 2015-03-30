@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Reactive.Concurrency;
@@ -20,9 +21,9 @@ namespace RxApp
             new Dictionary<Type, Func<INavigationControllerModel,IDisposable>>();
 
         private Func<IDisposable> onConnect = () => RxDisposable.Empty;
-        private IObservable<IEnumerable<INavigationModel>> rootState = null;
+        private IObservable<ImmutableStack<INavigationModel>> rootState = null;
 
-        public IObservable<IEnumerable<INavigationModel>> RootState
+        public IObservable<ImmutableStack<INavigationModel>> RootState
         { 
             set
             { 
@@ -47,9 +48,9 @@ namespace RxApp
                 bind((TModel) model));
         }
 
-        public IConnectableObservable<IEnumerable<INavigationModel>> Build()
+        public IConnectableObservable<ImmutableStack<INavigationModel>> Build()
         {
-            var typeToBindFunc = this.typeToBindFunc.ToDictionary(entry => entry.Key, entry => entry.Value);
+            var typeToBindFunc = this.typeToBindFunc.ToImmutableDictionary();
             var rootState = this.rootState;
             var onConnect = this.onConnect;
 
@@ -70,9 +71,9 @@ namespace RxApp
                     throw new NotSupportedException("No Controller found for the given model type: " + modelType);
                 };
 
-            return RxObservable.Create<IEnumerable<INavigationModel>>(observer => 
+            return RxObservable.Create<ImmutableStack<INavigationModel>>(observer => 
                 {
-                    var navigationStackSubject = new Subject<Stack<INavigationModel>>();
+                    var navigationStackSubject = new Subject<ImmutableStack<INavigationModel>>();
                     var navigationStack = navigationStackSubject.DistinctUntilChanged().Publish();
 
                     return Disposable.Compose(
@@ -83,26 +84,17 @@ namespace RxApp
                         onConnect(),
 
                         navigationStack
-                            // Since we use a mutable dictionary as the accumulator, be extra paranoid
-                            // and synchronize the observable.
-                            .Synchronize()
-                            .Scan(new Dictionary<INavigationModel,IDisposable>(), (acc, stack) =>
+                            .Scan(ImmutableDictionary<INavigationModel,IDisposable>.Empty, (acc, stack) =>
                                 {
-                                    var stackSet = new HashSet<INavigationModel>(stack);
-
-                                    // Need to copy the keys to an array to avoid a concurrent modification exception
-                                    foreach (var model in acc.Keys.Where(x => !stackSet.Contains(x)).ToArray())
-                                    {
-                                        acc[model].Dispose();
-                                        acc.Remove(model);
-                                    }
-
-                                    foreach (var model in stack.Where(x => !acc.ContainsKey(x)).ToArray())
-                                    {
-                                        acc.Add(model, bind(model));
-                                    }
-
-                                    return acc;
+                                    var stackSet = stack.ToImmutableHashSet();
+                                    var removed = acc.Keys.Where(x => !stackSet.Contains(x))
+                                        .Aggregate(acc, (accA, model) =>
+                                            {
+                                                accA[model].Dispose();
+                                                return accA.Remove(model);
+                                            });
+                                    return stack.Where(x => !acc.ContainsKey(x))
+                                        .Aggregate(removed, (accB, model) => accB.Add(model, bind(model)));
                                 })
                             .Subscribe(),
                         
@@ -115,73 +107,26 @@ namespace RxApp
                                     RxDisposable.Empty :
                                     RxObservable
                                         .Merge(
-                                            stack.Head.Back.Select(x => stack.Tail),
-                                            stack.Head.Up.Select(x => stack.Up()),
-                                            stack.Head.Open.Select(x => stack.Push(x)))
+                                            stack.Peek().Back.Select(x => stack.Pop()),
+                                            stack.Peek().Up.Select(x => stack.Up()),
+                                            stack.Peek().Open.Select(x => stack.Push(x)))
                                         .Where(x => x != stack)
                                         .FirstAsync()
                                         .Subscribe(x => navigationStackSubject.OnNext(x));
                             }).Subscribe(),
 
-                        rootState
-                            .Select(x => x.Reverse().Aggregate(Stack<INavigationModel>.Empty, (acc, source) =>
-                                acc.Push(source)))
-                            .Subscribe(x => navigationStackSubject.OnNext(x)));
+                        rootState.Subscribe(x => navigationStackSubject.OnNext(x)));
                 }).Replay(1);
         }
+    }
 
-        // A trivial cons list implementation
-        // FIXME: Might need to implement equality
-        private sealed class Stack<T> : IEnumerable<T>
+    internal static class ImmutableStackExt
+    {
+        internal static ImmutableStack<T> Up<T>(this ImmutableStack<T> This)
         {
-            private static readonly Stack<T> empty = new Stack<T>(default(T), null);
-
-            public static Stack<T> Empty { get { return empty; } }
-
-            private static IEnumerator<T> Enumerate(Stack<T> stack)
-            {
-                for (;stack.Head != null; stack = stack.Tail)
-                {
-                    yield return stack.Head;
-                }
-            }
-
-            private readonly Stack<T> tail;
-            private readonly T head;
-
-            internal Stack(T head, Stack<T> tail)
-            {
-                this.head = head;
-                this.tail = tail;
-            }
-
-            public bool IsEmpty { get { return (this.Head == null) && (this.Tail == null); } }
-
-            public T Head { get { return head; } }
-
-            public Stack<T> Tail  {  get { return tail; } }
-
-            public Stack<T> Push(T element)
-            {
-                return new Stack<T>(element, this);
-            }
-
-            public IEnumerator<T> GetEnumerator()
-            {
-                return Enumerate(this);
-            }
-
-            IEnumerator IEnumerable.GetEnumerator()
-            {
-                return this.GetEnumerator();
-            }
-
-            public Stack<T> Up()
-            {
-                var x = this;
-                for (; !x.Tail.IsEmpty; x = x.Tail) {}
-                return x;
-            }
+            var x = This;
+            for (; !x.Pop().IsEmpty; x = x.Pop()) {}
+            return x;
         }
     }
 }

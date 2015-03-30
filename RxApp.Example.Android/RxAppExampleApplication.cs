@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.IO;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
@@ -15,7 +16,7 @@ namespace RxApp.Example
     [Application]
     public sealed class RxAppExampleApplication : RxApplication
     {
-        private readonly IConnectableObservable<IEnumerable<INavigationModel>> application;
+        private readonly IConnectableObservable<ImmutableStack<INavigationModel>> application;
 
         public RxAppExampleApplication(IntPtr javaReference, JniHandleOwnership transfer) : base(javaReference, transfer)
         {
@@ -23,7 +24,7 @@ namespace RxApp.Example
             this.application = RxAppExampleApplicationController.Create();
         }
 
-        protected override IConnectableObservable<IEnumerable<INavigationModel>> NavigationApplicaction
+        protected override IConnectableObservable<ImmutableStack<INavigationModel>> NavigationApplicaction
         { 
             get { return application; }
         }
