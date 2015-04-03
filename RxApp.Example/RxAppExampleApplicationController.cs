@@ -13,7 +13,7 @@ namespace RxApp.Example
 {
     public static class RxAppExampleApplicationController
     {
-        public static IConnectableObservable<NavigationStack> Create()
+        public static IObservable<NavigationStack> Create()
         {
             var builder = new NavigationApplicationBuilder();
             builder.RootState = RxObservable.Return(NavigationStack.Empty.Push(new MainModel()));

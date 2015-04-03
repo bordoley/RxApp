@@ -22,40 +22,29 @@ namespace RxApp.Android
     public sealed class RxApplicationHelper
     {
         public static RxApplicationHelper Create(
-            Context context,
-            IConnectableObservable<NavigationStack> navigationApplicaction,
-            Func<INavigationViewModel,Type> getActivityType) 
+            Func<IObservable<NavigationStack>> navigationApplicaction,
+            Action<Activity,INavigationViewModel> createActivity) 
         {
-            Contract.Requires(context != null);
             Contract.Requires(navigationApplicaction != null);
-            Contract.Requires(getActivityType != null);
+            Contract.Requires(createActivity != null);
 
-            return new RxApplicationHelper(context, navigationApplicaction, getActivityType);
+            return new RxApplicationHelper(navigationApplicaction, createActivity);
         }
 
-        private readonly Context context;
+        private readonly Func<IObservable<NavigationStack>> navigationApplicaction;
 
-        private readonly IConnectableObservable<NavigationStack> navigationApplicaction;
-
-        private readonly Func<INavigationViewModel,Type> getActivityType;
+        private readonly Action<Activity,INavigationViewModel> createActivity;
 
         private readonly Subject<IRxActivity> activityCreated = new Subject<IRxActivity>();
 
         private IDisposable subscription;
 
         private RxApplicationHelper(
-            Context context,
-            IConnectableObservable<NavigationStack> navigationApplicaction,
-            Func<INavigationViewModel,Type> getActivityType)
+            Func<IObservable<NavigationStack>> navigationApplicaction,
+            Action<Activity,INavigationViewModel> createActivity)
         {
-            this.context = context;
             this.navigationApplicaction = navigationApplicaction;
-            this.getActivityType = getActivityType;
-        }
-
-        public void OnTerminate()
-        {
-            this.Stop();
+            this.createActivity = createActivity;
         }
 
         public void OnActivityCreated(IRxActivity activity)
@@ -69,8 +58,7 @@ namespace RxApp.Android
                 // When the application is reopened from the background, it creates the application and starts the last activity 
                 // that was opened, not the startup activity. 
 
-                this.Start();
-                activity.Finish();
+                this.Start(activity);
             }
             else
             {
@@ -78,61 +66,54 @@ namespace RxApp.Android
             }
         }
 
-        private void Start()
+        private void Start(IRxActivity startupActivity)
         {
-            Log.Debug("RxApp", "Starting application: " + this.context.ApplicationInfo.ClassName);
+            Log.Debug("RxApp", "Starting application");
 
             var activities = new Dictionary<INavigationViewModel, IRxActivity> ();
-
-            Action<IEnumerable<INavigationViewModel>> finishRemovedActivities = removed =>
-                {
-                    foreach (var model in removed)
-                    {
-                        IRxActivity activity = activities[model];  
-                        activities.Remove(model);
-                        activity.Finish();
-                    }   
-                };
+            INavigationViewModel currentModel = new StartupModel();
+            activities[currentModel] = startupActivity;
 
             // This is essentially an async lock. This code is single threaded so using a bool is ok.
             var canCreateActivity = RxProperty.Create(true);
-            INavigationViewModel currentModel = null;
-
-            // FIXME: Need to support activity transitions.
-            Action<INavigationViewModel> createActivity = model =>
-                {
-                    var viewType = getActivityType(model);
-                    var intent = new Intent(context, viewType).AddFlags(ActivityFlags.NewTask);
-                    context.StartActivity(intent);
-                };
-                    
+      
             subscription = Disposable.Compose(
-                this.navigationApplicaction
+                this.navigationApplicaction()
                     .ObserveOnMainThread()
-                    .Delay(x => canCreateActivity.Where(b => b))
-                    .Do(x =>
+                    .Delay(_ => canCreateActivity.Where(b => b))
+                    .Subscribe(navStack =>
                         {
-                            var removed = activities.Keys.Where(y => !x.Contains(y)).ToImmutableArray();
-                            var previousModel = currentModel;
-                            currentModel = x.FirstOrDefault();
+                            var removed = activities.Keys.Where(y => !navStack.Contains(y)).ToImmutableArray();
+                            var previousActivity = activities[currentModel];
+                            currentModel = navStack.FirstOrDefault();
 
-                            if (currentModel == null)
-                            {
-                                // Can't dispose the outer subscription from within its own callback, 
-                                // so post the call onto the sync context
-                                SynchronizationContext.Current.Post(_ => this.Stop(), null);
-                            } 
-                            else if (!activities.ContainsKey(currentModel))
+                            if (currentModel != null && !activities.ContainsKey(currentModel))
                             {
                                 Log.Debug("RxApp", "Starting activity with model: " + currentModel.GetType());
 
                                 canCreateActivity.Value = false;
-                                createActivity(currentModel);
+                                createActivity((Activity) previousActivity, currentModel);
                             }
 
-                            finishRemovedActivities(removed); 
+                            // Finish any removed activities
+                            foreach (var model in removed)
+                            {
+                                IRxActivity activity = activities[model];  
+                                activities.Remove(model);
+                                activity.Finish();
+                            }   
 
-                        }).Subscribe(),
+                            if (navStack.IsEmpty)
+                            {
+                                // Can't dispose the outer subscription from within its own callback, 
+                                // so post the call onto the sync context
+                                SynchronizationContext.Current.Post(_ => 
+                                    {
+                                        subscription.Dispose(); 
+                                        subscription = null;
+                                    }, null);
+                            } 
+                        }),
 
                 this.activityCreated
                     .Subscribe(activity => 
@@ -142,16 +123,12 @@ namespace RxApp.Android
                             activity.ViewModel = currentModel;
                             activities[currentModel] = activity;
                             canCreateActivity.Value = true;
-                        }),
-
-                this.navigationApplicaction.Connect()   
+                        })
             );
         }
 
-        private void Stop()
+        private sealed class StartupModel : NavigationModel
         {
-            subscription.Dispose(); 
-            subscription = null;
         }
     }
 
@@ -162,9 +139,10 @@ namespace RxApp.Android
 
         public RxApplication(IntPtr javaReference, JniHandleOwnership transfer) : base(javaReference, transfer)
         {
+            helper = RxApplicationHelper.Create(() => this.NavigationApplicaction, this.CreateActivity);
         }
 
-        protected abstract IConnectableObservable<NavigationStack> NavigationApplicaction { get; }
+        protected abstract IObservable<NavigationStack> NavigationApplicaction { get; }
 
         private Type GetActivityType(INavigationViewModel model)
         {
@@ -182,23 +160,23 @@ namespace RxApp.Android
             throw new NotSupportedException("No activity found for the given model type: " + modelType);
         }
 
+        private void CreateActivity(Activity current, INavigationViewModel model)
+        {
+            var viewType = GetActivityType(model);
+            var intent = new Intent(current, viewType);
+            StartActivity(current, intent);
+        }
+
+        protected virtual void StartActivity(Activity current, Intent intent)
+        {
+            current.StartActivity(intent);
+        }
+
         protected void RegisterActivity<TModel, TActivity>()
             where TModel : INavigationViewModel
             where TActivity : Activity, IRxActivity
         {
             this.modelToActivityMapping.Add(typeof(TModel), typeof(TActivity));
-        }
-
-        public override void OnCreate()
-        {   
-            base.OnCreate();
-            helper = RxApplicationHelper.Create(this.ApplicationContext, this.NavigationApplicaction, this.GetActivityType);
-        }
-
-        public override void OnTerminate()
-        {
-            helper.OnTerminate();
-            base.OnTerminate();
         }
 
         public void OnActivityCreated(IRxActivity activity)

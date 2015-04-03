@@ -19,19 +19,19 @@ namespace RxApp.iOS
     public sealed class RxUIApplicationDelegateHelper
     {
         public static RxUIApplicationDelegateHelper Create(
-            Func<IConnectableObservable<NavigationStack>> getApplication,
+            Func<IObservable<NavigationStack>> getApplication,
             Func<INavigationViewModel, UIViewController> provideView)
         {
             return new RxUIApplicationDelegateHelper(getApplication, provideView);
         }
 
-        private readonly Func<IConnectableObservable<NavigationStack>> getApplication;
+        private readonly Func<IObservable<NavigationStack>> getApplication;
         private readonly Func<INavigationViewModel, UIViewController> provideView;
 
         private IDisposable subscription;
 
         private RxUIApplicationDelegateHelper(
-            Func<IConnectableObservable<NavigationStack>> getApplication,
+            Func<IObservable<NavigationStack>> getApplication,
             Func<INavigationViewModel, UIViewController> provideView)
         {
             this.getApplication = getApplication;
@@ -73,8 +73,8 @@ namespace RxApp.iOS
                             }
 
                             return acc;
-                        }).Subscribe(),
-                application.Connect());
+                        }).Subscribe()
+                    );
 
             var window = new UIWindow(UIScreen.MainScreen.Bounds);
             window.RootViewController = navViewController;
@@ -214,7 +214,7 @@ namespace RxApp.iOS
                 model => viewCreator((TModel) model));
         }
 
-        protected abstract IConnectableObservable<NavigationStack> BuildNavigationApplication();
+        protected abstract IObservable<NavigationStack> BuildNavigationApplication();
 
         private UIViewController GetUIViewController(INavigationViewModel model)
         {

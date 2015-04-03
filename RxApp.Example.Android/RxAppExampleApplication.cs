@@ -16,7 +16,7 @@ namespace RxApp.Example
     [Application]
     public sealed class RxAppExampleApplication : RxApplication
     {
-        private readonly IConnectableObservable<NavigationStack> application;
+        private readonly IObservable<NavigationStack> application;
 
         public RxAppExampleApplication(IntPtr javaReference, JniHandleOwnership transfer) : base(javaReference, transfer)
         {
@@ -24,7 +24,7 @@ namespace RxApp.Example
             this.application = RxAppExampleApplicationController.Create();
         }
 
-        protected override IConnectableObservable<NavigationStack> NavigationApplicaction
+        protected override IObservable<NavigationStack> NavigationApplicaction
         { 
             get { return application; }
         }

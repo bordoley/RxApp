@@ -15,12 +15,12 @@ using RxObservable = System.Reactive.Linq.Observable;
 
 namespace RxApp
 {
+    // FIXME: Naming issue. Application is a bit of a misnomer. It could just be another window in a desktop app. Maybe NavigableBuilder?
     public sealed class NavigationApplicationBuilder
     {
         private readonly Dictionary<Type, Func<INavigationControllerModel,IDisposable>> typeToBindFunc = 
             new Dictionary<Type, Func<INavigationControllerModel,IDisposable>>();
 
-        private Func<IDisposable> onConnect = () => RxDisposable.Empty;
         private IObservable<NavigationStack> rootState = null;
 
         public IObservable<NavigationStack> RootState
@@ -32,15 +32,6 @@ namespace RxApp
             }
         }
 
-        public Func<IDisposable> OnConnect 
-        { 
-            set 
-            { 
-                Contract.Requires(value != null);
-                this.onConnect = value; 
-            } 
-        }
-
         public void RegisterBinding<TModel>(Func<TModel, IDisposable> bind)
             where TModel : INavigationControllerModel
         {
@@ -48,11 +39,10 @@ namespace RxApp
                 bind((TModel) model));
         }
 
-        public IConnectableObservable<NavigationStack> Build()
+        public IObservable<NavigationStack> Build()
         {
             var typeToBindFunc = this.typeToBindFunc.ToImmutableDictionary();
             var rootState = this.rootState;
-            var onConnect = this.onConnect;
 
             if (rootState == null) { throw new NotSupportedException("RootState must be set before calling build."); }
 
@@ -81,8 +71,6 @@ namespace RxApp
 
                         navigationStack.Subscribe(observer),
 
-                        onConnect(),
-
                         navigationStack
                             .Scan(ImmutableDictionary<INavigationModel,IDisposable>.Empty, (acc, stack) =>
                                 {
@@ -100,23 +88,23 @@ namespace RxApp
                         
                         navigationStack
                             .Scan(RxDisposable.Empty, (acc, stack) =>
-                            {
-                                acc.Dispose();
+                                {
+                                    acc.Dispose();
 
-                                return stack.IsEmpty ?
-                                    RxDisposable.Empty :
-                                    RxObservable
-                                        .Merge(
-                                            stack.Peek().Back.Select(x => stack.Pop()),
-                                            stack.Peek().Up.Select(x => stack.Up()),
-                                            stack.Peek().Open.Select(x => stack.Push(x)))
-                                        .Where(x => x != stack)
-                                        .FirstAsync()
-                                        .Subscribe(x => navigationStackSubject.OnNext(x));
-                            }).Subscribe(),
+                                    return stack.IsEmpty ?
+                                        RxDisposable.Empty :
+                                        RxObservable
+                                            .Merge(
+                                                stack.Peek().Back.Select(x => stack.Pop()),
+                                                stack.Peek().Up.Select(x => stack.Up()),
+                                                stack.Peek().Open.Select(x => stack.Push(x)))
+                                            .Where(x => x != stack)
+                                            .FirstAsync()
+                                            .Subscribe(x => navigationStackSubject.OnNext(x));
+                                }).Subscribe(),
 
                         rootState.Subscribe(x => navigationStackSubject.OnNext(x)));
-                }).Replay(1);
+                });
         }
     }
 

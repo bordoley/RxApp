@@ -26,7 +26,7 @@ namespace RxApp.Example
                 });
         }
 
-        protected override IConnectableObservable<NavigationStack> BuildNavigationApplication()
+        protected override IObservable<NavigationStack> BuildNavigationApplication()
         { 
             return RxAppExampleApplicationController.Create();
         }
