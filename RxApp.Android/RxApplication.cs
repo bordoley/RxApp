@@ -23,7 +23,7 @@ namespace RxApp.Android
     {
         public static RxApplicationHelper Create(
             Context context,
-            IConnectableObservable<ImmutableStack<INavigationModel>> navigationApplicaction,
+            IConnectableObservable<NavigationStack> navigationApplicaction,
             Func<INavigationViewModel,Type> getActivityType) 
         {
             Contract.Requires(context != null);
@@ -35,7 +35,7 @@ namespace RxApp.Android
 
         private readonly Context context;
 
-        private readonly IConnectableObservable<ImmutableStack<INavigationModel>> navigationApplicaction;
+        private readonly IConnectableObservable<NavigationStack> navigationApplicaction;
 
         private readonly Func<INavigationViewModel,Type> getActivityType;
 
@@ -45,7 +45,7 @@ namespace RxApp.Android
 
         private RxApplicationHelper(
             Context context,
-            IConnectableObservable<ImmutableStack<INavigationModel>> navigationApplicaction,
+            IConnectableObservable<NavigationStack> navigationApplicaction,
             Func<INavigationViewModel,Type> getActivityType)
         {
             this.context = context;
@@ -98,72 +98,40 @@ namespace RxApp.Android
             var canCreateActivity = RxProperty.Create(true);
             INavigationViewModel currentModel = null;
 
-
             // FIXME: Need to support activity transitions.
             Action<INavigationViewModel> createActivity = model =>
                 {
                     var viewType = getActivityType(model);
                     var intent = new Intent(context, viewType).AddFlags(ActivityFlags.NewTask);
-
-                    canCreateActivity.Value = false;
-                    currentModel = model;
                     context.StartActivity(intent);
                 };
                     
             subscription = Disposable.Compose(
                 this.navigationApplicaction
                     .ObserveOnMainThread()
-                    .Scan(Tuple.Create(ImmutableStack<INavigationModel>.Empty, ImmutableStack<INavigationModel>.Empty), (acc, next) =>
-                        Tuple.Create(acc.Item2, next))
                     .Delay(x => canCreateActivity.Where(b => b))
                     .Do(x =>
                         {
-                            var newHead = x.Item2.IsEmpty ? null :x.Item2.Peek();
-                            var oldHead = x.Item1.IsEmpty ? null : x.Item1.Peek();
+                            var removed = activities.Keys.Where(y => !x.Contains(y)).ToImmutableArray();
+                            var previousModel = currentModel;
+                            currentModel = x.FirstOrDefault();
 
-                            var newHeadSet = x.Item2.ToImmutableHashSet();
-                            var removed = x.Item1.Where(y => !newHeadSet.Contains(y));
-
-                            if (newHead == null)
+                            if (currentModel == null)
                             {
-                                // Back button clicked clearing the model stack
-                                currentModel = null;
-                                finishRemovedActivities(removed);
-
                                 // Can't dispose the outer subscription from within its own callback, 
                                 // so post the call onto the sync context
                                 SynchronizationContext.Current.Post(_ => this.Stop(), null);
                             } 
-                            else if (activities.ContainsKey(newHead))
+                            else if (!activities.ContainsKey(currentModel))
                             {
-                                // Back button clicked to a previous model in the stack.
-                                // Android still maintains the visual stack and will display
-                                // the correct view once we close all the other activities 
-                                // that have been popped from the model stack.
-                                currentModel = newHead;
-                                finishRemovedActivities(removed); 
-                            }
-                            else if (oldHead == null)
-                            {
-                                // Special case application start up since, we want to start the first application
-                                // activity immediately to avoid any weird visual glitches when transitioning from
-                                // the splash screen to the first activity of the app (which is sometimes an empty activity).
-                                Log.Debug("RxApp", "Starting activity with model: " + newHead.GetType());
+                                Log.Debug("RxApp", "Starting activity with model: " + currentModel.GetType());
 
-                                createActivity(newHead);
+                                canCreateActivity.Value = false;
+                                createActivity(currentModel);
                             }
-                            else
-                            {
-                                // Force the action to be placed on the event loop in order to ensure that each started activity
-                                // resumes with the correct model as current model.
-                                SynchronizationContext.Current.Post(_ =>
-                                    {
-                                        Log.Debug("RxApp", "Starting activity with model: " + newHead.GetType());
 
-                                        createActivity(newHead);
-                                        finishRemovedActivities(removed);   
-                                    }, null);
-                            }
+                            finishRemovedActivities(removed); 
+
                         }).Subscribe(),
 
                 this.activityCreated
@@ -196,7 +164,7 @@ namespace RxApp.Android
         {
         }
 
-        protected abstract IConnectableObservable<ImmutableStack<INavigationModel>> NavigationApplicaction { get; }
+        protected abstract IConnectableObservable<NavigationStack> NavigationApplicaction { get; }
 
         private Type GetActivityType(INavigationViewModel model)
         {

@@ -6,6 +6,10 @@ namespace RxApp
 {
     public static class Disposable
     {
+        /// <summary>
+        /// Returns an IDisposable that disposes a group of Disposables together.
+        /// </summary>
+        /// <param name="disposables">The disposables that will be disposed together.</param>
         public static IDisposable Compose(params IDisposable[] disposables)
         {
             disposables = disposables ?? new IDisposable[]{};

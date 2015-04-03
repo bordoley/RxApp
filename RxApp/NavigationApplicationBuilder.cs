@@ -21,9 +21,9 @@ namespace RxApp
             new Dictionary<Type, Func<INavigationControllerModel,IDisposable>>();
 
         private Func<IDisposable> onConnect = () => RxDisposable.Empty;
-        private IObservable<ImmutableStack<INavigationModel>> rootState = null;
+        private IObservable<NavigationStack> rootState = null;
 
-        public IObservable<ImmutableStack<INavigationModel>> RootState
+        public IObservable<NavigationStack> RootState
         { 
             set
             { 
@@ -48,7 +48,7 @@ namespace RxApp
                 bind((TModel) model));
         }
 
-        public IConnectableObservable<ImmutableStack<INavigationModel>> Build()
+        public IConnectableObservable<NavigationStack> Build()
         {
             var typeToBindFunc = this.typeToBindFunc.ToImmutableDictionary();
             var rootState = this.rootState;
@@ -71,9 +71,9 @@ namespace RxApp
                     throw new NotSupportedException("No Controller found for the given model type: " + modelType);
                 };
 
-            return RxObservable.Create<ImmutableStack<INavigationModel>>(observer => 
+            return RxObservable.Create<NavigationStack>(observer => 
                 {
-                    var navigationStackSubject = new Subject<ImmutableStack<INavigationModel>>();
+                    var navigationStackSubject = new Subject<NavigationStack>();
                     var navigationStack = navigationStackSubject.DistinctUntilChanged().Publish();
 
                     return Disposable.Compose(
@@ -120,13 +120,81 @@ namespace RxApp
         }
     }
 
-    internal static class ImmutableStackExt
+    public sealed class NavigationStack : IEnumerable<INavigationModel>, IEquatable<NavigationStack>
     {
-        internal static ImmutableStack<T> Up<T>(this ImmutableStack<T> This)
+        public static readonly NavigationStack Empty = 
+            new NavigationStack(ImmutableStack<INavigationModel>.Empty, ImmutableHashSet<INavigationModel>.Empty);
+
+        private readonly IImmutableStack<INavigationModel> stack;
+        private readonly IImmutableSet<INavigationModel> stackSet;
+
+        private NavigationStack(IImmutableStack<INavigationModel> stack, IImmutableSet<INavigationModel> stackSet)
         {
-            var x = This;
+            this.stack = stack;
+            this.stackSet = stackSet;
+        }
+
+        public bool Contains(INavigationModel model)
+        {
+            return stackSet.Contains(model);
+        }
+
+        public NavigationStack Push(INavigationModel model)
+        {
+            if (stackSet.Contains(model)) { throw new ArgumentException("Navigation stack already contains the model"); }
+
+            return new NavigationStack(stack.Push(model), stackSet.Add(model));
+        }
+
+        public NavigationStack Pop()
+        {
+            INavigationModel popped;
+            var stack = this.stack.Pop(out popped);
+            var stackSet = this.stackSet.Remove(popped);
+
+            return new NavigationStack(stack, stackSet);
+        }
+
+        public INavigationModel Peek()
+        {
+            return this.stack.Peek();
+        }
+
+        public NavigationStack Up()
+        {
+            var x = this;
             for (; !x.Pop().IsEmpty; x = x.Pop()) {}
             return x;
+        }
+
+        public bool IsEmpty { get { return this.stack.IsEmpty; } }
+
+        public IEnumerator<INavigationModel> GetEnumerator()
+        {
+            return stack.GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return this.GetEnumerator();
+        }
+
+        public bool Equals(NavigationStack other)
+        {
+            if (Object.ReferenceEquals(this, other))      { return true; }
+            else if (Object.ReferenceEquals(other, null)) { return false; }
+            else if (Object.ReferenceEquals(this, other)) { return true; }
+            else                                          { return this.stack.SequenceEqual(other.stack); }
+        }
+
+        public override bool Equals(object other)
+        {
+            return (other is NavigationStack) && (this.Equals((NavigationStack) other));
+        }
+
+        public override int GetHashCode()
+        {
+            return this.stack.Aggregate(0, (acc, model) => acc * 31 + model.GetHashCode()); 
         }
     }
 }
