@@ -108,7 +108,7 @@ namespace RxApp
         }
     }
 
-    public sealed class NavigationStack : IEnumerable<INavigationModel>, IEquatable<NavigationStack>
+    public sealed class NavigationStack : IReadOnlyCollection<INavigationModel>, IEquatable<NavigationStack>
     {
         public static readonly NavigationStack Empty = 
             new NavigationStack(ImmutableStack<INavigationModel>.Empty, ImmutableHashSet<INavigationModel>.Empty);
@@ -121,6 +121,8 @@ namespace RxApp
             this.stack = stack;
             this.stackSet = stackSet;
         }
+
+        public int Count { get { return stackSet.Count; } }
 
         public bool Contains(INavigationModel model)
         {
