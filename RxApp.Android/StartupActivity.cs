@@ -8,7 +8,7 @@ using Android.Views;
 
 namespace RxApp.Android
 {
-    public sealed class StartupActivity : Activity, IRxActivity
+    public sealed class StartupActivity : Activity, IViewFor
     {
         private static bool isColdBoot = true;
 

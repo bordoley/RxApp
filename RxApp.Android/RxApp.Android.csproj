@@ -55,8 +55,6 @@
   <Import Project="$(MSBuildExtensionsPath)\Novell\Novell.MonoDroid.CSharp.targets" />
   <ItemGroup>
     <Compile Include="StartupActivity.cs" />
-    <Compile Include="AndroidInterfaces.cs" />
-    <Compile Include="Interfaces.cs" />
     <Compile Include="RxActivity.cs" />
     <Compile Include="RxApplication.cs" />
     <Compile Include="Bindings.cs" />

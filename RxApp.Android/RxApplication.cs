@@ -13,12 +13,18 @@ using System.Reactive.Linq;
 using System.Threading;
 using Android.Content.PM;
 using Android.Runtime;
+using Android.OS;
 
 using RxObservable = System.Reactive.Linq.Observable;
 using System.Reflection;
 
 namespace RxApp.Android
 {
+    public interface IRxApplication
+    {
+        void OnActivityCreated<TActivity>(TActivity activity) where TActivity: Activity, IViewFor;
+    }
+
     public sealed class RxApplicationHelper
     {
         public static RxApplicationHelper Create(
@@ -35,7 +41,7 @@ namespace RxApp.Android
 
         private readonly Action<Activity,INavigationViewModel> createActivity;
 
-        private readonly Subject<IRxActivity> activityCreated = new Subject<IRxActivity>();
+        private readonly Subject<IViewFor> activityCreated = new Subject<IViewFor>();
 
         private IDisposable subscription;
 
@@ -47,7 +53,8 @@ namespace RxApp.Android
             this.createActivity = createActivity;
         }
 
-        public void OnActivityCreated(IRxActivity activity)
+        public void OnActivityCreated<TActivity>(TActivity activity) 
+            where TActivity: Activity, IViewFor
         {
             Contract.Requires(activity != null);
 
@@ -66,11 +73,12 @@ namespace RxApp.Android
             }
         }
 
-        private void Start(IRxActivity startupActivity)
+        private void Start<TActivity>(TActivity startupActivity) 
+            where TActivity: Activity, IViewFor
         {
             Log.Debug("RxApp", "Starting application");
 
-            var activities = new Dictionary<INavigationViewModel, IRxActivity> ();
+            var activities = new Dictionary<INavigationViewModel, IViewFor> ();
             INavigationViewModel currentModel = new StartupModel();
             activities[currentModel] = startupActivity;
 
@@ -81,7 +89,7 @@ namespace RxApp.Android
                 this.navigationApplicaction()
                     .ObserveOnMainThread()
                     .Delay(_ => canCreateActivity.Where(b => b))
-                    .Subscribe(navStack =>
+                    .Scan(NavigationStack.Empty, (previous, navStack) =>
                         {
                             var removed = activities.Keys.Where(y => !navStack.Contains(y)).ToImmutableArray();
                             var previousActivity = activities[currentModel];
@@ -95,13 +103,20 @@ namespace RxApp.Android
                                 createActivity((Activity) previousActivity, currentModel);
                             }
 
-                            // Finish any removed activities
-                            foreach (var model in removed)
+                            if ((navStack.IsEmpty || navStack.Pop().Equals(previous)) && ((int) Build.VERSION.SdkInt >= 21))
                             {
-                                IRxActivity activity = activities[model];  
-                                activities.Remove(model);
-                                activity.Finish();
-                            }   
+                                // Show the inverse activity transition after the back button is clicked.
+                                ((Activity) previousActivity).FinishAfterTransition();
+                            }
+                            else
+                            {
+                                foreach (var model in removed)
+                                {
+                                    IViewFor activity = activities[model];  
+                                    activities.Remove(model);
+                                    ((Activity) activity).Finish();
+                                }   
+                            }
 
                             if (navStack.IsEmpty)
                             {
@@ -113,7 +128,10 @@ namespace RxApp.Android
                                         subscription = null;
                                     }, null);
                             } 
-                        }),
+
+                            return navStack;
+                        })
+                    .Subscribe(),
 
                 this.activityCreated
                     .Subscribe(activity => 
@@ -163,23 +181,25 @@ namespace RxApp.Android
         private void CreateActivity(Activity current, INavigationViewModel model)
         {
             var viewType = GetActivityType(model);
-            var intent = new Intent(current, viewType);
-            StartActivity(current, intent);
+            StartActivity(current, viewType);
         }
 
-        protected virtual void StartActivity(Activity current, Intent intent)
+        // This method can be overrided to implement custom activity transitions.
+        protected virtual void StartActivity(Activity current, Type type)
         {
+            var intent = new Intent(current, type);
             current.StartActivity(intent);
         }
 
         protected void RegisterActivity<TModel, TActivity>()
             where TModel : INavigationViewModel
-            where TActivity : Activity, IRxActivity
+            where TActivity : Activity, IViewFor
         {
             this.modelToActivityMapping.Add(typeof(TModel), typeof(TActivity));
         }
 
-        public void OnActivityCreated(IRxActivity activity)
+        public void OnActivityCreated<TActivity>(TActivity activity) 
+            where TActivity: Activity, IViewFor
         {
             helper.OnActivityCreated(activity);
         }

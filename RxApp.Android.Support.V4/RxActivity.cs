@@ -6,26 +6,28 @@ using Android.OS;
 
 namespace RxApp.Android
 {
-    public abstract class RxFragmentActivity<TViewModel> : FragmentActivity, IRxActivity<TViewModel>
+    public abstract class RxFragmentActivity<TViewModel> : FragmentActivity, IViewFor<TViewModel>
         where TViewModel : INavigationViewModel
     {
-        private readonly RxActivityHelper<TViewModel> helper;
+        private readonly RxActivityHelper<RxFragmentActivity<TViewModel>, TViewModel> helper;
+
+        private TViewModel viewModel;
 
         protected RxFragmentActivity()
         {
-            helper = RxActivityHelper<TViewModel>.Create(this);
+            helper = RxActivityHelper<RxFragmentActivity<TViewModel>, TViewModel>.Create(this);
         }
 
         public TViewModel ViewModel
         {
-            get { return helper.ViewModel; }
+            get { return this.viewModel; }
 
-            set { helper.ViewModel = value; }
+            set { this.viewModel = value; }
         }
 
         object IViewFor.ViewModel
         {
-            get { return helper.ViewModel; }
+            get { return this.ViewModel; }
 
             set { this.ViewModel = (TViewModel) value; }
         }

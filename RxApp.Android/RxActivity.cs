@@ -13,28 +13,21 @@ using AndroidResource = Android.Resource;
 
 namespace RxApp.Android
 {   
-    public sealed class RxActivityHelper<TViewModel>
+    public sealed class RxActivityHelper<TActivity, TViewModel>
+        where TActivity : Activity, IViewFor<TViewModel>
         where TViewModel: INavigationViewModel
     {
-        public static RxActivityHelper<TViewModel> Create(IRxActivity activity)
+        public static RxActivityHelper<TActivity, TViewModel> Create(TActivity activity)
         {
             Contract.Requires(activity != null);
-            return new RxActivityHelper<TViewModel>(activity);
+            return new RxActivityHelper<TActivity, TViewModel>(activity);
         }
 
-        private readonly IRxActivity activity;
-        private TViewModel viewModel;
+        private readonly TActivity activity;
 
-        private RxActivityHelper(IRxActivity activity)
+        private RxActivityHelper(TActivity activity)
         {
             this.activity = activity;
-        }
-
-        public TViewModel ViewModel
-        {
-            get { return viewModel; }
-
-            set { this.viewModel = value; }
         }
 
         public void OnCreate(Bundle bundle)
@@ -45,19 +38,19 @@ namespace RxApp.Android
 
         public void OnResume()
         {
-            this.ViewModel.Activate.Execute();
+            activity.ViewModel.Activate.Execute();
         }
 
         public void OnPause()
         {
-            this.ViewModel.Deactivate.Execute();
+            activity.ViewModel.Deactivate.Execute();
         }
 
         public void OnBackPressed()
         {
             if (!activity.FragmentManager.PopBackStackImmediate())
             {
-                this.ViewModel.Back.Execute();
+                activity.ViewModel.Back.Execute();
             }
         }
 
@@ -68,7 +61,7 @@ namespace RxApp.Android
             if (item.ItemId == AndroidResource.Id.Home)
             {
                 // We own this one
-                this.ViewModel.Up.Execute();
+                activity.ViewModel.Up.Execute();
                 return true;
             }
 
@@ -76,26 +69,28 @@ namespace RxApp.Android
         }
     }
         
-    public abstract class RxActivity<TViewModel> : Activity, IRxActivity<TViewModel>
+    public abstract class RxActivity<TViewModel> : Activity, IViewFor<TViewModel>
         where TViewModel : INavigationViewModel
     {
-        private readonly RxActivityHelper<TViewModel> helper;
+        private readonly RxActivityHelper<RxActivity<TViewModel>,TViewModel> helper;
+
+        private TViewModel viewModel;
 
         protected RxActivity()
         {
-            helper = RxActivityHelper<TViewModel>.Create(this);
+            helper = RxActivityHelper<RxActivity<TViewModel>,TViewModel>.Create(this);
         }
 
         public TViewModel ViewModel
         {
-            get { return helper.ViewModel; }
+            get { return this.viewModel; }
 
-            set { helper.ViewModel = value; }
+            set { this.viewModel = value; }
         }
 
         object IViewFor.ViewModel
         {
-            get { return helper.ViewModel; }
+            get { return this.ViewModel; }
 
             set { this.ViewModel = (TViewModel) value; }
         }

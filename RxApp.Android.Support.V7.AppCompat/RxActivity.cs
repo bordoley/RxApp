@@ -5,26 +5,27 @@ using Android.OS;
 
 namespace RxApp.Android
 {
-    public abstract class RxActionBarActivity<TViewModel> : ActionBarActivity, IRxActivity<TViewModel>
+    public abstract class RxActionBarActivity<TViewModel> : ActionBarActivity, IViewFor<TViewModel>
         where TViewModel : INavigationViewModel
     {
-        private readonly RxActivityHelper<TViewModel> helper;
+        private readonly RxActivityHelper<RxActionBarActivity<TViewModel>,TViewModel> helper;
+        private TViewModel viewModel;
 
         protected RxActionBarActivity()
         {
-            helper = RxActivityHelper<TViewModel>.Create(this);
+            helper = RxActivityHelper<RxActionBarActivity<TViewModel>,TViewModel>.Create(this);
         }
   
         public TViewModel ViewModel
         {
-            get { return helper.ViewModel; }
+            get { return this.viewModel; }
 
-            set { helper.ViewModel = value; }
+            set { this.viewModel = value; }
         }
 
         object IViewFor.ViewModel
         {
-            get { return helper.ViewModel; }
+            get { return this.ViewModel; }
 
             set { this.ViewModel = (TViewModel) value; }
         }
