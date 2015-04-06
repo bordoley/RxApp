@@ -16,17 +16,10 @@ namespace RxApp.Example
     [Application]
     public sealed class RxAppExampleApplication : RxApplication
     {
-        private readonly IObservable<NavigationStack> application;
+        private IDisposable subscription;
 
         public RxAppExampleApplication(IntPtr javaReference, JniHandleOwnership transfer) : base(javaReference, transfer)
         {
-            this.RegisterActivity<IMainViewModel, MainActivity>();
-            this.application = RxAppExampleApplicationController.Create();
-        }
-
-        protected override IObservable<NavigationStack> NavigationApplicaction
-        { 
-            get { return application; }
         }
 
         public override void OnCreate()
@@ -34,6 +27,19 @@ namespace RxApp.Example
             base.OnCreate();
 
             Insights.Initialize("2435d94d2dae17b47f305d2cf5f3413fb1d3aa8d", this.ApplicationContext);
+
+            var builder = new RxAndroidApplicationBuilder();
+            builder.NavigationApplicaction = RxAppExampleApplicationController.Create();
+            builder.RegisterActivityMapping<IMainViewModel, MainActivity>();
+            builder.CreatedActivities = this.CreatedActivities;
+
+            this.subscription = builder.Build().Subscribe();
+        }
+
+        public override void OnTerminate()
+        {
+            this.subscription.Dispose();
+            base.OnTerminate();
         }
     }
 }
