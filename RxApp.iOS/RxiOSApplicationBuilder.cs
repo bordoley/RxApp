@@ -18,6 +18,24 @@ namespace RxApp.iOS
 {
     public sealed class RxiOSApplicationBuilder
     {
+        private static UIViewController CreateViewController (
+            IReadOnlyDictionary<Type, Func<INavigationViewModel,UIViewController>> modelToViewCreator,
+            INavigationViewModel model)
+        {
+            var modelType = model.GetType();
+
+            foreach (var iface in Enumerable.Concat(new Type[] { modelType }, modelType.GetTypeInfo().ImplementedInterfaces))
+            {
+                Func<INavigationViewModel,UIViewController> viewCreator;
+                if (modelToViewCreator.TryGetValue(iface, out viewCreator))
+                {
+                    return viewCreator(model);
+                }
+            }
+
+            throw new NotSupportedException("No UIViewController found for the given model type: " + modelType);
+        }
+
         private readonly Dictionary<Type, Func<INavigationViewModel,UIViewController>> modelToViewCreator =
             new Dictionary<Type, Func<INavigationViewModel,UIViewController>>();
 
@@ -49,22 +67,6 @@ namespace RxApp.iOS
             window.RootViewController = navigationController;
             window.MakeKeyAndVisible();
 
-            Func<INavigationViewModel,UIViewController> createViewController = (INavigationViewModel model) =>
-                {
-                    var modelType = model.GetType();
-
-                    foreach (var iface in Enumerable.Concat(new Type[] { modelType }, modelType.GetTypeInfo().ImplementedInterfaces))
-                    {
-                        Func<INavigationViewModel,UIViewController> viewCreator;
-                        if (modelToViewCreator.TryGetValue(iface, out viewCreator))
-                        {
-                            return viewCreator(model);
-                        }
-                    }
-
-                    throw new NotSupportedException("No UIViewController found for the given model type: " + modelType);
-                };
-
             var viewControllers = new Dictionary<INavigationViewModel, UIViewController>();
 
             return navigationApplication
@@ -76,7 +78,7 @@ namespace RxApp.iOS
 
                         if (!viewControllers.ContainsKey(head))
                         {
-                            var view = createViewController(head);
+                            var view = CreateViewController(modelToViewCreator, head);
                             viewControllers.Add(head, view);
                         }
 
