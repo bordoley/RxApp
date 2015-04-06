@@ -18,19 +18,11 @@ namespace RxApp.Example
 		[GeneratedCode ("iOS Designer", "1.0")]
 		UIButton OpenButton { get; set; }
 
-		[Outlet]
-		[GeneratedCode ("iOS Designer", "1.0")]
-		UIButton UpButton { get; set; }
-
 		void ReleaseDesignerOutlets ()
 		{
 			if (OpenButton != null) {
 				OpenButton.Dispose ();
 				OpenButton = null;
-			}
-			if (UpButton != null) {
-				UpButton.Dispose ();
-				UpButton = null;
 			}
 		}
 	}

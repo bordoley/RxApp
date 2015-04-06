@@ -1,97 +1,89 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Diagnostics.Contracts;
+using System.Reactive.Disposables;
 
 using Foundation;
 using UIKit;
 
 namespace RxApp.iOS
 {
-    public sealed class RxUIViewControllerHelper<TViewModel>
+    public sealed class RxUIViewControllerHelper<TViewController,TViewModel>
+        where TViewController : UIViewController, IViewFor<TViewModel> 
         where TViewModel: INavigationViewModel
     {
-        public static RxUIViewControllerHelper<TViewModel> Create()
+        public static RxUIViewControllerHelper<TViewController,TViewModel> Create(TViewController viewController)
         {
-            return new RxUIViewControllerHelper<TViewModel>();
-        }
-       
-        private TViewModel viewModel;
-
-        private RxUIViewControllerHelper()
-        {
+            return new RxUIViewControllerHelper<TViewController,TViewModel>(viewController);
         }
 
-        public TViewModel ViewModel
-        {
-            get 
-            { 
-                return viewModel; 
-            }
+        private readonly TViewController viewController;
 
-            set 
-            { 
-                this.viewModel = value;
-            }
+        private RxUIViewControllerHelper(TViewController viewController)
+        {
+            this.viewController = viewController;
         }
 
         public void ViewDidAppear(bool animated)
         {
-            viewModel.Activate.Execute();
+            viewController.ViewModel.Activate.Execute();
         }
 
         public void ViewDidDisappear(bool animated)
         {
-            viewModel.Deactivate.Execute();
+            viewController.ViewModel.Deactivate.Execute();
         }
     }
 
     public abstract class RxUIViewController<TViewModel>: UIViewController, IViewFor<TViewModel> 
         where TViewModel: INavigationViewModel
     {
-        private readonly RxUIViewControllerHelper<TViewModel> helper = RxUIViewControllerHelper<TViewModel>.Create();
+        private readonly RxUIViewControllerHelper<RxUIViewController<TViewModel>,TViewModel> helper;
 
         protected RxUIViewController() : base()
         {
+            helper = RxUIViewControllerHelper<RxUIViewController<TViewModel>,TViewModel>.Create(this);
         }
 
         protected RxUIViewController(NSCoder c) : base(c)
         {
+            helper = RxUIViewControllerHelper<RxUIViewController<TViewModel>,TViewModel>.Create(this);
         }
 
         protected RxUIViewController(NSObjectFlag f) : base(f)
         {
+            helper = RxUIViewControllerHelper<RxUIViewController<TViewModel>,TViewModel>.Create(this);
         }
 
         protected RxUIViewController(IntPtr handle) : base(handle)
         {
+            helper = RxUIViewControllerHelper<RxUIViewController<TViewModel>,TViewModel>.Create(this);
         }
 
         protected RxUIViewController(string nibNameOrNull, NSBundle nibBundleOrNull) : base(nibNameOrNull, nibBundleOrNull)
         {
+            helper = RxUIViewControllerHelper<RxUIViewController<TViewModel>,TViewModel>.Create(this);
         }
 
-        public TViewModel ViewModel 
-        {
-            get { return helper.ViewModel; }
-
-            set { helper.ViewModel = value; }
-        }
+        public TViewModel ViewModel { get; set; }
 
         object IViewFor.ViewModel
         {
-            get { return helper.ViewModel; }
+            get { return this.ViewModel; }
 
             set { this.ViewModel = (TViewModel) value; }
         }
 
         public override void ViewDidAppear(bool animated)
         {
+            base.ViewDidAppear(animated);
             helper.ViewDidAppear(animated);
         }
 
         public override void ViewDidDisappear(bool animated)
         {
             helper.ViewDidDisappear(animated);
+            base.ViewDidDisappear(animated);
         }
     }
 }

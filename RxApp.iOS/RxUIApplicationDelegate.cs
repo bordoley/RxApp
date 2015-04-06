@@ -41,40 +41,32 @@ namespace RxApp.iOS
         public bool FinishedLaunching(UIApplication app, NSDictionary options)
         {
             var navViewController = new BufferedNavigationController();
-            var application = getApplication();
 
-            subscription = Disposable.Compose(
-                application
-                    .ObserveOnMainThread()
-                    .Scan(new Dictionary<INavigationViewModel, UIViewController>(), (acc, src) =>
+            subscription = getApplication()
+                .ObserveOnMainThread()
+                .Scan(ImmutableDictionary<INavigationViewModel, UIViewController>.Empty, (acc, navStack) =>
+                    {
+                        var head = navStack.FirstOrDefault();
+                        var removed = acc.Keys.Where(y => !navStack.Contains(y)).ToImmutableArray();
+
+                        if (!acc.ContainsKey(head))
                         {
-                            var head = src.FirstOrDefault();
-                            var newHeadSet = new HashSet<INavigationModel>(src);
-                            var removed = acc.Keys.Where(y => !newHeadSet.Contains(y)).ToList();
+                            var view = provideView(head);
+                            acc = acc.Add(head, view);
+                        }
 
-                            if (!acc.ContainsKey(head))
-                            {
-                                var view = provideView(head);
-                                acc[head] = view;
-                            }
+                        foreach (var model in removed)
+                        {
+                            IDisposable view = acc[model];
+                            acc = acc.Remove(model);
+                            view.Dispose();
+                        }
 
-                            if (head != null)
-                            {
-                                navViewController.ViewModel = head;
-                                var viewControllers = src.Reverse().Select(model => acc[model]).ToArray();
-                                navViewController.SetViewControllers(viewControllers, true);
-                            }
+                        var viewControllers = navStack.Reverse().Select(model => acc[model]).ToArray();
+                        navViewController.SetViewControllers(viewControllers, true);
 
-                            foreach (var model in removed)
-                            {
-                                IDisposable view = acc[model];
-                                acc.Remove(model);
-                                view.Dispose();
-                            }
-
-                            return acc;
-                        }).Subscribe()
-                    );
+                        return acc;
+                    }).Subscribe();
 
             var window = new UIWindow(UIScreen.MainScreen.Bounds);
             window.RootViewController = navViewController;
@@ -90,7 +82,7 @@ namespace RxApp.iOS
     }
 
     // See: https://github.com/Plasma/BufferedNavigationController/blob/master/BufferedNavigationController.m
-    internal class BufferedNavigationController : UINavigationController, IViewFor<INavigationViewModel>
+    internal class BufferedNavigationController : UINavigationController
     {
         private readonly Queue<Action> actions = new Queue<Action>();
 
@@ -100,43 +92,23 @@ namespace RxApp.iOS
         {
             this.WeakDelegate = this;
         }
-
-        public INavigationViewModel ViewModel { get; set; }
-
-
-        object IViewFor.ViewModel
-        {
-            get
-            {
-                return this.ViewModel;
-            }
-            set
-            {
-                this.ViewModel = (INavigationViewModel) value;
-            }
-        }
       
-        public override UIViewController PopViewController (bool animated)
+        public override UIViewController PopViewController(bool animated)
         {
-            this.actions.Enqueue(() => 
-                {
-                    this.ViewModel.Back.Execute();
-                });
-            return base.PopViewController(animated);
-        }
+            var viewFor = (IViewFor)this.TopViewController;
+            var viewModel = (INavigationViewModel)viewFor.ViewModel;
 
-        public override UIViewController[] PopToRootViewController(bool animated)
-        {
-            this.actions.Enqueue(() => 
-                {
-                    this.ViewModel.Up.Execute();
-                });
-            return base.PopToRootViewController(animated);
-        }
-
-        public override UIViewController[] PopToViewController(UIViewController viewController, bool animated)
-        {
-            return null;
+            if (this.transitioning)
+            {
+                this.actions.Enqueue(() => this.PopViewController(animated));
+                return null;
+            }
+            else
+            {
+                var result = base.PopViewController(animated);
+                viewModel.Back.Execute();
+                return result;
+            }
         }
 
         public override void SetViewControllers(UIViewController[] controllers, bool animated)
@@ -151,6 +123,16 @@ namespace RxApp.iOS
             }
         }
 
+        public override UIViewController[] PopToRootViewController(bool animated)
+        {
+            throw new NotSupportedException();
+        }
+
+        public override UIViewController[] PopToViewController(UIViewController viewController, bool animated)
+        {
+            return null;
+        }
+
         public override void PushViewController(UIViewController viewController, bool animated)
         {
             throw new NotSupportedException();
@@ -160,7 +142,7 @@ namespace RxApp.iOS
         public void DidShowViewController(UINavigationController navigationController, UIViewController viewController, bool animated)
         {
             this.transitioning = false;
-            runNextAction();
+            if (actions.Count > 0) { actions.Dequeue()(); }
         }
 
         [Export("navigationController:willShowViewController:animated:")]
@@ -178,15 +160,6 @@ namespace RxApp.iOS
                             this.transitioning = false;
                         }
                     });
-            }
-        }
-
-        private void runNextAction()
-        {
-            if (actions.Count > 0)
-            {
-                var action = actions.Dequeue();
-                action();
             }
         }
     }
