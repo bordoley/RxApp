@@ -74,8 +74,7 @@ namespace RxApp
                         navigationStack
                             .Scan(ImmutableDictionary<INavigationModel,IDisposable>.Empty, (acc, stack) =>
                                 {
-                                    var stackSet = stack.ToImmutableHashSet();
-                                    var removed = acc.Keys.Where(x => !stackSet.Contains(x))
+                                    var removed = acc.Keys.Where(x => !stack.Contains(x))
                                         .Aggregate(acc, (accA, model) =>
                                             {
                                                 accA[model].Dispose();
