@@ -13,22 +13,28 @@ using System.Reactive.Subjects;
 namespace RxApp.Example
 {
     [Register("AppDelegate")]
-    public partial class AppDelegate : RxUIApplicationDelegate
+    public partial class AppDelegate : UIApplicationDelegate
     {
-        public AppDelegate()
+        private IDisposable appSubscription;
+
+        public override bool FinishedLaunching(UIApplication app, NSDictionary options)
         {
             var storyBoard = UIStoryboard.FromName("Views", null);
-            this.RegisterViewCreator<IMainViewModel,ExampleViewController>(model =>
+            var builder = new RxiOSApplicationBuilder();
+            builder.NavigationApplicaction = RxAppExampleApplicationController.Create();
+            builder.RegisterViewCreator<IMainViewModel,ExampleViewController>(model =>
                 {
                     var view = (ExampleViewController) storyBoard.InstantiateViewController("ExampleViewController");
                     view.ViewModel = model;
                     return view;
                 });
+            appSubscription = builder.Build().Subscribe();
+            return true;
         }
 
-        protected override IObservable<NavigationStack> BuildNavigationApplication()
-        { 
-            return RxAppExampleApplicationController.Create();
+        public override void WillTerminate(UIApplication app)
+        {
+            appSubscription.Dispose();
         }
     }
 }
