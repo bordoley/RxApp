@@ -21,6 +21,11 @@ namespace RxApp.iOS
             {
                 var innerDisp = new SingleAssignmentDisposable();
 
+                if (NSThread.Current == NSThread.MainThread)
+                {
+                    return action(this, state);
+                }
+
                 DispatchQueue.MainQueue.DispatchAsync(() => 
                     {
                         if (!innerDisp.IsDisposed) innerDisp.Disposable = action(this, state);
