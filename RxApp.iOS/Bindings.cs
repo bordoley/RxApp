@@ -76,6 +76,14 @@ namespace RxApp.iOS
                 RxObservable.FromEventPattern(button, "TouchUpInside").InvokeCommand(This)
             );
         }
+
+        public static IDisposable Bind(this IRxCommand This, UIBarButtonItem button)
+        {  
+            return Disposable.Compose(
+                This.CanExecute.ObserveOnMainThread().Subscribe(x => button.Enabled = x),
+                RxObservable.FromEventPattern(button, "Clicked").InvokeCommand(This)
+            );
+        }
     }
 }
 
