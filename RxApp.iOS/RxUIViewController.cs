@@ -9,7 +9,7 @@ using UIKit;
 namespace RxApp.iOS
 {
     public sealed class RxUIViewControllerHelper<TViewController,TViewModel>
-        where TViewController : UIViewController, IViewFor<TViewModel> 
+        where TViewController : UIViewController, IReadOnlyViewFor<TViewModel> 
         where TViewModel: INavigationViewModel
     {
         public static RxUIViewControllerHelper<TViewController,TViewModel> Create(TViewController viewController)
@@ -35,7 +35,7 @@ namespace RxApp.iOS
         }
     }
 
-    public abstract class RxUIViewController<TViewModel>: UIViewController, IViewFor<TViewModel> 
+    public abstract class RxUIViewController<TViewModel>: UIViewController, IViewFor<TViewModel>, IReadOnlyViewFor<TViewModel> 
         where TViewModel: INavigationViewModel
     {
         private readonly RxUIViewControllerHelper<RxUIViewController<TViewModel>,TViewModel> helper;
@@ -72,6 +72,11 @@ namespace RxApp.iOS
             get { return this.ViewModel; }
 
             set { this.ViewModel = (TViewModel) value; }
+        }
+
+        object IReadOnlyViewFor.ViewModel
+        {
+            get { return this.ViewModel; }
         }
 
         public override void ViewDidAppear(bool animated)

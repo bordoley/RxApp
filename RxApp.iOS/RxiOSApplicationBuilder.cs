@@ -54,6 +54,7 @@ namespace RxApp.iOS
 
         public RxUINavigationController UINavigationController { get; set; }
 
+        // FIXME: Maybe should be a hot observable
         public IObservable<NavigationStack> Build()
         {
             var modelToViewCreator = this.modelToViewCreator.ToImmutableDictionary();
