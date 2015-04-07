@@ -36,6 +36,16 @@ namespace RxApp
         IObservable<Unit> Deactivate { get; }
     }
 
+    public interface IReadOnlyViewFor
+    {
+        object ViewModel { get; }
+    }
+
+    public interface IReadOnlyViewFor<TViewModel> : IReadOnlyViewFor
+    {
+        new TViewModel ViewModel { get; }
+    }
+
     public interface IViewFor
     {
         object ViewModel { get; set; }
