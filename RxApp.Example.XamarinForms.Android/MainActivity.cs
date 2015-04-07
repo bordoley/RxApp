@@ -7,18 +7,25 @@ using Android.Views;
 using Android.Widget;
 using Android.OS;
 using Xamarin.Forms;
+using Xamarin.Forms.Platform.Android;
+using RxApp.XamarinForms;
 
-namespace RxApp.Example.XamarinForms.Android
+namespace RxApp.Example.XamarinForms
 {
     [Activity(Label = "RxApp.Example.XamarinForms.Android", MainLauncher = true)]
-    public class MainActivity : Activity
+    public class MainActivity : RxFormsApplicationActivity
     {
         protected override void OnCreate(Bundle bundle)
         {
             base.OnCreate(bundle);
 
             Forms.Init(this, bundle);
-            //LoadApplication(new App());
+
+            var application = new RxFormsApplication();
+            var exampleApp = ExampleApplication.Create(application);
+            exampleApp.Subscribe();
+
+            LoadApplication(application);
         }
     }
 }
