@@ -2,13 +2,8 @@
 using System.Runtime.CompilerServices;
 
 [assembly: AssemblyTitle("RxApp")]
-[assembly: AssemblyDescription("")]
-[assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("")]
-[assembly: AssemblyCopyright("dave")]
-[assembly: AssemblyTrademark("")]
-[assembly: AssemblyCulture("")]
+[assembly: AssemblyDescription("Functional Reactive MVVM Framework")]
+[assembly: AssemblyCopyright("")]
 
 [assembly: AssemblyVersion("0.0.1")]
 
