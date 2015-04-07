@@ -54,6 +54,7 @@ namespace RxApp.Android
             this.activityMapping.Add(typeof(TModel), typeof(TActivity));
         }
 
+        // FIXME: Maybe should be a hot observable
         public IObservable<NavigationStack> Build()
         {
             var activityMapping = this.activityMapping.ToImmutableDictionary();
