@@ -21,7 +21,7 @@ namespace RxApp.Example
         {
             var storyBoard = UIStoryboard.FromName("Views", null);
             var builder = new RxiOSApplicationBuilder();
-            builder.NavigationApplicaction = RxAppExampleApplicationController.Create();
+            builder.NavigationApplication = RxAppExampleApplicationController.Create();
             builder.RegisterViewCreator<IMainViewModel,ExampleViewController>(model =>
                 {
                     var view = (ExampleViewController) storyBoard.InstantiateViewController("ExampleViewController");

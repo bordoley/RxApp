@@ -48,7 +48,7 @@ namespace RxApp.iOS
                 model => viewCreator((TModel) model));
         }
 
-        public IObservable<NavigationStack> NavigationApplicaction { get; set; }
+        public IObservable<NavigationStack> NavigationApplication { get; set; }
 
         public UIWindow Window { get; set; }
 
@@ -59,8 +59,8 @@ namespace RxApp.iOS
         {
             var modelToViewCreator = this.modelToViewCreator.ToImmutableDictionary();
 
-            if (this.NavigationApplicaction == null) { throw new NotSupportedException("Application must not be null"); }
-            var navigationApplication = this.NavigationApplicaction;
+            if (this.NavigationApplication == null) { throw new NotSupportedException("Application must not be null"); }
+            var navigationApplication = this.NavigationApplication;
 
             var navigationController = this.UINavigationController ?? new RxUINavigationController();
             var window = this.Window ?? new UIWindow(UIScreen.MainScreen.Bounds);
