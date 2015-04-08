@@ -9,7 +9,7 @@
     <projectUrl>https://github.com/bordoley/RxApp</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <summary>Functional Reactive MVVM Framework for iOS, Android, and Xamarin Forms.</summary>
-    <description>RxApp view bindings and navigation support for the Android Support library V7.AppCompat.</description>
+    <description>RxApp view bindings and navigation support for the Android Support library v7.AppCompat.</description>
     <tags>portable mvvm pcl rx reactive LINQ</tags>
     <dependencies>
       <dependency id="RxApp" version="0.0.1-pre1" />
