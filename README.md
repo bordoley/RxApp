@@ -131,9 +131,9 @@ Let's dig into the details of IRxProperty and IRxCommand a bit deeper.
 In addition, we are defining our view models in terms of an interface. 
 While not strictly required in RxApp, doing so is very useful. This design clearly denotes what the shape of the 
 view model from differing perspective of its users and consumers. For instance, ILoginViewModel denotes an inteface 
-that directly mimics the interface that the view would expose to the user. But what about the consumers of the view model data? In RxApp we will typically expose additional controller interfaces. For instance for our login view model we'd expose:
+that directly mimics the interface that the view would expose to the user. But what about the consumers of the view model data? In RxApp we will typically expose an additional controller interface. For instance for our login view model we'd expose:
 
-```
+```CSharp
 public interface ILoginControllerModel : INavigationControllerModel
 {
     IObservable<string> UserName { get; }
@@ -147,8 +147,52 @@ public interface ILoginControllerModel : INavigationControllerModel
 In contrast, ILoginControllerModel exposes the view of the model from the perspective of the application which will 
 consume the user data and take action on behalf the user.
 
+Finally we'll expose an implementation class that implements both interfaces:
+```CSharp
+public sealed class LoginModel : NavigationModel, ILoginViewModel, ILoginControllerModel
+{
+}
+```
+
+## View Model Driven Navigation
+
 ## Platform Agnostic Business Logic
+RxApp's view model driven navigation dynamically binds view models to controllers that consume the view model data and take action on behalf of the user
+
+```CSharp
+    public static IDisposable Create(ILoginControllerModel model)
+    {
+        model.DoLogin
+            // Get the most recent username and password from the view model
+            .SelectMany(_ =>  RxAppObservable.CombineLatest(model.UserName, model.Password).FirstAsync()) 
+
+            // Indicate that we are logging in. This will cause the ui to show a progress dialog
+            .Do(_ => model.LoggingIn.Value = true)
+
+            // Actually log in
+            .SelectMany(async x => await DoLogin(x.Item1, x.Item2))
+
+            // React to the result of logging in.
+            .Do(loginSucceed =>
+                {
+                    if (loginSucceed)
+                    {
+                        // Login succeeded navigate to the main page
+                        model.Open.Execute(new MainPageModel());
+                    } 
+                    else 
+                    {
+                        // Notify the user that loggin failed
+                        model.LoginFailed.Execute();
+
+                        // Indicate that we are no longer logging in
+                        model.LoggingIn = false;
+                    }
+                })
+            .Subscribe();
+    }
+```
 
 ## Platform specific UI databinding
 
-## View Model Driven Navigation
+
