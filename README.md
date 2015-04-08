@@ -194,6 +194,9 @@ public static IDisposable Create(ILoginControllerModel model)
 ```
 
 ## Platform specific UI databinding
+
+Finally now that we've implemented our view model and have binded it to our business logic, its time to hook it up to our UI. I'm an Android fan, so lets build an Android Activity (the code is nearly identical for iOS, just subsitute RxUIViewcontroller for RxActionBarActivity). Notice how our databinding is purely declarative. We bind UI properties or elements to IRxProperty, IRxCommand and IObservable properties on our ViewModel, but have virtuall no logic in the bindings.
+
 ```CSharp
 [Activity(Label = "MainActivity")]            
 public sealed class MainActivity : RxActionBarActivity<ILoginViewModel>
@@ -221,16 +224,28 @@ public sealed class MainActivity : RxActionBarActivity<ILoginViewModel>
     {
         base.OnStart();
 
+        // Set up the data bindings
         subscription = Disposable.Compose(
+            // Two way bind the login button to the DoLogin IRxCommand
             this.ViewModel.DoLogin.Bind(button),
+
+            // Set the username and password properties a half second after they were last changed
             Observable.FromEventPattern(this.userName, "AfterTextChanged")
                           .Throttle(TimeSpan.FromSeconds(.5))
                           .Select(x => userName.Text)
                           .BindTo(this.ViewModel.UserName),
+
             Observable.FromEventPattern(this.password, "AfterTextChanged")
                           .Throttle(TimeSpan.FromSeconds(.5))
                           .Select(x => password.Text)
-                          .BindTo(this.ViewModel.Password)
+                          .BindTo(this.ViewModel.Password),
+
+            // If login failed show a toast to the user
+            this.ViewModel.LoginFailed
+                    .BindTo(Toast.MakeText(
+                                this, 
+                                this.Resources.GetString(Resource.String.login_failed), 
+                                ToastLength.Long).Show)
         );
     }
 
