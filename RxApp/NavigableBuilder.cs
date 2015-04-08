@@ -15,20 +15,19 @@ using RxObservable = System.Reactive.Linq.Observable;
 
 namespace RxApp
 {
-    // FIXME: Naming issue. Application is a bit of a misnomer. It could just be another window in a desktop app. Maybe NavigableBuilder?
-    public sealed class NavigationApplicationBuilder
+    public sealed class NavigableBuilder
     {
         private readonly Dictionary<Type, Func<INavigationControllerModel,IDisposable>> typeToBindFunc = 
             new Dictionary<Type, Func<INavigationControllerModel,IDisposable>>();
 
-        private IObservable<NavigationStack> rootState = null;
+        private IObservable<NavigationStack> initialState = null;
 
-        public IObservable<NavigationStack> RootState
+        public IObservable<NavigationStack> InitialState
         { 
             set
             { 
                 Contract.Requires(value != null);
-                this.rootState = value; 
+                this.initialState = value; 
             }
         }
 
@@ -42,7 +41,7 @@ namespace RxApp
         public IObservable<NavigationStack> Build()
         {
             var typeToBindFunc = this.typeToBindFunc.ToImmutableDictionary();
-            var rootState = this.rootState;
+            var rootState = this.initialState;
 
             if (rootState == null) { throw new NotSupportedException("RootState must be set before calling build."); }
 

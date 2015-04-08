@@ -39,7 +39,7 @@
     <Compile Include="Bindings.cs" />
     <Compile Include="Observable.cs" />
     <Compile Include="Disposable.cs" />
-    <Compile Include="NavigationApplicationBuilder.cs" />
+    <Compile Include="NavigableBuilder.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
   <ItemGroup>
