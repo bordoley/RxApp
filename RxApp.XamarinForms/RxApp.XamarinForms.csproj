@@ -12,8 +12,8 @@
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <OutputPath>bin\Debug\Portable-Net45+Win8+WP8+WPA81\</OutputPath>
-    <IntermediateOutputPath>obj\Debug\Portable-Net45+Win8+WP8+WPA81\</IntermediateOutputPath>
+    <OutputPath>bin\Debug\portable-net45+netcore45+wpa81+wp8\</OutputPath>
+    <IntermediateOutputPath>obj\Debug\portable-net45+netcore45+wpa81+wp8\</IntermediateOutputPath>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
@@ -23,13 +23,13 @@
     <ConsolePause>false</ConsolePause>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <OutputPath>bin\Release\Portable-Net45+Win8+WP8+WPA81\</OutputPath>
-    <IntermediateOutputPath>obj\Release\Portable-Net45+Win8+WP8+WPA81\</IntermediateOutputPath>
-    <DebugType>full</DebugType>
+    <OutputPath>bin\Release\portable-net45+netcore45+wpa81+wp8\</OutputPath>
+    <IntermediateOutputPath>obj\Release\portable-net45+netcore45+wpa81+wp8\</IntermediateOutputPath>
     <Optimize>true</Optimize>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <ConsolePause>false</ConsolePause>
+    <DocumentationFile>bin\Release\portable-net45+netcore45+wpa81+wp8\RxApp.XamarinForms.xml</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -67,6 +67,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+    <None Include="RxApp.XamarinForms.nuspec" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\RxApp\RxApp.csproj">

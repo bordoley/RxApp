@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package >
+  <metadata>
+    <id>RxApp</id>
+    <version>0.0.1-pre1</version>
+    <title>RxApp</title>
+    <authors>David Bordoley</authors>
+    <licenseUrl>https://github.com/bordoley/RxApp/blob/master/LICENSE</licenseUrl>
+    <projectUrl>https://github.com/bordoley/RxApp</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <summary>Functional Reactive MVVM Framework for iOS, Android, and Xamarin Forms.</summary>
+    <description>
+        This is the base package for RxApp that is used to build platform agnostic view models.
+        Additional platform specific packages are available that support databinding view models 
+        to platform specific views.
+    </description>
+    <tags>portable mvvm pcl rx reactive LINQ</tags>
+    <dependencies>
+      <dependency id="Rx-Main" version="2.2.5" />
+      <dependency id="System.Collections.Immutable" version="1.1.34-rc" />
+    </dependencies>
+  </metadata>
+  <files>
+  	<file src="bin\Release\RxApp.dll" target="lib\portable-net45+netcore45+wpa81+wp8" />
+  	<file src="bin\Release\RxApp.xml" target="lib\portable-net45+netcore45+wpa81+wp8" />
+  </files>
+</package>
+

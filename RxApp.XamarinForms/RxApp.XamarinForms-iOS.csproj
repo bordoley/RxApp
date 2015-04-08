@@ -24,11 +24,11 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <OutputPath>bin\Release\Xamarin.iOS10\</OutputPath>
     <IntermediateOutputPath>obj\Release\Xamarin.iOS10\</IntermediateOutputPath>
-    <DebugType>full</DebugType>
     <Optimize>true</Optimize>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <ConsolePause>false</ConsolePause>
+    <DocumentationFile>bin\Release\Xamarin.iOS10\RxApp.XamarinForms.xml</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -78,5 +78,8 @@
       <Project>{8FA289F3-255E-46D7-8946-8C1FA9B4B65C}</Project>
       <Name>RxApp.iOS</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="RxApp.XamarinForms.nuspec" />
   </ItemGroup>
 </Project>
