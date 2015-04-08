@@ -128,12 +128,24 @@ Let's dig into the details of IRxProperty and IRxCommand a bit deeper.
     databinding button clicks etc., but occasionally you will run into situations where you will need the ability 
     to fire and forget data. Consider carefully whether using an IRxProperty would work better first. 
 
-In addtion, we are defining our view models in terms of an interface. 
+In addition, we are defining our view models in terms of an interface. 
 While not strictly required in RxApp, doing so is very useful. This design clearly denotes what the shape of the 
 view model from differing perspective of its users and consumers. For instance, ILoginViewModel denotes an inteface 
-that directly mimics the interface that the view would expose to the user. In contrast, ILoginControllerModel 
-exposes the view of the model from the perspective of the application which will consume the user data and take 
-action on behalf the user.
+that directly mimics the interface that the view would expose to the user. But what about the consumers of the view model data? In RxApp we will typically expose additional controller interfaces. For instance for our login view model we'd expose:
+
+```
+public interface ILoginControllerModel : INavigationControllerModel
+{
+    IObservable<string> UserName { get; }
+    IObservable<string> Password { get; }
+    IObservable<Unit> DoLogin { get; }
+
+    IRxProperty<bool> LoggingIn { get; }
+    IRxCommand LoginFailed { get; }
+}
+```
+In contrast, ILoginControllerModel exposes the view of the model from the perspective of the application which will 
+consume the user data and take action on behalf the user.
 
 ## Platform Agnostic Business Logic
 
