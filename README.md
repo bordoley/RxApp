@@ -194,5 +194,51 @@ public static IDisposable Create(ILoginControllerModel model)
 ```
 
 ## Platform specific UI databinding
+```CSharp
+[Activity(Label = "MainActivity")]            
+public sealed class MainActivity : RxActionBarActivity<ILoginViewModel>
+{
+    private IDisposable subscription = null;
 
+    private Button loginButton;
+    private EditText userName;
+    private EditTest password;
+
+    protected override void OnCreate(Bundle bundle)
+    {
+        // Update the activity theme. Must be the first thing done in OnCreate();
+        this.SetTheme(Resource.Style.RxAppTheme);
+        base.OnCreate(bundle);
+
+        this.SetContentView(Resource.Layout.Main);
+
+        loginButton = this.FindViewById<Button>(Resource.Id.LoginButton);
+        userName = FindViewById<EditText>(Resource.Id.UserName);
+        password = FindViewById<EditText>(Resource.Id.PassWord);
+    }
+
+    protected override void OnStart()
+    {
+        base.OnStart();
+
+        subscription = Disposable.Compose(
+            this.ViewModel.DoLogin.Bind(button),
+            Observable.FromEventPattern(this.userName, "AfterTextChanged")
+                          .Throttle(TimeSpan.FromSeconds(.5))
+                          .Select(x => userName.Text)
+                          .BindTo(this.ViewModel.UserName),
+            Observable.FromEventPattern(this.password, "AfterTextChanged")
+                          .Throttle(TimeSpan.FromSeconds(.5))
+                          .Select(x => password.Text)
+                          .BindTo(this.ViewModel.Password)
+        );
+    }
+
+    protected override void OnStop()
+    {
+        subscription.Dispose();
+        base.OnStop();
+    }
+}
+```
 
