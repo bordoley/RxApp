@@ -16,7 +16,7 @@
     <TargetFrameworkVersion>v5.0</TargetFrameworkVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <OutputPath>bin\Debug\Monoandroid\</OutputPath>
+    <OutputPath>bin\Debug\MonoAndroid\</OutputPath>
     <IntermediateOutputPath>obj\Debug\MonoAndroid\</IntermediateOutputPath>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
@@ -28,14 +28,14 @@
     <ConsolePause>false</ConsolePause>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <OutputPath>bin\Release\Monoandroid\</OutputPath>
+    <OutputPath>bin\Release\MonoAndroid\</OutputPath>
     <IntermediateOutputPath>obj\Release\MonoAndroid\</IntermediateOutputPath>
     <Optimize>true</Optimize>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <AndroidUseSharedRuntime>false</AndroidUseSharedRuntime>
     <ConsolePause>false</ConsolePause>
-    <DocumentationFile>bin\Release\Monoandroid\RxApp.XamarinForms.xml</DocumentationFile>
+    <DocumentationFile>bin\Release\MonoAndroid\RxApp.XamarinForms.xml</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
