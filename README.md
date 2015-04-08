@@ -90,17 +90,6 @@ into the system, and forces developers to carefully consider concurrency and the
 updates to the view model from non-UI threads. In addition, the traditional design combines business logic with the 
 view model, which introduces coupling and makes testing harder than it has to be.
 
-```CSharp
-public sealed class TraditionalLoginViewModel : INotifyPropertyChanged
-{
-    public string UserName { get; set; }
-    public string Password { get; set; }
-    public bool LogginIn { get; set; }
-
-    public ICommand DoLogin { get; }
-}
-```
-
 ## View Models
 
 In contrast to the tradional design, View Models in RxApp can be thought of as collections of properties and include virtually no logic. 
@@ -109,10 +98,6 @@ For instance consider the design of a basic UI to support a login dialog.
 Within RxApp, we design our view model to directly mimic our desired logical user interface. 
 
 ```CSharp
-using System;
-using RxApp;
-using System.Reactive;
-
 public interface ILoginViewModel : INavigationViewModel
 {
     IRxProperty<string> UserName { get; }
@@ -121,25 +106,27 @@ public interface ILoginViewModel : INavigationViewModel
 
     IObservable<bool> LoggingIn { get; }
 }
-
-public interface ILoginControllerModel : INavigationControllerModel
-{
-    IObservable<string> UserName { get; }
-    IObservable<string> Password { get; }
-    IObservable<Unit> LoginModel { get; }
-
-    IRxProperty<bool> LoggingIn { get; }
-}
-
-public sealed class LoginModel : NavigationModel, ILoginViewModel, ILoginControllerModel
-{
-  // Implement the interfaces here
-}
 ```
 
 You'll notice several things going on here. 
 
-First you'll notice, that we have pretty
+First you'll notice, that we don't expose mutable properties as in the traditional design and don't impplement 
+INotifyPropertyChanged. Instead we expose instances of IRxProperty, IRxCommand, and IObservable. 
+
+Let's dig into the details of IRxProperty and IRxCommand a bit deeper. 
+
+  * Unlike traditional mutable properties, IRxProperty instances can be thgought of like streams of values, whose 
+    current value can be always be retrieved by subscribing to the the property. A value can be imperatively 
+    published to the properties listeners by setting the IRxProperty.Value property. However unlike a mutable
+    property on the traditional view model, setting the property is thread safe and may be set from any thread. 
+    This is guaranteed by the underlying Rx BehaviorSubject used to implement the property.
+
+  * IRxCommand is an improvement over the traditional ICommand interface, but does not itself implement ICommand. 
+    In contrast to ICommand, IRxCommand implement IObservable. Specifically there are two command variants 
+    in RxApp: IRxCommand which implements IObseverable<Unit>, and IRxCommand<T> which implements IObservable<Unit>.
+    Normally you will use the non-generic version which is designed for databinding button clicks etc., but    
+    occasionally you will run into situations where you will need the ability to fire and forget data. Consider 
+    carefully whether using an IRxProperty would work better first. 
 
 In addtion, we are defining our view models in terms of an interface. 
 While not strictly required in RxApp, doing so is very useful. This design clearly denotes what the shape of the 
