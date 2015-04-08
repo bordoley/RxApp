@@ -8,7 +8,7 @@ Combining a functional reactive data binding framework with a view model driven
 navigation framework, RxApp allows developers to build truly testable cross platform
 mobile applications.
 
-# Supported Platform
+# Supported Platforms
   * Portable Class Libraries (Profile 259)
   * Xamarin.iOS
   * Xamarin.Android
@@ -42,7 +42,7 @@ password fields, along with a button for the user to complete the login process.
 is attempting to log the user in, you typically will display a progress indicator to the user to indicate that the 
 applications is busy and attempting to complete the login process. 
 
-## A Quick Overview of traditional MVVM
+## A quick overview of traditional MVVM
 
 In traditional .NET MVVM applications, view models expose public mutable properties and ICommands, 
 and notify of property changes by implementing the INotifyPropertyChanged interface. The UI framework
@@ -50,14 +50,17 @@ listens to propery changes on the view model and updates the UI state when they 
 mutating properties on the view model when the UI state changes.
 
 Lets consider our login example. One implementation might look like:
+
 ```CSharp
 public sealed class TraditionalLoginViewModel : INotifyPropertyChanged
 {
+    private readonly ICommand loginCommand = new RelayCommand(param => this.LogInToApp());
+
     public string UserName { get; set; }
     public string Password { get; set; }
     public bool LogginIn { get; set; }
 
-    public ICommand DoLogin { get; }
+    public ICommand DoLogin { get { return loginCommand; }
 
     private async Task LogInToApp()
     {
