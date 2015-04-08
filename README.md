@@ -123,10 +123,10 @@ Let's dig into the details of IRxProperty and IRxCommand a bit deeper.
 
   * IRxCommand is an improvement over the traditional ICommand interface, but does not itself implement ICommand. 
     In contrast to ICommand, IRxCommand implement IObservable. Specifically there are two command variants 
-    in RxApp: IRxCommand which implements IObseverable<Unit>, and IRxCommand<T> which implements IObservable<Unit>.
-    Normally you will use the non-generic version which is designed for databinding button clicks etc., but    
-    occasionally you will run into situations where you will need the ability to fire and forget data. Consider 
-    carefully whether using an IRxProperty would work better first. 
+    in RxApp: IRxCommand which implements ```IObseverable<Unit>```, and ```IRxCommand<T>``` 
+    which implements ```IObservable<Unit>```. Normally you will use the non-generic version which is designed for 
+    databinding button clicks etc., but occasionally you will run into situations where you will need the ability 
+    to fire and forget data. Consider carefully whether using an IRxProperty would work better first. 
 
 In addtion, we are defining our view models in terms of an interface. 
 While not strictly required in RxApp, doing so is very useful. This design clearly denotes what the shape of the 
