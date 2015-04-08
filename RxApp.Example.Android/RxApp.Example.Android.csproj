@@ -94,13 +94,13 @@
       <Project>{45AD3C90-23ED-4424-9F50-D8E843A59B7A}</Project>
       <Name>RxApp.Example</Name>
     </ProjectReference>
-    <ProjectReference Include="..\RxApp.Android.Support.V7.AppCompat\RxApp.Android.Support.V7.AppCompat.csproj">
+    <ProjectReference Include="..\RxApp.Android.Support.V7.AppCompat\RxApp.Android.Support.v7.AppCompat.csproj">
       <Project>{5C9F268C-C30D-491A-9B4C-8D46934AA416}</Project>
-      <Name>RxApp.Android.Support.V7.AppCompat</Name>
+      <Name>RxApp.Android.Support.v7.AppCompat</Name>
     </ProjectReference>
-    <ProjectReference Include="..\RxApp.Android.Support.V4\RxApp.Android.Support.V4.csproj">
+    <ProjectReference Include="..\RxApp.Android.Support.V4\RxApp.Android.Support.v4.csproj">
       <Project>{BBEE95A4-6F63-4B9A-A3BD-99EF3901EB95}</Project>
-      <Name>RxApp.Android.Support.V4</Name>
+      <Name>RxApp.Android.Support.v4</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

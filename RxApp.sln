@@ -19,9 +19,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RxApp.Example.XamarinForms"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RxApp.WPF", "RxApp.WPF\RxApp.WPF.csproj", "{14A1EF88-E82C-4E3E-BE4C-9C42DEA767E6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RxApp.Android.Support.V4", "RxApp.Android.Support.V4\RxApp.Android.Support.V4.csproj", "{BBEE95A4-6F63-4B9A-A3BD-99EF3901EB95}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RxApp.Android.Support.v4", "RxApp.Android.Support.v4\RxApp.Android.Support.v4.csproj", "{BBEE95A4-6F63-4B9A-A3BD-99EF3901EB95}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RxApp.Android.Support.V7.AppCompat", "RxApp.Android.Support.V7.AppCompat\RxApp.Android.Support.V7.AppCompat.csproj", "{5C9F268C-C30D-491A-9B4C-8D46934AA416}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RxApp.Android.Support.v7.AppCompat", "RxApp.Android.Support.v7.AppCompat\RxApp.Android.Support.v7.AppCompat.csproj", "{5C9F268C-C30D-491A-9B4C-8D46934AA416}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RxApp.XamarinForms-Android", "RxApp.XamarinForms\RxApp.XamarinForms-Android.csproj", "{CFCF3B6C-8D9E-4A7F-A2BC-CF2CFEEA3594}"
 EndProject
