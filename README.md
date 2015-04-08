@@ -160,37 +160,37 @@ public sealed class LoginModel : NavigationModel, ILoginViewModel, ILoginControl
 RxApp's view model driven navigation dynamically binds view models to controllers that consume the view model data and take action on behalf of the user
 
 ```CSharp
-    public static IDisposable Create(ILoginControllerModel model)
-    {
-        model.DoLogin
-            // Get the most recent username and password from the view model
-            .SelectMany(_ =>  RxAppObservable.CombineLatest(model.UserName, model.Password).FirstAsync()) 
+public static IDisposable Create(ILoginControllerModel model)
+{
+    model.DoLogin
+        // Get the most recent username and password from the view model
+        .SelectMany(_ =>  RxAppObservable.CombineLatest(model.UserName, model.Password).FirstAsync()) 
 
-            // Indicate that we are logging in. This will cause the ui to show a progress dialog
-            .Do(_ => model.LoggingIn.Value = true)
+        // Indicate that we are logging in. This will cause the ui to show a progress dialog
+        .Do(_ => model.LoggingIn.Value = true)
 
-            // Actually log in
-            .SelectMany(async x => await DoLogin(x.Item1, x.Item2))
+        // Actually log in
+        .SelectMany(async x => await DoLogin(x.Item1, x.Item2))
 
-            // React to the result of logging in.
-            .Do(loginSucceed =>
+        // React to the result of logging in.
+        .Do(loginSucceed =>
+            {
+                if (loginSucceed)
                 {
-                    if (loginSucceed)
-                    {
-                        // Login succeeded navigate to the main page
-                        model.Open.Execute(new MainPageModel());
-                    } 
-                    else 
-                    {
-                        // Notify the user that loggin failed
-                        model.LoginFailed.Execute();
+                    // Login succeeded navigate to the main page
+                    model.Open.Execute(new MainPageModel());
+                } 
+                else 
+                {
+                    // Notify the user that loggin failed
+                    model.LoginFailed.Execute();
 
-                        // Indicate that we are no longer logging in
-                        model.LoggingIn = false;
-                    }
-                })
-            .Subscribe();
-    }
+                    // Indicate that we are no longer logging in
+                    model.LoggingIn = false;
+                }
+            })
+        .Subscribe();
+}
 ```
 
 ## Platform specific UI databinding
