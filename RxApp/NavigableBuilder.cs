@@ -15,6 +15,11 @@ using RxObservable = System.Reactive.Linq.Observable;
 
 namespace RxApp
 {
+    /// <summary>
+    /// A builder for building an virtual application that uses a navigation stack to represent its state. 
+    /// The output of the builder is a cold IObservable&lt;NavigationStack&gt; that can be subscribed to
+    /// in order to start the application.
+    /// </summary>
     public sealed class NavigableBuilder
     {
         private readonly Dictionary<Type, Func<INavigationControllerModel,IDisposable>> typeToBindFunc = 
@@ -22,6 +27,14 @@ namespace RxApp
 
         private IObservable<NavigationStack> initialState = null;
 
+        /// <summary>
+        /// A cold observable that bootstraps the application to an initial state. This observable should
+        /// return an initial value on subscription to set the inital state of the navigable's navigation
+        /// stack. In addition, this IObservable may reset the navigation stack anytime during the
+        /// application's lifecycle. Note, while the Navigable builder itself supports Observables that 
+        /// publish an initial state with a depth of more than 1, not all UI connectors do and may not
+        /// behave correctly in that rare scenario.
+        /// </summary>
         public IObservable<NavigationStack> InitialState
         { 
             set
@@ -31,6 +44,12 @@ namespace RxApp
             }
         }
 
+        /// <summary>
+        /// Registers a function that can be used to create business logic binding to a model based
+        /// upon the model's runtime type.
+        /// </summary>
+        /// <param name="bind">The function that will create a binding.</param>
+        /// <typeparam name="TModel">The model type.</typeparam>
         public void RegisterBinding<TModel>(Func<TModel, IDisposable> bind)
             where TModel : INavigationControllerModel
         {
@@ -38,6 +57,10 @@ namespace RxApp
                 bind((TModel) model));
         }
 
+        /// <summary>
+        /// Create's a cold observable that when subscribed to starts the application and publishes the current
+        /// state of the navigation stack.
+        /// </summary>
         public IObservable<NavigationStack> Build()
         {
             var typeToBindFunc = this.typeToBindFunc.ToImmutableDictionary();
@@ -106,6 +129,9 @@ namespace RxApp
         }
     }
 
+    /// <summary>
+    /// A persistent immutable stack that is used to represent the current navigation state.
+    /// </summary>
     public sealed class NavigationStack : IReadOnlyCollection<INavigationModel>, IEquatable<NavigationStack>
     {
         public static readonly NavigationStack Empty = 
