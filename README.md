@@ -17,6 +17,12 @@ mobile applications.
 # How do I add RxApp to my project?
 
 Use the NuGet packages:
+* https://www.nuget.org/packages/RxApp/
+* https://www.nuget.org/packages/RxApp.iOS
+* https://www.nuget.org/packages/RxApp.Android
+* https://www.nuget.org/packages/RxApp.Android.Support.v4
+* https://www.nuget.org/packages/RxApp.Android.Support.v7.AppCompat
+* https://www.nuget.org/packages/RxApp.XamarinForms
 
 # What are RxApp's dependencies?
 
