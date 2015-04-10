@@ -33,9 +33,9 @@ The platform specific UI bindings introduce dependencies upon their native frame
 
 # How stable is RxApp?
 
-RxApp is under active development and is not yet API stable. Its currently released as a pre-release on 
-Nuget. While there may be cosmetic changes to the library (propery name changes, etc.), I don't expect any
-significant architectural changes to the current API. Future releases will primarily focus on additional 
+RxApp is under active development and is not yet API stable. It's currently released as a pre-release on 
+Nuget. While there may be cosmetic changes to the library (propery and method names, etc.), I don't expect any
+significant architectural changes. Future releases will primarily focus on additional 
 control binding support across all platforms and the addition of support for new platforms, specifically 
 Xamarin.Mac, WPF, Windows Phone and Windows Store apps.
 
@@ -48,60 +48,9 @@ password fields, along with a button for the user to complete the login process.
 is attempting to log the user in, you typically will display a progress indicator to the user to indicate that the 
 applications is busy and attempting to complete the login process. 
 
-## A quick overview of traditional MVVM
-
-In traditional .NET MVVM applications, view models expose public mutable properties and ICommands, 
-and notify of property changes by implementing the INotifyPropertyChanged interface. The UI framework
-listens to propery changes on the view model and updates the UI state when they change, as well as 
-mutating properties on the view model when the UI state changes.
-
-Lets consider our login example. One implementation might look like:
-
-```CSharp
-public sealed class TraditionalLoginViewModel : INotifyPropertyChanged
-{
-    private readonly ICommand loginCommand = new RelayCommand(param => this.LogInToApp());
-
-    public string UserName { get; set; }
-    public string Password { get; set; }
-    public bool LogginIn { get; set; }
-
-    public ICommand DoLogin { get { return loginCommand; }
-
-    private async Task LogInToApp()
-    {
-        var username = this.UserName;
-        var password = this.Password;
-        this.LogginIn = true;
-
-        bool loginResult = await CallLoginService(username, password);
-
-        if (loginResult)
-        {
-            // navigate to the next state on login success
-        }
-        else
-        {
-            // pop up the error dialog
-        }
-    }
-}
-```
-
-Within a traditional view model, developers implement logic that interacts with underlying system
-data models and services, such as web service APIs, SQLite databases etc., updating the view model state in response to user actions.
-
-While this is an improvement over other models, such as MVC, it still introduces complex mutable state management 
-into the system, and forces developers to carefully consider concurrency and the impacts of threading to prevent 
-updates to the view model from non-UI threads. In addition, the traditional design combines business logic with the 
-view model, which introduces coupling and makes testing harder than it has to be.
-
 ## View Models
 
-In contrast to the tradional design, View Models in RxApp can be thought of as collections of properties and include virtually no logic. 
-
-For instance consider the design of a basic UI to support a login dialog.
-Within RxApp, we design our view model to directly mimic our desired logical user interface. 
+View models in RxApp can be thought of as collections of reactive properties and commands, including virtually no logic. We design our view models to directly mimic our desired logical user interfaces. For instance consider the following view model design for a login dialog.
 
 ```CSharp
 public interface ILoginViewModel : INavigationViewModel
