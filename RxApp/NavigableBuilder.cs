@@ -22,6 +22,23 @@ namespace RxApp
     /// </summary>
     public sealed class NavigableBuilder
     {
+        private static IDisposable Bind(
+            IReadOnlyDictionary<Type, Func<INavigationControllerModel,IDisposable>> typeToBindFunc,
+            INavigationControllerModel model)
+        {
+            var modelType = model.GetType();
+            foreach (var iface in Enumerable.Concat(new Type[] { modelType }, modelType.GetTypeInfo().ImplementedInterfaces))
+            {
+                Func<INavigationControllerModel,IDisposable> doBind;
+                if (typeToBindFunc.TryGetValue(iface, out doBind))
+                {
+                    return doBind(model);
+                }
+            }
+
+            throw new NotSupportedException("No Controller found for the given model type: " + modelType);
+        }
+
         private readonly Dictionary<Type, Func<INavigationControllerModel,IDisposable>> typeToBindFunc = 
             new Dictionary<Type, Func<INavigationControllerModel,IDisposable>>();
 
@@ -68,21 +85,6 @@ namespace RxApp
             if (this.initialState == null) { throw new NotSupportedException("InitialState must be set before calling build."); }
             var initialState = this.initialState;
 
-            Func<INavigationControllerModel,IDisposable> bind = (INavigationControllerModel model) =>
-                {
-                    var modelType = model.GetType();
-                    foreach (var iface in Enumerable.Concat(new Type[] { modelType }, modelType.GetTypeInfo().ImplementedInterfaces))
-                    {
-                        Func<INavigationControllerModel,IDisposable> doBind;
-                        if (typeToBindFunc.TryGetValue(iface, out doBind))
-                        {
-                            return doBind(model);
-                        }
-                    }
-
-                    throw new NotSupportedException("No Controller found for the given model type: " + modelType);
-                };
-
             return RxObservable.Create<NavigationStack>(observer => 
                 {
                     var navigationStackSubject = new Subject<NavigationStack>();
@@ -103,7 +105,7 @@ namespace RxApp
                                                 return accA.Remove(model);
                                             });
                                     return stack.Where(x => !acc.ContainsKey(x))
-                                        .Aggregate(removed, (accB, model) => accB.Add(model, bind(model)));
+                                        .Aggregate(removed, (accB, model) => accB.Add(model, Bind(typeToBindFunc, model)));
                                 })
                             .Subscribe(),
                         
