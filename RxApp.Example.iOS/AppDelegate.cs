@@ -21,14 +21,14 @@ namespace RxApp.Example
         {
             var storyBoard = UIStoryboard.FromName("Views", null);
             var builder = new RxiOSApplicationBuilder();
-            builder.NavigationApplication = RxAppExampleApplicationController.Create();
+            builder.NavigationStack = RxAppExampleApplicationController.Create();
             builder.RegisterViewCreator<IMainViewModel,ExampleViewController>(model =>
                 {
                     var view = (ExampleViewController) storyBoard.InstantiateViewController("ExampleViewController");
                     view.ViewModel = model;
                     return view;
                 });
-            appSubscription = builder.Build().Subscribe();
+            appSubscription = builder.Build();
             return true;
         }
 

@@ -39,6 +39,10 @@ namespace RxApp.iOS
         private readonly Dictionary<Type, Func<INavigationViewModel,UIViewController>> modelToViewCreator =
             new Dictionary<Type, Func<INavigationViewModel,UIViewController>>();
 
+        private IObservable<NavigationStack> navigationStack;
+        private UIWindow window;
+        private RxUINavigationController uiNavigationController;
+
         public void RegisterViewCreator<TModel, TView>(Func<TModel,TView> viewCreator)
             where TModel : INavigationViewModel
             where TView : UIViewController
@@ -48,29 +52,37 @@ namespace RxApp.iOS
                 model => viewCreator((TModel) model));
         }
 
-        public IObservable<NavigationStack> NavigationApplication { get; set; }
+        public IObservable<NavigationStack> NavigationStack
+        { 
+            set { this.navigationStack = value; }
+        }
 
-        public UIWindow Window { get; set; }
+        public UIWindow Window
+        { 
+            set { this.window = value; }
+        }
 
-        public RxUINavigationController UINavigationController { get; set; }
+        public RxUINavigationController UINavigationController
+        {
+            set { this.uiNavigationController = value; }
+        }
 
-        // FIXME: Maybe should be a hot observable
-        public IObservable<NavigationStack> Build()
+        public IDisposable Build()
         {
             var modelToViewCreator = this.modelToViewCreator.ToImmutableDictionary();
 
-            if (this.NavigationApplication == null) { throw new NotSupportedException("Application must not be null"); }
-            var navigationApplication = this.NavigationApplication;
+            if (this.navigationStack == null) { throw new NotSupportedException("Application must not be null"); }
+            var navigationStack = this.navigationStack;
 
-            var navigationController = this.UINavigationController ?? new RxUINavigationController();
-            var window = this.Window ?? new UIWindow(UIScreen.MainScreen.Bounds);
+            var navigationController = this.uiNavigationController ?? new RxUINavigationController();
+            var window = this.window ?? new UIWindow(UIScreen.MainScreen.Bounds);
 
             window.RootViewController = navigationController;
             window.MakeKeyAndVisible();
 
             var viewControllers = new Dictionary<INavigationViewModel, UIViewController>();
 
-            return navigationApplication
+            return navigationStack
                 .ObserveOnMainThread()
                 .Do(navStack =>
                     {
@@ -93,7 +105,7 @@ namespace RxApp.iOS
                         navigationController.SetViewControllers(
                             navStack.Reverse().Select(model => viewControllers[model]).ToArray(), 
                             true);
-                    });
+                    }).Subscribe();
         }
     }
 }

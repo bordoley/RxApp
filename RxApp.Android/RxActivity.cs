@@ -74,19 +74,12 @@ namespace RxApp.Android
     {
         private readonly RxActivityHelper<RxActivity<TViewModel>,TViewModel> helper;
 
-        private TViewModel viewModel;
-
         protected RxActivity()
         {
             helper = RxActivityHelper<RxActivity<TViewModel>,TViewModel>.Create(this);
         }
 
-        public TViewModel ViewModel
-        {
-            get { return this.viewModel; }
-
-            set { this.viewModel = value; }
-        }
+        public TViewModel ViewModel { get; set; }
 
         object IViewFor.ViewModel
         {

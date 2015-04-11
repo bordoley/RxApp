@@ -9,19 +9,13 @@ namespace RxApp.Android
         where TViewModel : INavigationViewModel
     {
         private readonly RxActivityHelper<RxActionBarActivity<TViewModel>,TViewModel> helper;
-        private TViewModel viewModel;
 
         protected RxActionBarActivity()
         {
             helper = RxActivityHelper<RxActionBarActivity<TViewModel>,TViewModel>.Create(this);
         }
   
-        public TViewModel ViewModel
-        {
-            get { return this.viewModel; }
-
-            set { this.viewModel = value; }
-        }
+        public TViewModel ViewModel { get; set; }
 
         object IViewFor.ViewModel
         {

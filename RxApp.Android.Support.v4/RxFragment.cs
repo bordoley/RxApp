@@ -7,18 +7,11 @@ namespace RxApp.Android
     public abstract class RxSupportFragment<TViewModel> : Fragment, IViewFor<TViewModel>
         where TViewModel : IActivationViewModel
     {
-        private TViewModel viewModel;
-
-        public TViewModel ViewModel
-        {
-            get { return viewModel; }
-
-            set { viewModel = value; }
-        }
+        public TViewModel ViewModel { get; set; }
 
         object IViewFor.ViewModel
         {
-            get { return viewModel; }
+            get { return this.ViewModel; }
 
             set { this.ViewModel = (TViewModel) value; }
         }
@@ -26,12 +19,12 @@ namespace RxApp.Android
         public override void OnResume()
         {
             base.OnResume();
-            viewModel.Activate.Execute();
+            this.ViewModel.Activate.Execute();
         }
 
         public override void OnPause()
         {
-            viewModel.Deactivate.Execute();
+            this.ViewModel.Deactivate.Execute();
             base.OnPause();
         }
     } 

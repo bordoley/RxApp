@@ -65,7 +65,7 @@ namespace RxApp
         {
             var typeToBindFunc = this.typeToBindFunc.ToImmutableDictionary();
 
-            if (initialState == null) { throw new NotSupportedException("InitialState must be set before calling build."); }
+            if (this.initialState == null) { throw new NotSupportedException("InitialState must be set before calling build."); }
             var initialState = this.initialState;
 
             Func<INavigationControllerModel,IDisposable> bind = (INavigationControllerModel model) =>

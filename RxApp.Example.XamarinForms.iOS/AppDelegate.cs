@@ -13,17 +13,23 @@ namespace RxApp.Example.XamarinForms.iOS
     [Register("AppDelegate")]
     public partial class AppDelegate : FormsApplicationDelegate
     {
+        private IDisposable subscription;
+
         public override bool FinishedLaunching(UIApplication app, NSDictionary options)
         {
             Forms.Init();
 
             var application = new RxFormsApplication();
-            var exampleApp = ExampleApplication.Create(application);
-            exampleApp.Subscribe();
+            subscription = ExampleApplication.Create(application);
 
             LoadApplication(application);
 
             return base.FinishedLaunching (app, options);
+        }
+
+        public override void WillTerminate(UIApplication app)
+        {
+            subscription.Dispose();
         }
     }
 }
