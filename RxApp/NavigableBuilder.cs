@@ -64,9 +64,9 @@ namespace RxApp
         public IObservable<NavigationStack> Build()
         {
             var typeToBindFunc = this.typeToBindFunc.ToImmutableDictionary();
-            var rootState = this.initialState;
 
-            if (rootState == null) { throw new NotSupportedException("RootState must be set before calling build."); }
+            if (initialState == null) { throw new NotSupportedException("InitialState must be set before calling build."); }
+            var initialState = this.initialState;
 
             Func<INavigationControllerModel,IDisposable> bind = (INavigationControllerModel model) =>
                 {
@@ -124,7 +124,7 @@ namespace RxApp
                                             .Subscribe(x => navigationStackSubject.OnNext(x));
                                 }).Subscribe(),
 
-                        rootState.Subscribe(x => navigationStackSubject.OnNext(x)));
+                        initialState.Subscribe(x => navigationStackSubject.OnNext(x)));
                 });
         }
     }
