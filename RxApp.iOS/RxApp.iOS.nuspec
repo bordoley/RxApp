@@ -2,7 +2,7 @@
 <package >
   <metadata>
     <id>RxApp.iOS</id>
-    <version>0.0.1-pre1</version>
+    <version>0.0.1-pre2</version>
     <title>RxApp.iOS</title>
     <authors>David Bordoley</authors>
     <licenseUrl>https://github.com/bordoley/RxApp/blob/master/LICENSE</licenseUrl>
@@ -12,7 +12,7 @@
     <description>RxApp view bindings and navigation support for Xamarin iOS Unified.</description>
     <tags>portable mvvm pcl rx reactive LINQ</tags>
     <dependencies>
-      <dependency id="RxApp" version="0.0.1-pre1" />
+      <dependency id="RxApp" version="0.0.1-pre2" />
       <dependency id="Rx-Main" version="2.2.5" />
       <dependency id="System.Collections.Immutable" version="1.1.34-rc" />
     </dependencies>
