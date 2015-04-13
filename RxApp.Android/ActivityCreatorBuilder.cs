@@ -6,7 +6,7 @@ using Android.App;
 using System.Collections.Immutable;
 using Android.Content;
 
-namespace RxApp
+namespace RxApp.Android
 {
     public sealed class ActivityCreatorBuilder
     {

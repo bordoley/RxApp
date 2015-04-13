@@ -2,7 +2,7 @@
 <package >
   <metadata>
     <id>RxApp</id>
-    <version>0.0.1-pre2</version>
+    <version>0.0.1-pre3</version>
     <title>RxApp</title>
     <authors>David Bordoley</authors>
     <licenseUrl>https://github.com/bordoley/RxApp/blob/master/LICENSE</licenseUrl>
@@ -21,8 +21,8 @@
     </dependencies>
   </metadata>
   <files>
-  	<file src="bin\Release\RxApp.dll" target="lib\portable-net45+netcore45+wpa81+wp8" />
-  	<file src="bin\Release\RxApp.xml" target="lib\portable-net45+netcore45+wpa81+wp8" />
+  	<file src="bin/Release/RxApp.dll" target="lib/portable-net45+netcore45+wpa81+wp8" />
+  	<file src="bin/Release/RxApp.xml" target="lib/portable-net45+netcore45+wpa81+wp8" />
   </files>
 </package>
 

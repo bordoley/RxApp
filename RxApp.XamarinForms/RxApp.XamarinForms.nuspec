@@ -2,7 +2,7 @@
 <package >
   <metadata>
     <id>RxApp.XamarinForms</id>
-    <version>0.0.1-pre2</version>
+    <version>0.0.1-pre3</version>
     <title>RxApp.XamarinForms</title>
     <authors>David Bordoley</authors>
     <licenseUrl>https://github.com/bordoley/RxApp/blob/master/LICENSE</licenseUrl>
@@ -13,21 +13,21 @@
     <tags>portable mvvm pcl rx reactive LINQ</tags>
     <dependencies>
       <group targetFramework="portable-net45+netcore45+wpa81+wp8">
-        <dependency id="RxApp" version="0.0.1-pre2" />
+        <dependency id="RxApp" version="0.0.1-pre3" />
         <dependency id="Rx-Main" version="2.2.5" />
         <dependency id="System.Collections.Immutable" version="1.1.34-rc" />
         <dependency id="Xamarin.Forms" version="1.4.1.6349" />
       </group>
       <group targetFramework="MonoAndroid">
-        <dependency id="RxApp" version="0.0.1-pre2" />
-        <dependency id="RxApp.Android" version="0.0.1-pre2" />
+        <dependency id="RxApp" version="0.0.1-pre3" />
+        <dependency id="RxApp.Android" version="0.0.1-pre3" />
         <dependency id="Rx-Main" version="2.2.5" />
         <dependency id="System.Collections.Immutable" version="1.1.34-rc" />
         <dependency id="Xamarin.Forms" version="1.4.1.6349" />
       </group>
       <group targetFramework="Xamarin.iOS10">
-        <dependency id="RxApp" version="0.0.1-pre2" />
-        <dependency id="RxApp.iOS" version="0.0.1-pre2" />
+        <dependency id="RxApp" version="0.0.1-pre3" />
+        <dependency id="RxApp.iOS" version="0.0.1-pre3" />
         <dependency id="Rx-Main" version="2.2.5" />
         <dependency id="System.Collections.Immutable" version="1.1.34-rc" />
         <dependency id="Xamarin.Forms" version="1.4.1.6349" />
@@ -35,14 +35,14 @@
     </dependencies>
   </metadata>
   <files>
-    <file src="bin\Release\portable-net45+netcore45+wpa81+wp8\RxApp.XamarinForms.dll" target="lib\portable-net45+netcore45+wpa81+wp8" />
-    <file src="bin\Release\portable-net45+netcore45+wpa81+wp8\RxApp.XamarinForms.xml" target="lib\portable-net45+netcore45+wpa81+wp8" />
+    <file src="bin/Release/portable-net45+netcore45+wpa81+wp8/RxApp.XamarinForms.dll" target="lib/portable-net45+netcore45+wpa81+wp8" />
+    <file src="bin/Release/portable-net45+netcore45+wpa81+wp8/RxApp.XamarinForms.xml" target="lib/portable-net45+netcore45+wpa81+wp8" />
 
-    <file src="bin\Release\MonoAndroid\RxApp.XamarinForms.dll" target="lib\MonoAndroid" />
-    <file src="bin\Release\MonoAndroid\RxApp.XamarinForms.xml" target="lib\MonoAndroid" />
+    <file src="bin/Release/MonoAndroid/RxApp.XamarinForms.dll" target="lib/MonoAndroid" />
+    <file src="bin/Release/MonoAndroid/RxApp.XamarinForms.xml" target="lib/MonoAndroid" />
 
-    <file src="bin\Release\Xamarin.iOS10\RxApp.XamarinForms.dll" target="lib\Xamarin.iOS10" />
-    <file src="bin\Release\Xamarin.iOS10\RxApp.XamarinForms.xml" target="lib\Xamarin.iOS10" />
+    <file src="bin/Release/Xamarin.iOS10/RxApp.XamarinForms.dll" target="lib/Xamarin.iOS10" />
+    <file src="bin/Release/Xamarin.iOS10/RxApp.XamarinForms.xml" target="lib/Xamarin.iOS10" />
   </files>
 </package>
 
