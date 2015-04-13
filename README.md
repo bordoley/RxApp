@@ -39,6 +39,186 @@ significant architectural changes. Future releases will primarily focus on addit
 control binding support across all platforms and the addition of support for new platforms, specifically 
 Xamarin.Mac, WPF, Windows Phone and Windows Store apps.
 
+# A Compelling Example
+
+```CSharp
+
+using System;
+
+using Android.App;
+using Android.Content;
+using Android.Runtime;
+using Android.Views;
+using Android.Widget;
+using Android.OS;
+
+using RxApp.Android;
+using System.Reactive;
+using System.Reactive.Linq;
+using RxApp;
+
+using RxObservable = System.Reactive.Linq.Observable;
+using System.Reactive.Subjects;
+
+namespace RxAppDemo
+{
+    public interface ILoginViewModel : INavigationViewModel
+    {
+        IRxProperty<string> UserName { get; }
+        IRxProperty<string> Password { get; }
+        IRxCommand Login { get; }
+
+        IObservable<Unit> LoginFailed { get; }
+    }
+
+    public interface ILoginControllerModel : INavigationControllerModel
+    {
+        IObservable<string> UserName { get; }
+        IObservable<string> Password { get; }
+        IObservable<Unit> Login { get; }
+
+        IRxCommand LoginFailed { get; }
+    }
+
+    public class LoginViewModel : NavigationModel, ILoginViewModel, ILoginControllerModel
+    {
+        private IRxProperty<string> username = RxProperty.Create<string>("");
+        private IRxProperty<string> password = RxProperty.Create<string>("");
+        private IRxCommand login = RxCommand.Create();
+        private IRxCommand loginFailed = RxCommand.Create();
+
+        IRxProperty<string> ILoginViewModel.UserName { get { return username; } }
+        IObservable<string> ILoginControllerModel.UserName { get { return username; } }
+
+        IRxProperty<string> ILoginViewModel.Password { get { return password; } }
+        IObservable<string> ILoginControllerModel.Password { get { return password; } }
+
+        IRxCommand ILoginViewModel.Login { get { return login; } }
+        IObservable<Unit> ILoginControllerModel.Login { get { return login; } }
+
+        IObservable<Unit> ILoginViewModel.LoginFailed { get { return loginFailed; } }
+        IRxCommand ILoginControllerModel.LoginFailed { get { return loginFailed; } }
+    }
+
+    public class MainViewModel : NavigationModel
+    {
+
+    }
+
+    public static class RxAppDemoNavigable
+    {
+        
+        public static IObservable<NavigationStack> Create()
+        {
+            var initialState = new BehaviorSubject<NavigationStack>(NavigationStack.Empty.Push(new LoginViewModel()));
+
+            var builder = new NavigableBuilder();
+            builder.InitialState = initialState;
+            builder.RegisterBinding<MainViewModel>(_ => System.Reactive.Disposables.Disposable.Empty);
+            builder.RegisterBinding<ILoginControllerModel>(model => Disposable.Compose(
+                model.Login
+                    .SelectMany(_ => 
+                        RxApp.Observable.CombineLatest(model.UserName, model.Password).FirstAsync())
+                    .Where(x => x.Item1 == "admin")
+                    .Subscribe(_ => model.LoginFailed.Execute()),
+                model.Login
+                    .SelectMany(_ => 
+                        RxApp.Observable.CombineLatest(model.UserName, model.Password).FirstAsync())
+                    .Where(x => x.Item1 == "dave")
+                    .Subscribe(_ => initialState.OnNext(NavigationStack.Empty.Push(new MainViewModel())))));
+
+            return builder.Build();
+        }
+    }
+
+    [Activity(Label = "RxAppDemo", MainLauncher = true, Icon = "@drawable/icon")]
+    public class LoginActivity : RxActivity<ILoginViewModel>
+    {
+        private Button loginButton;
+        private EditText username;
+        private EditText password;
+
+        private IDisposable subscription;
+
+        protected override void OnCreate(Bundle bundle)
+        {
+            base.OnCreate(bundle);
+            SetContentView(Resource.Layout.Login);
+            loginButton = FindViewById<Button>(Resource.Id.login_button);
+			username = FindViewById<EditText>(Resource.Id.login_username);
+            password = FindViewById<EditText>(Resource.Id.login_password); 
+        }
+
+        protected override void OnStart()
+        {
+            base.OnStart();
+            subscription = Disposable.Compose(
+                this.ViewModel.Login.Bind(loginButton),
+
+                RxObservable.FromEventPattern(username, "AfterTextChanged")
+                    .Select(x => username.Text)
+                    .BindTo(this.ViewModel.UserName),
+
+                RxObservable.FromEventPattern(password, "AfterTextChanged")
+                    .Select(x => password.Text)
+                    .BindTo(this.ViewModel.Password),
+
+                this.ViewModel.LoginFailed.BindTo(Toast.MakeText(this, "Login Failed", ToastLength.Long).Show)
+            );
+        }
+
+        protected override void OnStop()
+        {
+            subscription.Dispose();
+            base.OnStop();
+        }
+    }
+
+    [Activity(Label = "RxAppDemo Success", Icon = "@drawable/icon")]
+    public class MainActivity : RxActivity<MainViewModel>
+    {
+        protected override void OnCreate(Bundle bundle)
+        {
+            base.OnCreate(bundle);
+            SetContentView(Resource.Layout.Main);
+        }
+    }
+
+    [Application]
+    public sealed class LoginApplication : RxApplication
+    {
+        private IDisposable subscription;
+
+        public LoginApplication(IntPtr javaReference, JniHandleOwnership transfer) : base(javaReference, transfer)
+        {
+        }
+
+        public override void OnCreate()
+        {
+            base.OnCreate();
+
+            var activityCreatorBuilder = new ActivityCreatorBuilder();
+            activityCreatorBuilder.RegisterActivityMapping<ILoginViewModel,LoginActivity>();
+            activityCreatorBuilder.RegisterActivityMapping<MainViewModel,MainActivity>();
+
+            var navigationStack = RxAppDemoNavigable.Create();
+            this.subscription = navigationStack.BindTo(this, activityCreatorBuilder.Build());
+        }
+
+        public override void OnTerminate()
+        {
+            subscription.Dispose();
+            base.OnTerminate();
+        }
+    }
+}
+
+
+
+
+```
+
+<!--
 # Building an application using RxApp
 
 The style of MVVM used in RxApp is slightly different than what you might familiar with. The best way to understand
@@ -211,4 +391,4 @@ public sealed class MainActivity : RxActionBarActivity<ILoginViewModel>
     }
 }
 ```
-
+-->
