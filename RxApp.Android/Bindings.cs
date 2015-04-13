@@ -12,12 +12,98 @@ using System.Linq.Expressions;
 
 using RxObservable = System.Reactive.Linq.Observable;
 using RxDisposable = System.Reactive.Disposables.Disposable;
+using AndroidBuild = Android.OS.Build;
+
 using System.Reactive.Subjects;
+using System.Collections.Immutable;
+using Android.App;
+using System.Threading;
 
 namespace RxApp.Android
 {
     public static partial class Bindings
     {
+        public static IDisposable BindTo(this IObservable<NavigationStack> This, IRxApplication application, Action<Activity,INavigationViewModel> startActivity)
+        {
+            var activities = new Dictionary<INavigationViewModel, IViewFor>();
+
+            // This is essentially an async lock. This code is single threaded so using a bool is ok.
+            var canCreateActivity = RxProperty.Create(true);
+            INavigationViewModel currentModel = null;
+
+            var whenNavigationStackChanged = This
+                .ObserveOnMainThread()
+                .Delay(_ => canCreateActivity.Where(b => b))
+                .Scan(RxApp.NavigationStack.Empty, (previous, navStack) =>
+                    {
+                        var removed = activities.Keys.Where(y => !navStack.Contains(y)).ToImmutableArray();
+                        var previousActivity = activities[currentModel];
+                        currentModel = navStack.FirstOrDefault();
+
+                        if (currentModel != null && !activities.ContainsKey(currentModel))
+                        {
+                            canCreateActivity.Value = false;
+                            startActivity((Activity) previousActivity, currentModel);
+                        }
+
+                        if (((int) AndroidBuild.VERSION.SdkInt >= 21) && !previous.IsEmpty && previous.Pop().Equals(navStack))
+                        {
+                            // Show the inverse activity transition after the back button is clicked.
+                            ((Activity) previousActivity).FinishAfterTransition();
+                        }
+                        else
+                        {
+                            foreach (var model in removed)
+                            {
+                                IViewFor activity = activities[model];  
+                                activities.Remove(model);
+                                ((Activity) activity).Finish();
+                            }   
+                        }
+
+                        return navStack;
+                    });
+
+
+            IDisposable subscription = null;
+
+            return application.WhenActivityCreated.Subscribe(activity => 
+                {
+                    if (subscription == null)
+                    {
+                        // Either the startup activity called OnActivityCreated or the application was killed and restarted by android.
+                        // If the application is backgrounded, android will kill all the activities and the application class.
+                        // When the application is reopened from the background, it creates the application and starts the last activity 
+                        // that was opened, not the startup activity. 
+                        currentModel = new StartupModel();
+                        activities[currentModel] = activity;
+
+                        subscription = whenNavigationStackChanged
+                            .Where(x => x.IsEmpty)
+                            .Subscribe(x => 
+                                {
+                                    // Can't dispose the outer subscription from within its own callback, 
+                                    // so post the call onto the sync context
+                                    SynchronizationContext.Current.Post(_ => 
+                                        {
+                                            subscription.Dispose(); 
+                                            subscription = null;
+                                        }, null);
+                                });
+                    }
+                    else
+                    {
+                        activity.ViewModel = currentModel;
+                        activities[currentModel] = activity;
+                        canCreateActivity.Value = true;
+                    }
+                });
+        }
+
+        private sealed class StartupModel : NavigationModel
+        {
+        }
+
         public static IDisposable BindTo<T, TView>(this IObservable<T> This, TView target, Expression<Func<TView, T>> property)
         {
             return This.BindTo(target, property, Scheduler.MainThreadScheduler);

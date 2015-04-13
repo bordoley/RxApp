@@ -1,6 +1,6 @@
 ﻿using System;
+using System.Linq;
 using System.Linq.Expressions;
-
 using System.Reactive;
 
 using Foundation;
@@ -8,6 +8,9 @@ using UIKit;
 
 using RxDisposable = System.Reactive.Disposables.Disposable;
 using RxObservable = System.Reactive.Linq.Observable;
+using System.Collections.Generic;
+using System.Reactive.Linq;
+using System.Collections.Immutable;
 
 namespace RxApp.iOS
 {
@@ -26,6 +29,39 @@ namespace RxApp.iOS
                 new DateTime(2001, 1, 1, 0, 0, 0) );
             return NSDate.FromTimeIntervalSinceReferenceDate(
                 (date - reference).TotalSeconds);
+        }
+
+        public static IDisposable BindTo(
+            this IObservable<NavigationStack> This, 
+            RxUINavigationController navigationController, 
+            Func<INavigationViewModel,UIViewController> createView)
+        {
+            var viewControllers = new Dictionary<INavigationViewModel, UIViewController>();
+
+            return This
+                .ObserveOnMainThread()
+                .Do(navStack =>
+                    {
+                        var head = navStack.FirstOrDefault();
+                        var removed = viewControllers.Keys.Where(x => !navStack.Contains(x)).ToImmutableArray();
+
+                        if (!viewControllers.ContainsKey(head))
+                        {
+                            var view = createView(head);
+                            viewControllers.Add(head, view);
+                        }
+
+                        foreach (var model in removed)
+                        {
+                            IDisposable view = viewControllers[model];
+                            viewControllers.Remove(model);
+                            view.Dispose();
+                        }
+
+                        navigationController.SetViewControllers(
+                            navStack.Reverse().Select(model => viewControllers[model]).ToArray(), 
+                            true);
+                    }).Subscribe();
         }
 
         public static IDisposable Bind(this IRxProperty<bool> This, UISwitch uiSwitch)

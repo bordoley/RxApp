@@ -21,165 +21,28 @@ using System.Reflection;
 
 namespace RxApp.Android
 {
-    public sealed class RxAndroidApplicationBuilder
-    {
-        private static Type GetActivityType(IReadOnlyDictionary<Type, Type> activityMapping, INavigationViewModel model)
-        {
-            var modelType = model.GetType();
-
-            foreach (var iface in Enumerable.Concat(new Type[] { modelType }, modelType.GetTypeInfo().ImplementedInterfaces))
-            {
-                Type activityType;
-                if (activityMapping.TryGetValue(iface, out activityType))
-                {
-                    return activityType;
-                }
-            }
-
-            throw new NotSupportedException("No activity found for the given model type: " + modelType);
-        }
-
-        private readonly Dictionary<Type, Type> activityMapping = new Dictionary<Type, Type>();
-
-        private IObservable<NavigationStack> navigationStack;
-        private Action<Activity,Type> startActivity;
-        private IObservable<IViewFor> createdActivities;
-
-        public IObservable<NavigationStack> NavigationStack
-        {  
-            set { this.navigationStack = value; }
-        }
-
-        public Action<Activity,Type> StartActivity
-        { 
-            set { this.startActivity = value; }
-        }
-
-        public IObservable<IViewFor> CreatedActivities
-        { 
-            set { this.createdActivities = value; }
-        }
-
-        public void RegisterActivityMapping<TModel, TActivity>()
-            where TModel : INavigationViewModel
-            where TActivity : Activity, IViewFor
-        {
-            this.activityMapping.Add(typeof(TModel), typeof(TActivity));
-        }
-
-        public IDisposable Build()
-        {
-            var activityMapping = this.activityMapping.ToImmutableDictionary();
-
-            if (this.navigationStack == null) { throw new NotSupportedException("Application must not be null"); }
-            var navigationStack = this.navigationStack;
-
-            if (this.createdActivities == null) { throw new NotSupportedException("Activity stream must not be null"); }
-            var createdActivities = this.createdActivities;
-
-            var startActivity = this.startActivity ?? ((current, type) => 
-                {
-                    var intent = new Intent(current, type);
-                    current.StartActivity(intent);
-                });
-
-            var activities = new Dictionary<INavigationViewModel, IViewFor>();
-
-            // This is essentially an async lock. This code is single threaded so using a bool is ok.
-            var canCreateActivity = RxProperty.Create(true);
-            INavigationViewModel currentModel = null;
-
-            var appBinding = navigationStack
-                .ObserveOnMainThread()
-                .Delay(_ => canCreateActivity.Where(b => b))
-                .Scan(RxApp.NavigationStack.Empty, (previous, navStack) =>
-                    {
-                        var removed = activities.Keys.Where(y => !navStack.Contains(y)).ToImmutableArray();
-                        var previousActivity = activities[currentModel];
-                        currentModel = navStack.FirstOrDefault();
-
-                        if (currentModel != null && !activities.ContainsKey(currentModel))
-                        {
-                            canCreateActivity.Value = false;
-                            var viewType = GetActivityType(activityMapping, currentModel);
-                            startActivity((Activity) previousActivity, viewType);
-                        }
-
-                        if (((int) AndroidBuild.VERSION.SdkInt >= 21) && !previous.IsEmpty && previous.Pop().Equals(navStack))
-                        {
-                            // Show the inverse activity transition after the back button is clicked.
-                            ((Activity) previousActivity).FinishAfterTransition();
-                        }
-                        else
-                        {
-                            foreach (var model in removed)
-                            {
-                                IViewFor activity = activities[model];  
-                                activities.Remove(model);
-                                ((Activity) activity).Finish();
-                            }   
-                        }
-
-                        return navStack;
-                    });
-
-            IDisposable subscription = null;
-
-            return createdActivities.Subscribe(activity => 
-                {
-                    if (subscription == null)
-                    {
-                        // Either the startup activity called OnActivityCreated or the application was killed and restarted by android.
-                        // If the application is backgrounded, android will kill all the activities and the application class.
-                        // When the application is reopened from the background, it creates the application and starts the last activity 
-                        // that was opened, not the startup activity. 
-                        currentModel = new StartupModel();
-                        activities[currentModel] = activity;
-
-                        subscription = appBinding.Where(x => x.IsEmpty).Subscribe(x => 
-                            {
-                                // Can't dispose the outer subscription from within its own callback, 
-                                // so post the call onto the sync context
-                                SynchronizationContext.Current.Post(_ => 
-                                    {
-                                        subscription.Dispose(); 
-                                        subscription = null;
-                                    }, null);
-                            });
-                    }
-                    else
-                    {
-                        activity.ViewModel = currentModel;
-                        activities[currentModel] = activity;
-                        canCreateActivity.Value = true;
-                    }
-                });
-        }  
-
-        private sealed class StartupModel : NavigationModel
-        {
-        }
-    }
-
     public interface IRxApplication
     {
+        IObservable<IViewFor> WhenActivityCreated { get; }
+
         void OnActivityCreated<TActivity>(TActivity activity) where TActivity: Activity, IViewFor;
     }
 
     public abstract class RxApplication : Application, IRxApplication
     {
-        private readonly Subject<IViewFor> createdActivities = new Subject<IViewFor>();
+        private readonly Subject<IViewFor> whenActivityCreated = new Subject<IViewFor>();
+
 
         public RxApplication(IntPtr javaReference, JniHandleOwnership transfer) : base(javaReference, transfer)
         {
         }
 
-        public IObservable<IViewFor> CreatedActivities { get { return createdActivities; } }
+        public IObservable<IViewFor> WhenActivityCreated { get { return whenActivityCreated; } }
 
         public void OnActivityCreated<TActivity>(TActivity activity) 
             where TActivity: Activity, IViewFor
         {
-            createdActivities.OnNext(activity);
+            whenActivityCreated.OnNext(activity);
         }
     }
 }

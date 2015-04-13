@@ -56,7 +56,7 @@
     <Compile Include="Bindings.cs" />
     <Compile Include="Scheduler.cs" />
     <Compile Include="RxUINavigationController.cs" />
-    <Compile Include="RxiOSApplicationBuilder.cs" />
+    <Compile Include="ViewCreatorBuilder.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\iOS\Xamarin.iOS.CSharp.targets" />
   <ItemGroup>

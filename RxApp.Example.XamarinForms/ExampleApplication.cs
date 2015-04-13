@@ -12,12 +12,10 @@ namespace RxApp.Example.XamarinForms
     {
         public static IDisposable Create(RxFormsApplication app)
         {
-            
-            var builder = new RxFormsApplicationBuilder();
-            builder.Application = app;
-            builder.NavigationStack = RxAppExampleApplicationController.Create();
-            builder.RegisterPageCreator<IMainViewModel,Page>(model => new ExamplePage(model));
-            return builder.Build();
+            var pageCreatorBuilder = new PageCreatorBuilder();
+            pageCreatorBuilder.RegisterPageCreator<IMainViewModel,ExamplePage>(model => new ExamplePage(model));
+
+            return RxAppExampleApplicationController.Create().BindTo(app, pageCreatorBuilder.Build());
         }
     }
 

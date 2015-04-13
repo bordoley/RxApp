@@ -15,26 +15,33 @@ namespace RxApp.Example
     [Register("AppDelegate")]
     public partial class AppDelegate : UIApplicationDelegate
     {
-        private IDisposable appSubscription;
+        private IDisposable subscription;
 
         public override bool FinishedLaunching(UIApplication app, NSDictionary options)
         {
             var storyBoard = UIStoryboard.FromName("Views", null);
-            var builder = new RxiOSApplicationBuilder();
-            builder.NavigationStack = RxAppExampleApplicationController.Create();
-            builder.RegisterViewCreator<IMainViewModel,ExampleViewController>(model =>
+
+            var viewCreatorBuilder = new ViewCreatorBuilder();
+            viewCreatorBuilder.RegisterViewCreator<IMainViewModel,ExampleViewController>(model =>
                 {
                     var view = (ExampleViewController) storyBoard.InstantiateViewController("ExampleViewController");
                     view.ViewModel = model;
                     return view;
                 });
-            appSubscription = builder.Build();
+
+            var navigationController = new RxUINavigationController();
+            subscription = RxAppExampleApplicationController.Create().BindTo(navigationController, viewCreatorBuilder.Build());
+
+            var window = new UIWindow(UIScreen.MainScreen.Bounds);
+            window.RootViewController = navigationController;
+            window.MakeKeyAndVisible();
+
             return true;
         }
 
         public override void WillTerminate(UIApplication app)
         {
-            appSubscription.Dispose();
+            subscription.Dispose();
         }
     }
 }

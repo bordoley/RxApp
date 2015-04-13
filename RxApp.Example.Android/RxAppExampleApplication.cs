@@ -27,13 +27,10 @@ namespace RxApp.Example
             base.OnCreate();
 
             Insights.Initialize("2435d94d2dae17b47f305d2cf5f3413fb1d3aa8d", this.ApplicationContext);
+            var activityCreatorBuilder = new ActivityCreatorBuilder();
+            activityCreatorBuilder.RegisterActivityMapping<IMainViewModel, MainActivity>();
 
-            var builder = new RxAndroidApplicationBuilder();
-            builder.NavigationStack = RxAppExampleApplicationController.Create();
-            builder.RegisterActivityMapping<IMainViewModel, MainActivity>();
-            builder.CreatedActivities = this.CreatedActivities;
-
-            this.subscription = builder.Build();
+            this.subscription = RxAppExampleApplicationController.Create().BindTo(this, activityCreatorBuilder.Build());
         }
 
         public override void OnTerminate()
